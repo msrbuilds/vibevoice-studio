@@ -1,0 +1,26 @@
+[project]
+name = "vibevoice-backend"
+version = "0.1.0"
+description = "FastAPI backend for local VibeVoice-1.5B TTS"
+requires-python = ">=3.10"
+dependencies = [
+    "transformers>=4.51.0",
+    "torch>=2.4.0",
+    "torchaudio>=2.4.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",
+    "soundfile>=0.12.1",
+    "numpy>=1.26,<3.0",
+    "scipy>=1.11",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.4.0",
+    "python-dotenv>=1.0.1",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["core", "services", "api"]

@@ -1,0 +1,41 @@
+# Core TTS — the `vibevoice` Python package from the community fork
+# provides VibeVoiceForConditionalGenerationInference and VibeVoiceProcessor.
+# (Microsoft's official VibeVoice repo was removed in Sept 2025.)
+vibevoice @ git+https://github.com/vibevoice-community/VibeVoice.git
+
+# Pinned versions to match the vibevoice package's own pin (pyproject.toml).
+# Newer transformers versions (5.x) drop the modeling API this code uses.
+transformers==4.51.3
+
+# torch: install with CUDA wheels on Windows:
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+torch>=2.4.0
+torchaudio>=2.4.0
+accelerate==1.6.0
+peft
+datasets==3.5.0
+diffusers
+numba>=0.57.0
+llvmlite>=0.40.0
+librosa
+ml-collections
+absl-py
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# Audio I/O
+soundfile>=0.12.1
+numpy>=1.26,<3.0
+scipy>=1.11
+
+# Config & validation
+pydantic>=2.7.0
+pydantic-settings>=2.4.0
+python-dotenv>=1.0.1
+
+# Optional: flash-attn for faster inference on supported GPUs (Ampere+).
+# Skipped by default; install manually if you have CUDA 11.8/12.x and want it.
+# pip install flash-attn --no-build-isolation
