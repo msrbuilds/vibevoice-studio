@@ -108,3 +108,21 @@ def test_mount_frontend_noop_when_dist_absent(tmp_path):
 
     assert client.get("/api/health").json() == {"status": "ok"}
     assert client.get("/").status_code == 404
+
+
+import studio  # noqa: E402
+
+
+def test_venv_python_path_shape():
+    repo = Path("/repo")
+    p = studio.venv_python(repo)
+    # Either Scripts/python.exe (Windows) or bin/python (POSIX)
+    assert p.name in ("python.exe", "python")
+    assert "venv" in p.parts
+
+
+def test_build_backend_cmd_forwards_passthrough():
+    cmd = studio.build_backend_cmd(Path("/repo/backend/venv/bin/python"),
+                                   ["--device", "cuda", "--port", "9000"])
+    assert cmd[:3] == ["/repo/backend/venv/bin/python", "-m", "backend.cli"]
+    assert cmd[-4:] == ["--device", "cuda", "--port", "9000"]
