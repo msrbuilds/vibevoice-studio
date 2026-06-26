@@ -4,6 +4,7 @@ import type {
   ConfigResponse,
   EngineInfo,
   HealthResponse,
+  InstallStatus,
   SynthBase64Response,
   SynthSpeaker,
   UploadVoiceResponse,
@@ -129,6 +130,18 @@ export async function loadEngine(name: string): Promise<EngineInfo> {
     await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/load`, {
       method: "POST",
     }),
+  );
+}
+
+export async function startChatterboxInstall(): Promise<InstallStatus> {
+  return jsonOrThrow<InstallStatus>(
+    await fetch(`${API_BASE}/engines/chatterbox/install`, { method: "POST" }),
+  );
+}
+
+export async function getChatterboxInstallStatus(): Promise<InstallStatus> {
+  return jsonOrThrow<InstallStatus>(
+    await fetch(`${API_BASE}/engines/chatterbox/install`),
   );
 }
 

@@ -40,11 +40,18 @@ export interface EngineInfo {
   display_name: string;
   description: string;
   loaded: boolean;
+  installed: boolean;
   supports_voice_cloning: boolean;
   sample_rate: number | null;
   max_speakers: number;
   default_cfg_scale: number | null;
   active: boolean;
+}
+
+export interface InstallStatus {
+  state: "not_installed" | "installing" | "installed" | "error";
+  log: string[];
+  returncode: number | null;
 }
 
 export interface HealthResponse {
