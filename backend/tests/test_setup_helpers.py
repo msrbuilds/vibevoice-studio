@@ -133,3 +133,18 @@ def test_chatterbox_venv_python_path_shape():
     p = studio.chatterbox_venv_python(repo)
     assert p.name in ("python.exe", "python")
     assert "venv-chatterbox" in p.parts
+
+
+def test_install_chatterbox_subcommand_success(monkeypatch):
+    calls = {"n": 0}
+    def _fake():
+        calls["n"] += 1
+        return True
+    monkeypatch.setattr(studio, "_ensure_chatterbox_env", _fake)
+    assert studio.main(["install-chatterbox"]) == 0
+    assert calls["n"] == 1
+
+
+def test_install_chatterbox_subcommand_failure(monkeypatch):
+    monkeypatch.setattr(studio, "_ensure_chatterbox_env", lambda: False)
+    assert studio.main(["install-chatterbox"]) == 1

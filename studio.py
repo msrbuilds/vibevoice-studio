@@ -50,18 +50,19 @@ def chatterbox_venv_python(repo_root: Path) -> Path:
     return venv / "bin" / "python"
 
 
-def _ensure_chatterbox_env() -> None:
+def _ensure_chatterbox_env() -> bool:
     """Create backend/venv-chatterbox and install chatterbox-tts into it.
 
     Chatterbox can't share the main venv (transformers pin conflict), so it
     gets its own environment with a CUDA-matched torch + chatterbox-tts.
+    Returns True on success, False on any failure.
     """
     cpy = chatterbox_venv_python(REPO_ROOT)
     if not cpy.is_file():
         print("  Creating isolated Chatterbox environment (backend/venv-chatterbox) …")
         if _run([sys.executable, "-m", "venv", str(BACKEND_DIR / "venv-chatterbox")]) != 0:
             print("  ERROR: failed to create venv-chatterbox.")
-            return
+            return False
     # CUDA-matched torch first (same detection as the main setup).
     tag = envdetect.detect_cuda_tag()
     index = envdetect.torch_index_url(tag)
@@ -71,13 +72,14 @@ def _ensure_chatterbox_env() -> None:
     print("  Installing PyTorch into the Chatterbox env …")
     if _run(pip_torch) != 0:
         print("  ERROR: torch install into venv-chatterbox failed.")
-        return
+        return False
     print("  Installing chatterbox-tts into the Chatterbox env …")
     if _run([str(cpy), "-m", "pip", "install", "-r",
              str(BACKEND_DIR / "requirements-chatterbox.txt")]) != 0:
         print("  ERROR: chatterbox-tts install failed.")
-        return
+        return False
     print("  Chatterbox environment ready.")
+    return True
 
 
 def build_backend_cmd(py: Path, passthrough: list[str]) -> list[str]:
@@ -236,6 +238,15 @@ def cmd_models(_args: argparse.Namespace) -> int:
     return 0
 
 
+# ------------------------------------------------ install-chatterbox --
+def cmd_install_chatterbox(_args: argparse.Namespace) -> int:
+    """Non-interactive: build/refresh the isolated Chatterbox env. Used by the
+    backend's in-UI installer. Returns 0 on success, 1 on failure."""
+    print(BANNER)
+    ok = _ensure_chatterbox_env()
+    return 0 if ok else 1
+
+
 # ---------------------------------------------------------------- start --
 def cmd_start(args: argparse.Namespace) -> int:
     print(BANNER)
@@ -357,12 +368,15 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     sub.add_parser("models", help="re-open the model picker")
+    sub.add_parser("install-chatterbox", help="build the isolated Chatterbox env (non-interactive)")
 
     args = parser.parse_args(argv)
     if args.command == "setup":
         return cmd_setup(args)
     if args.command == "models":
         return cmd_models(args)
+    if args.command == "install-chatterbox":
+        return cmd_install_chatterbox(args)
     if args.command == "start":
         return cmd_start(args)
     parser.print_help()
