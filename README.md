@@ -1,16 +1,39 @@
-# VibeVoice Studio
+# Voice Studio by MSR
 
-A local web UI for **Microsoft's VibeVoice-1.5B** text-to-speech model. Multi-segment podcast editor, voice uploads, GPU/CPU/MPS backend, fully offline after first run.
+A local web UI for **multiple open-source TTS models**, starting with:
+
+- **Microsoft VibeVoice-1.5B** (default) — multilingual voice cloning, ~5.4 GB
+- **Kokoro-82M** by [hexgrad](https://huggingface.co/hexgrad/Kokoro-82M) — fast, lightweight, Apache-2.0, 38 built-in voices across English/Japanese/Mandarin
+
+Multi-segment podcast editor, voice uploads, GPU/CPU/MPS backend, fully offline after first run.
 
 ```
 ┌─────────────────────────┐         ┌──────────────────────────┐
 │  React + Vite + Tailwind │  HTTP   │   FastAPI (Python 3.10+) │
 │  localhost:5173          │ ──────▶ │   localhost:8880         │
-│  - Sidebar: speakers     │         │  - vibevoice (community) │
-│  - Segments list         │         │  - VibeVoice-1.5B        │
-│  - Generate / Play / WAV │         │  - voices/ + uploads/    │
+│  - Engine selector       │         │  - vibevoice  (5.4 GB)   │
+│  - Sidebar: speakers     │         │  - kokoro     (~350 MB)  │
+│  - Segments list         │         │  - voices/ + uploads/    │
+│  - Generate / Play / WAV │         │  - one engine loaded     │
 └─────────────────────────┘         └──────────────────────────┘
 ```
+
+## Quick Start
+
+Requires Python 3.10+ (and Node.js 18+ for the dev UI). From the repo root:
+
+```bash
+python studio.py setup     # creates the venv, installs deps, auto-picks a PyTorch/CUDA build,
+                           # checks system deps, and lets you choose which models to download
+python studio.py start     # launches backend + frontend together (Ctrl+C stops both)
+```
+
+- `python studio.py start --dev` — backend (:8880) + Vite dev server (:5173), hot reload.
+- `python studio.py start --prod` — builds the UI and serves it + the API on a single port (:8880); no Node needed at runtime.
+- `python studio.py models` — re-open the model picker anytime.
+- Flags after `start` pass through to the server, e.g. `python studio.py start --dev --device cuda --port 9000`.
+
+The manual two-terminal setup below still works and remains the underlying primitive.
 
 ## Features
 
@@ -69,6 +92,12 @@ source venv/bin/activate
 
 # Install backend dependencies
 pip install -r requirements.txt
+
+# If pip fails with "WinError 2 ... cannot find the file specified"
+# when installing `kokoro`, `weasel`, `spacy`, or `jsonschema`
+# (these packages install CLI launchers to `C:\Python311\Scripts\`),
+# run with `--user` to skip the Scripts write:
+#   pip install --user -r requirements.txt
 ```
 
 ### 3. Frontend
@@ -288,7 +317,7 @@ vibe-podcast/
 
 - **VibeVoice-1.5B supports up to 4 speakers** with voice cloning from short reference clips. Voice identity comes from a 1–60s clip you assign to each speaker in the sidebar.
 - **Microsoft removed the original repo and code in Sept 2025** for responsible-AI reasons. The `vibevoice` Python package (from the community fork) and the 1.5B weights (from `microsoft/VibeVoice-1.5B` on HuggingFace) are how you run it now. The model embeds an audible AI disclaimer in every clip and logs a hashed request ID, per Microsoft's policy.
-- **First-boot download is ~5.4 GB.** Set `HF_HOME` to relocate the cache (default `~/.cache/huggingface/`).
+- **First-boot download is ~5.4 GB.** Model weights cache to `backend/models/` (override with the `MODELS_DIR` env var, `--models-dir` CLI flag, or `HF_HOME`).
 - **Concurrent requests serialize.** The backend uses a single `threading.Lock` so two requests don't fight over the GPU. Set up a queue upstream if you need fan-out.
 - **`max-text-chars` defaults to 5000.** The model's 64K-token context is much larger, but text > 5K chars risks OOM on smaller GPUs.
 - **On Windows, install PyTorch from the official wheel index** before `pip install -r requirements.txt` — otherwise you get a CPU-only torch and CUDA will silently fall back to CPU.
@@ -300,6 +329,9 @@ vibe-podcast/
 - **`backend not reachable` on the frontend** — make sure `python -m backend.cli` is running on port 8880 and didn't crash at startup. Tail the logs.
 - **CUDA available but model runs on CPU** — you probably installed the CPU-only PyTorch wheel. Reinstall from `https://download.pytorch.org/whl/cu121` (or `cu118` / `cu124` matching your driver).
 - **`flash_attn seems to be not installed`** — safe to ignore; the backend retries with `sdpa`.
+- **`Kokoro failed to init for lang_code='j'`** — install the matching misaki extra: `pip install misaki[ja]`. Same for `'z'` (Mandarin) — `pip install misaki[zh]`.
+- **Kokoro is silent / no audio** — `espeak-ng` is not on PATH. Install it (see "Notes & gotchas" above) and restart the backend.
+- **Switched to Kokoro but old cached audio still plays** — the cache is per-engine, so the old VibeVoice audio remains valid. Click **Regenerate** on each segment to produce new Kokoro audio.
 - **`out of memory` during generation** — switch to `--device cpu` or shorten the text. The backend returns 507 with a clear message and empties the CUDA cache.
 - **No built-in voices in the sidebar** — drop a `.wav`/`.mp3`/`.flac`/`.ogg` into `backend/voices/` and restart the backend.
 - **Generated voice sounds robotic** — your reference clip is too clean / synthetic / has reverb. Re-record with a real voice on a quiet room.
@@ -329,3 +361,15 @@ npm run build
 ## License
 
 MIT for the code in this repo. The VibeVoice model weights are released under MIT by Microsoft. See <https://huggingface.co/microsoft/VibeVoice-1.5B> for the model's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
+odel's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
+
+```bash
+cd frontend
+npm run typecheck
+npm run build
+```
+
+## License
+
+MIT for the code in this repo. The VibeVoice model weights are released under MIT by Microsoft. See <https://huggingface.co/microsoft/VibeVoice-1.5B> for the model's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
+odel's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
