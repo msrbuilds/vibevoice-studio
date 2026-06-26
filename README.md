@@ -7,6 +7,8 @@ A local web UI for **multiple open-source TTS models**, starting with:
 
 Multi-segment podcast editor, voice uploads, GPU/CPU/MPS backend, fully offline after first run.
 
+<img width="2536" height="1433" alt="Voice Studio by MSR" src="https://github.com/user-attachments/assets/78ad65a4-67c9-4902-8627-8c8532a7176e" />
+
 ```
 ┌─────────────────────────┐         ┌──────────────────────────┐
 │  React + Vite + Tailwind │  HTTP   │   FastAPI (Python 3.10+) │
