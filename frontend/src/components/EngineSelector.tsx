@@ -8,6 +8,7 @@ interface Props {
   activeName: string | null;
   onSelect: (name: string) => Promise<void>;
   onLoad: (name: string) => Promise<void>;
+  onInstall: (name: string) => void;
 }
 
 export function EngineSelector({
@@ -16,6 +17,7 @@ export function EngineSelector({
   activeName,
   onSelect,
   onLoad,
+  onInstall,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
@@ -172,24 +174,41 @@ export function EngineSelector({
                           ? `${(e.sample_rate / 1000).toFixed(0)} kHz`
                           : "—"}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => void handleSelect(e.name)}
-                        disabled={isActive}
-                        className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
-                          isActive
-                            ? "bg-teal-600/20 text-teal-300 cursor-default"
-                            : isDark
-                              ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
-                              : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                        }`}
-                      >
-                        {isActive
-                          ? "Currently active"
-                          : switching
-                            ? "Loading…"
-                            : `Switch to ${e.display_name}`}
-                      </button>
+                      {e.installed === false ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onInstall(e.name);
+                            setOpen(false);
+                          }}
+                          className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                            isDark
+                              ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
+                              : "bg-teal-50 hover:bg-teal-100 text-teal-700"
+                          }`}
+                        >
+                          {`Install ${e.display_name}`}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void handleSelect(e.name)}
+                          disabled={isActive}
+                          className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                            isActive
+                              ? "bg-teal-600/20 text-teal-300 cursor-default"
+                              : isDark
+                                ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          {isActive
+                            ? "Currently active"
+                            : switching
+                              ? "Loading…"
+                              : `Switch to ${e.display_name}`}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>

@@ -24,6 +24,7 @@ interface Props {
   activeEngine: string | null;
   onSelectEngine: (name: string) => Promise<void>;
   onLoadEngine: (name: string) => Promise<void>;
+  onInstallEngine: (name: string) => void;
   onAddSegment: () => void;
   onGenerateAll: () => void;
   onExportJson: () => void;
@@ -50,6 +51,7 @@ export function ActionBar({
   activeEngine,
   onSelectEngine,
   onLoadEngine,
+  onInstallEngine,
   onAddSegment,
   onGenerateAll,
   onExportJson,
@@ -159,6 +161,7 @@ export function ActionBar({
           activeName={activeEngine}
           onSelect={onSelectEngine}
           onLoad={onLoadEngine}
+          onInstall={onInstallEngine}
         />
 
         <SettingsMenu

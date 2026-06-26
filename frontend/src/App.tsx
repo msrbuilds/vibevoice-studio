@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { ActionBar } from "@/components/ActionBar";
+import { InstallChatterboxDialog } from "@/components/InstallChatterboxDialog";
 import { PlayerFooter } from "@/components/PlayerFooter";
 import { SegmentCard } from "@/components/SegmentCard";
 import { Sidebar } from "@/components/Sidebar";
@@ -48,6 +49,7 @@ export default function App() {
     activeName: activeEngine,
     setActive: setActiveEngine,
     ensureLoaded: ensureEngineLoaded,
+    refresh: refreshEngines,
   } = useEngine();
   const supportsVoiceCloning =
     engines.find((e) => e.name === activeEngine)?.supports_voice_cloning ?? true;
@@ -65,6 +67,7 @@ export default function App() {
   const [exportProgress, setExportProgress] = useState("");
   const [stopExport, setStopExport] = useState(false);
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string } | null>(null);
+  const [installEngineOpen, setInstallEngineOpen] = useState(false);
   // Measured heights of the fixed top/bottom bars, so the segment list can
   // pad itself by exactly the rendered heights (avoids overlap if a bar
   // wraps to a second row at narrow viewport widths). Bumped initial
@@ -567,6 +570,7 @@ export default function App() {
               showError(err, "Engine load failed");
             }
           }}
+          onInstallEngine={() => setInstallEngineOpen(true)}
           onAddSegment={project.addSegment}
           onGenerateAll={handleGenerateAll}
           onExportJson={handleExportJson}
@@ -661,6 +665,15 @@ export default function App() {
           onExportAudio={handleExportAudio}
           onHeightChange={setPlayerFooterH}
         />
+        {installEngineOpen && (
+          <InstallChatterboxDialog
+            isDark={isDark}
+            onClose={() => setInstallEngineOpen(false)}
+            onInstalled={() => {
+              void refreshEngines();
+            }}
+          />
+        )}
       </main>
     </div>
   );
