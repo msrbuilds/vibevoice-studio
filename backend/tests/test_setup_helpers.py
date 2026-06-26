@@ -66,3 +66,45 @@ def test_parse_model_selection_rejects_unknown():
 def test_catalog_has_expected_engines():
     assert set(dm.MODEL_CATALOG) == {"vibevoice", "kokoro", "chatterbox"}
     assert dm.MODEL_CATALOG["kokoro"]["repo_id"] == "hexgrad/Kokoro-82M"
+
+
+def test_mount_frontend_serves_index_when_dist_present(tmp_path):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from backend.app import _mount_frontend
+
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<html>voice studio</html>", encoding="utf-8")
+
+    app = FastAPI()
+
+    @app.get("/api/health")
+    def health():
+        return {"status": "ok"}
+
+    _mount_frontend(app, dist)
+    client = TestClient(app)
+
+    assert client.get("/api/health").json() == {"status": "ok"}
+    root = client.get("/")
+    assert root.status_code == 200
+    assert "voice studio" in root.text
+
+
+def test_mount_frontend_noop_when_dist_absent(tmp_path):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from backend.app import _mount_frontend
+
+    app = FastAPI()
+
+    @app.get("/api/health")
+    def health():
+        return {"status": "ok"}
+
+    _mount_frontend(app, tmp_path / "missing-dist")
+    client = TestClient(app)
+
+    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/").status_code == 404
