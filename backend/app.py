@@ -213,7 +213,3 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 # Module-level instance for `uvicorn backend.app:app`
 app = create_app()
-
-
-# Module-level instance for `uvicorn backend.app:app`
-app = create_app()
