@@ -42,12 +42,11 @@ python-dotenv>=1.0.1
 kokoro>=0.9.4
 misaki[en]>=0.9.4
 
-# Chatterbox Multilingual V3 TTS engine (Resemble AI, 0.5B params,
-# 23+ languages, voice cloning, MIT licensed). ~500 MB on first run.
-# Models: https://huggingface.co/ResembleAI/chatterbox
-# If pip fails on Windows, use `pip install --user chatterbox-tts` to
-# bypass the Scripts/ launcher race condition.
-chatterbox-tts>=0.1.3
+# Chatterbox Multilingual V3 is NOT installed here. It hard-pins
+# transformers==5.2.0, which conflicts with vibevoice's transformers==4.51.3.
+# It installs into a separate environment (backend/venv-chatterbox) and runs
+# as a subprocess worker. Install it with:  python studio.py models
+# (select Chatterbox). See backend/requirements-chatterbox.txt.
 
 # Optional: flash-attn for faster inference on supported GPUs (Ampere+).
 # Skipped by default; install manually if you have CUDA 11.8/12.x and want it.

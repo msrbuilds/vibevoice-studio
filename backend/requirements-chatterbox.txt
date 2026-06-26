@@ -1,0 +1,13 @@
+# Chatterbox Multilingual V3 — ISOLATED ENVIRONMENT ONLY.
+#
+# Chatterbox hard-pins transformers==5.2.0, which is INCOMPATIBLE with the
+# `vibevoice` package (transformers==4.51.3) in the main backend venv.
+# These deps therefore install into a SEPARATE venv (backend/venv-chatterbox)
+# and are driven by backend/chatterbox_worker.py as a subprocess.
+#
+# Install with:  python studio.py models   (select Chatterbox)
+#
+# Install PyTorch FIRST with a CUDA-matched wheel into this venv, same as the
+# main backend (studio.py does this automatically). Then:
+#   pip install -r backend/requirements-chatterbox.txt
+chatterbox-tts>=0.1.7
