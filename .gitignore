@@ -92,6 +92,16 @@ debug.log
 smoke*.log
 *.bak
 
+# Captured process stdout/stderr from manual runs (backend.err/out, vite.err/out)
+*.err
+*.out
+
+# Ad-hoc /api/config dumps saved during manual testing
+/cfg*.json
+
+# Runtime state: last-selected engine (written by EngineManager at runtime)
+backend/.last_engine
+
 # Test artifacts
 test_join.wav
 test_*.wav
