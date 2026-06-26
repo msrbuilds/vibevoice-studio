@@ -126,3 +126,10 @@ def test_build_backend_cmd_forwards_passthrough():
                                    ["--device", "cuda", "--port", "9000"])
     assert cmd[:3] == ["/repo/backend/venv/bin/python", "-m", "backend.cli"]
     assert cmd[-4:] == ["--device", "cuda", "--port", "9000"]
+
+
+def test_chatterbox_venv_python_path_shape():
+    repo = Path("/repo")
+    p = studio.chatterbox_venv_python(repo)
+    assert p.name in ("python.exe", "python")
+    assert "venv-chatterbox" in p.parts

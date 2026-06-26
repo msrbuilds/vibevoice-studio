@@ -42,6 +42,44 @@ def venv_python(repo_root: Path) -> Path:
     return venv / "bin" / "python"
 
 
+def chatterbox_venv_python(repo_root: Path) -> Path:
+    """Path to the ISOLATED Chatterbox venv's Python interpreter."""
+    venv = repo_root / "backend" / "venv-chatterbox"
+    if os.name == "nt":
+        return venv / "Scripts" / "python.exe"
+    return venv / "bin" / "python"
+
+
+def _ensure_chatterbox_env() -> None:
+    """Create backend/venv-chatterbox and install chatterbox-tts into it.
+
+    Chatterbox can't share the main venv (transformers pin conflict), so it
+    gets its own environment with a CUDA-matched torch + chatterbox-tts.
+    """
+    cpy = chatterbox_venv_python(REPO_ROOT)
+    if not cpy.is_file():
+        print("  Creating isolated Chatterbox environment (backend/venv-chatterbox) …")
+        if _run([sys.executable, "-m", "venv", str(BACKEND_DIR / "venv-chatterbox")]) != 0:
+            print("  ERROR: failed to create venv-chatterbox.")
+            return
+    # CUDA-matched torch first (same detection as the main setup).
+    tag = envdetect.detect_cuda_tag()
+    index = envdetect.torch_index_url(tag)
+    pip_torch = [str(cpy), "-m", "pip", "install", "torch", "torchaudio"]
+    if index:
+        pip_torch += ["--index-url", index]
+    print("  Installing PyTorch into the Chatterbox env …")
+    if _run(pip_torch) != 0:
+        print("  ERROR: torch install into venv-chatterbox failed.")
+        return
+    print("  Installing chatterbox-tts into the Chatterbox env …")
+    if _run([str(cpy), "-m", "pip", "install", "-r",
+             str(BACKEND_DIR / "requirements-chatterbox.txt")]) != 0:
+        print("  ERROR: chatterbox-tts install failed.")
+        return
+    print("  Chatterbox environment ready.")
+
+
 def build_backend_cmd(py: Path, passthrough: list[str]) -> list[str]:
     """Command to launch the backend server via the venv Python."""
     return [py.as_posix(), "-m", "backend.cli", *passthrough]
@@ -183,6 +221,9 @@ def _interactive_model_picker(py: Path) -> None:
         return
     _run([str(py), "-m", "backend.scripts.download_models",
           "--models", ",".join(picked)], cwd=REPO_ROOT)
+    if "chatterbox" in picked:
+        print("  Chatterbox selected — setting up its isolated environment …")
+        _ensure_chatterbox_env()
 
 
 # --------------------------------------------------------------- models --
