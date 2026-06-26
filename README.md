@@ -20,23 +20,6 @@ Multi-segment podcast editor, voice uploads, GPU/CPU/MPS backend, fully offline 
 └─────────────────────────┘         └──────────────────────────┘
 ```
 
-## Quick Start
-
-Requires Python 3.10+ (and Node.js 18+ for the dev UI). From the repo root:
-
-```bash
-python studio.py setup     # creates the venv, installs deps, auto-picks a PyTorch/CUDA build,
-                           # checks system deps, and lets you choose which models to download
-python studio.py start     # launches backend + frontend together (Ctrl+C stops both)
-```
-
-- `python studio.py start --dev` — backend (:8880) + Vite dev server (:5173), hot reload.
-- `python studio.py start --prod` — builds the UI and serves it + the API on a single port (:8880); no Node needed at runtime.
-- `python studio.py models` — re-open the model picker anytime.
-- Flags after `start` pass through to the server, e.g. `python studio.py start --dev --device cuda --port 9000`.
-
-The manual two-terminal setup below still works and remains the underlying primitive.
-
 ## Features
 
 - **Multi-segment podcast editor** — author scripts with multiple speakers, generate each segment, play through, or export one joined WAV.
@@ -61,85 +44,72 @@ The manual two-terminal setup below still works and remains the underlying primi
 - **~3 GB VRAM** for fp16 inference; **~2 GB RAM** for CPU
 - **OS**: Windows 10/11, Linux, macOS
 
-## Installation
+## Getting Started
 
 ### 1. Clone
 
 ```bash
-git clone https://github.com/<your-username>/vibe-podcast.git
-cd vibe-podcast
+git clone https://github.com/msrbuilds/voice-studio.git
+cd voice-studio
 ```
 
-### 2. Backend
+### 2. Quick setup (recommended)
+
+From the repo root, one command bootstraps everything — it creates the Python virtual environment, **auto-detects your GPU and installs the matching PyTorch/CUDA build**, installs the backend and frontend dependencies, checks system dependencies (`espeak-ng`, `ffmpeg`), and lets you **pick which models to download**:
+
+```bash
+python studio.py setup
+```
+
+Then launch the app — backend and frontend together, one command:
+
+```bash
+python studio.py start          # auto-selects dev/prod; Ctrl+C stops both
+python studio.py start --dev    # backend (:8880) + Vite dev server (:5173), hot reload
+python studio.py start --prod   # build the UI and serve it + the API on one port (:8880)
+python studio.py models         # re-open the model picker anytime
+```
+
+Open <http://localhost:5173> (dev) or <http://localhost:8880> (prod). Flags after `start` pass through to the server, e.g. `python studio.py start --dev --device cuda --port 9000`.
+
+> `studio.py` is the recommended path and only uses the Python standard library. If you'd rather wire things up by hand, the manual steps below do exactly the same thing.
+
+### Manual setup & running (alternative)
+
+Prefer two terminals and explicit control? Set up and run each side yourself.
+
+**Backend (Terminal 1):**
 
 ```bash
 cd backend
 
 # Create and activate a virtual environment
 python -m venv venv
-# Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# Windows (cmd):
-.\venv\Scripts\activate.bat
-# Linux / macOS:
-source venv/bin/activate
+# Windows (PowerShell): .\venv\Scripts\Activate.ps1
+# Windows (cmd):        .\venv\Scripts\activate.bat
+# Linux / macOS:        source venv/bin/activate
 
-# Install PyTorch FIRST with a CUDA-matched wheel.
-# Skip this line if you only want CPU inference.
+# Install PyTorch FIRST with a CUDA-matched wheel (skip for CPU-only).
 # Pick the cu121 / cu118 / cu124 wheel that matches your NVIDIA driver:
 #   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
-#
-# Or, just install a CPU-only torch (smaller download, slower inference):
+# Or CPU-only (smaller download, slower inference):
 #   pip install torch torchaudio
 
 # Install backend dependencies
 pip install -r requirements.txt
 
-# If pip fails with "WinError 2 ... cannot find the file specified"
-# when installing `kokoro`, `weasel`, `spacy`, or `jsonschema`
-# (these packages install CLI launchers to `C:\Python311\Scripts\`),
-# run with `--user` to skip the Scripts write:
-#   pip install --user -r requirements.txt
+# Run the backend (from the repo root, with the venv active)
+cd ..
+python -m backend.cli --engine vibevoice --device cuda   # engine: vibevoice | kokoro | chatterbox; device: cuda | cpu | mps
 ```
 
-### 3. Frontend
+The first boot downloads the selected model's weights from HuggingFace into `backend/models/`. Subsequent boots use that local cache.
 
-```bash
-cd ../frontend
-npm install
-```
-
-## Running
-
-You'll need two terminals — one for the backend, one for the frontend.
-
-### Terminal 1 — Backend
-
-```bash
-cd backend
-
-# Activate venv if you haven't already
-# Windows (PowerShell): .\venv\Scripts\Activate.ps1
-# Linux / macOS:        source venv/bin/activate
-
-python -m backend.cli --device cuda   # or: cpu, mps
-```
-
-You should see:
-
-```
-[startup] Loading processor from microsoft/VibeVoice-1.5B …
-[startup] Loading model weights (device=cuda, dtype=bfloat16, attn=sdpa) …
-[startup] Model ready. sampling_rate=24000 Hz, attn=sdpa
-INFO:     Uvicorn running on http://0.0.0.0:8880
-```
-
-The first boot downloads the **5.4 GB** `microsoft/VibeVoice-1.5B` weights from HuggingFace. Subsequent boots use the local cache (`~/.cache/huggingface/`).
-
-### Terminal 2 — Frontend
+**Frontend (Terminal 2):**
 
 ```bash
 cd frontend
+npm install      # first time only
 npm run dev
 ```
 
@@ -153,13 +123,15 @@ python -m backend.cli --help
 
 | Flag | Default | Description |
 |---|---|---|
+| `--engine` | `vibevoice` | Active engine: `vibevoice`, `kokoro`, or `chatterbox` (persists across restarts) |
 | `--device` | `auto` | `auto`, `cuda`, `cpu`, or `mps` |
 | `--port` | `8880` | HTTP port |
-| `--model` | `microsoft/VibeVoice-1.5B` | HF model id or local path |
+| `--model` | `vibevoice/VibeVoice-1.5B` | HF model id or local path (VibeVoice only) |
+| `--kokoro-lang` | `a` | Kokoro lang code: `a` (US English), `b` (British), `j` (Japanese), `z` (Mandarin) |
+| `--chatterbox-lang` | `en` | Default Chatterbox language id (e.g. `en`, `fr`, `ur`, `zh`) |
+| `--models-dir` | `backend/models` | Where HuggingFace model weights are cached |
 | `--voices-dir` | `backend/voices` | Built-in voice directory |
 | `--uploads-dir` | `backend/uploads` | User-uploaded voice directory |
-| `--cache-dir` | `backend/cache` | Per-segment + join cache directory |
-| `--max-text-chars` | `5000` | Hard cap on input text length |
 | `--log-level` | `info` | `debug`, `info`, `warning`, `error` |
 
 ## Adding voices
@@ -256,7 +228,7 @@ Base URL: `http://localhost:8880/api`
 ## Project layout
 
 ```
-vibe-podcast/
+voice-studio/
 ├── backend/
 │   ├── app.py                    # FastAPI app factory + lifespan + exception handlers
 │   ├── cli.py                    # `python -m backend.cli --device cuda --port 8880`
@@ -362,16 +334,4 @@ npm run build
 
 ## License
 
-MIT for the code in this repo. The VibeVoice model weights are released under MIT by Microsoft. See <https://huggingface.co/microsoft/VibeVoice-1.5B> for the model's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
-odel's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
-
-```bash
-cd frontend
-npm run typecheck
-npm run build
-```
-
-## License
-
-MIT for the code in this repo. The VibeVoice model weights are released under MIT by Microsoft. See <https://huggingface.co/microsoft/VibeVoice-1.5B> for the model's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
-odel's own usage policy — it embeds an audible AI disclaimer in every generated clip and is intended for research use.
+MIT for the code in this repo. The bundled engines keep their own licenses and model-usage policies — VibeVoice-1.5B (MIT, embeds an audible AI disclaimer in every clip; see <https://huggingface.co/microsoft/VibeVoice-1.5B>), Kokoro-82M (Apache-2.0), and Chatterbox (MIT). Review each model's policy before redistributing generated audio.
