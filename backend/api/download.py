@@ -25,7 +25,8 @@ import logging
 import time
 import uuid
 import wave
-from typing import Annotated
+import json
+from typing import Annotated, Literal
 
 import numpy as np
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
@@ -44,7 +45,9 @@ router = APIRouter(tags=["download"])
 
 class DownloadSegment(BaseModel):
     text: str = Field(..., min_length=1)
-    voice: str = Field(..., min_length=1)
+    voice: str = Field("", max_length=256)  # may be empty for OmniVoice design/auto
+    voice_mode: Literal["clone", "design", "auto"] | None = None
+    instruct: str | None = None
     cfg_scale: float | None = None
     # Per-segment cache hash. If provided, the join hash includes this so that
     # regenerating a segment invalidates the join cache. Optional for backward
@@ -59,6 +62,27 @@ class DownloadSegment(BaseModel):
 class DownloadRequest(BaseModel):
     segments: list[DownloadSegment] = Field(..., min_length=1, max_length=200)
     silence_gap_ms: int = Field(default=150, ge=0, le=2000)
+
+
+def _join_canonical(segments: list["DownloadSegment"], silence_gap_ms: int, default_cfg: float) -> str:
+    """Stable JSON canonical of a download request, used for the join-cache hash.
+    Folds voice_mode/instruct so OmniVoice design/auto and distinct prompts
+    never share a joined-WAV cache slot."""
+    return json.dumps(
+        [
+            {
+                "text": s.text,
+                "voice": s.voice,
+                "cfg_scale": round(float(s.cfg_scale if s.cfg_scale is not None else default_cfg), 4),
+                "vm": s.voice_mode,
+                "in": s.instruct,
+            }
+            for s in segments
+        ]
+        + [{"gap_ms": silence_gap_ms}],
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
 
 
 def _pcm16_from_wav(wav_bytes: bytes) -> tuple[bytes, int, int]:
@@ -144,18 +168,8 @@ def download(
     # We use the request text + voice (not the audio hash) so the join key
     # is stable even before the audio exists.
     import hashlib
-    import json
 
-    canonical = json.dumps(
-        [
-            {"text": s.text, "voice": s.voice,
-             "cfg_scale": round(float(s.cfg_scale or svc.default_cfg_scale), 4)}
-            for s in body.segments
-        ]
-        + [{"gap_ms": body.silence_gap_ms}],
-        ensure_ascii=False,
-        separators=(",", ":"),
-    )
+    canonical = _join_canonical(body.segments, body.silence_gap_ms, svc.default_cfg_scale)
     join_hash = "join-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:24]
 
     # Cache hit fast path
@@ -188,7 +202,12 @@ def download(
             result = svc.synthesize(
                 SynthRequest(
                     text=seg.text,
-                    speakers=[Speaker(name=seg.voice, voice_id=seg.voice)],
+                    speakers=[Speaker(
+                        name=seg.voice or "speaker",
+                        voice_id=seg.voice,
+                        voice_mode=seg.voice_mode,
+                        instruct=seg.instruct,
+                    )],
                     cfg_scale=seg.cfg_scale,
                     cfg_weight=seg.cfg_weight,
                     exaggeration=seg.exaggeration,

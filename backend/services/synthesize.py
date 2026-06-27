@@ -187,15 +187,21 @@ class SynthService:
                 f"{target_engine.max_speakers()} speaker(s) per request "
                 f"(got {len(req.speakers)})"
             )
-        # Resolve reference audio (clone mode only) + voice language. OmniVoice
-        # design/auto carry no reference voice, so skip the lookup that would
-        # otherwise raise VoiceNotFound for an empty voice id.
+        # Resolve reference audio (clone mode only) + voice language. Only
+        # OmniVoice has design/auto modes; every other engine is always
+        # voice-based, so an empty voice there is a clean 400, not an "auto"
+        # request. Design/auto carry no reference voice, so skip the lookup.
         reference_audio: str | None = None
         voice_language: str | None = None
         for sp in req.speakers:
-            sp_mode = sp.voice_mode or ("clone" if sp.voice_id else "auto")
+            if target_name == "omnivoice":
+                sp_mode = sp.voice_mode or ("clone" if sp.voice_id else "auto")
+            else:
+                sp_mode = "clone"
             if sp_mode != "clone":
                 continue
+            if not sp.voice_id:
+                raise TextInvalid("a reference voice is required; pick a voice for each speaker")
             if target_engine.supports_voice_cloning():
                 reference_audio = str(self._voices.get(sp.voice_id))
             voice_language = voice_language or self._voices.get_language(sp.voice_id)
@@ -332,6 +338,8 @@ class SynthService:
                 cfg_weight=effective_cfg_weight,
                 exaggeration=effective_exaggeration,
                 language_id=effective_language_id,
+                voice_mode=req.speakers[0].voice_mode,
+                instruct=req.speakers[0].instruct,
             )
             sub = self._synth_one(
                 engine=target_engine,

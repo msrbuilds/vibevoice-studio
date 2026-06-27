@@ -154,3 +154,55 @@ def test_clone_request_resolves_reference_audio():
     ))
     assert eng.last_req.reference_audio == "/voices/v.wav"
     assert eng.last_req.voice_mode == "clone"
+
+
+def test_multiline_design_threads_mode():
+    svc, eng = _make_service()
+    svc.synthesize(SynthRequest(
+        text="line one\nline two",
+        speakers=[Speaker(name="A", voice_id="", voice_mode="design", instruct="warm")],
+    ))
+    assert eng.last_req.voice_mode == "design"
+    assert eng.last_req.instruct == "warm"
+
+
+def test_clone_empty_voice_raises_for_non_omnivoice():
+    import pytest
+    from backend.core.exceptions import TextInvalid
+
+    eng = _StubEngine()
+
+    class _VibeManager(_StubManager):
+        @property
+        def active_name(self):
+            return "vibevoice"
+
+    svc = SynthService(
+        engine_manager=_VibeManager(eng),
+        voice_registry=_StubVoices(),
+        max_text_chars=5000,
+        synth_timeout_s=30,
+        default_cfg_scale=1.0,
+        cache=None,
+    )
+    with pytest.raises(TextInvalid):
+        svc.synthesize(SynthRequest(text="hi", speakers=[Speaker(name="A", voice_id="")]))
+
+
+def test_download_segment_allows_empty_voice_with_mode():
+    from backend.api.download import DownloadSegment
+    s = DownloadSegment(text="hi", voice="", voice_mode="design", instruct="female")
+    assert s.voice == "" and s.voice_mode == "design" and s.instruct == "female"
+
+
+def test_join_canonical_diverges_by_mode_and_prompt():
+    from backend.api.download import DownloadSegment, _join_canonical
+    base = dict(text="hi", voice="")
+    d1 = [DownloadSegment(**base, voice_mode="design", instruct="female")]
+    d2 = [DownloadSegment(**base, voice_mode="design", instruct="male")]
+    auto = [DownloadSegment(**base, voice_mode="auto")]
+    assert _join_canonical(d1, 150, 1.0) != _join_canonical(d2, 150, 1.0)
+    assert _join_canonical(d1, 150, 1.0) != _join_canonical(auto, 150, 1.0)
+    # backward-compat: a plain clone segment (no mode) still hashes
+    clone = [DownloadSegment(text="hi", voice="v")]
+    assert isinstance(_join_canonical(clone, 150, 1.0), str)
