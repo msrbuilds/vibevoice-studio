@@ -7,7 +7,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from backend.services.chatterbox_install import ChatterboxInstaller  # noqa: E402
+from backend.services.chatterbox_install import (  # noqa: E402
+    ChatterboxInstaller,
+    _format_progress,
+)
 
 
 def _fake_runner(lines, rc):
@@ -89,3 +92,31 @@ def test_install_endpoint_status_and_start():
     s = client.get("/api/engines/chatterbox/install").json()
     assert s["state"] == "installed"
     assert "hello" in s["log"]
+
+
+def test_format_progress_parses_pip_raw():
+    assert _format_progress("Progress 524288000 of 1048576000") == "  downloading 50% (500.0 / 1000.0 MB)"
+    assert _format_progress("Collecting torch") is None
+    assert _format_progress("Progress 5 of 0") is None
+
+
+def test_progress_lines_collapse_to_one_updating_line():
+    runner = _fake_runner(
+        [
+            "Collecting torch",
+            "Progress 262144000 of 1048576000",
+            "Progress 524288000 of 1048576000",
+            "Progress 1048576000 of 1048576000",
+            "Successfully installed torch",
+        ],
+        0,
+    )
+    inst = ChatterboxInstaller(runner=runner)
+    inst.start()
+    _wait(inst)
+    log = inst.status()["log"]
+    prog = [ln for ln in log if ln.startswith("  downloading ")]
+    assert len(prog) == 1  # collapsed into a single updating line
+    assert prog[0] == "  downloading 100% (1000.0 / 1000.0 MB)"
+    assert "Collecting torch" in log
+    assert "Successfully installed torch" in log

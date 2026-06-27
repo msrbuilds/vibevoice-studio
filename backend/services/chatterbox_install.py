@@ -11,6 +11,7 @@ each output line is yielded as (line, None); the final item is (None, rc).
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 import threading
@@ -22,6 +23,23 @@ _MAX_LOG_LINES = 2000
 
 RunnerItem = Tuple[Optional[str], Optional[int]]
 Runner = Callable[[], Iterator[RunnerItem]]
+
+# pip's `--progress-bar raw` emits "Progress <done> of <total>" (bytes) lines.
+_PROGRESS_RE = re.compile(r"^\s*Progress\s+(\d+)\s+of\s+(\d+)\s*$")
+_PROGRESS_PREFIX = "  downloading "
+
+
+def _format_progress(line: str) -> str | None:
+    """Turn a pip raw-progress line into a human one, or None if not progress."""
+    m = _PROGRESS_RE.match(line)
+    if not m:
+        return None
+    done, total = int(m.group(1)), int(m.group(2))
+    if total <= 0:
+        return None
+    pct = min(100, done * 100 // total)
+    mb = 1024 * 1024
+    return f"{_PROGRESS_PREFIX}{pct}% ({done / mb:.1f} / {total / mb:.1f} MB)"
 
 
 def _default_runner(repo_root: Path) -> Iterator[RunnerItem]:
@@ -82,8 +100,18 @@ class ChatterboxInstaller:
         try:
             for line, code in self._runner():
                 if line is not None:
+                    formatted = _format_progress(line)
                     with self._lock:
-                        self._log.append(line)
+                        if (
+                            formatted is not None
+                            and self._log
+                            and self._log[-1].startswith(_PROGRESS_PREFIX)
+                        ):
+                            # Collapse a stream of progress updates into one
+                            # in-place updating line instead of flooding the log.
+                            self._log[-1] = formatted
+                        else:
+                            self._log.append(formatted if formatted is not None else line)
                         if len(self._log) > _MAX_LOG_LINES:
                             del self._log[: len(self._log) - _MAX_LOG_LINES]
                 if code is not None:

@@ -80,10 +80,17 @@ def _ensure_chatterbox_env() -> bool:
         if _run([sys.executable, "-m", "venv", str(BACKEND_DIR / "venv-chatterbox")]) != 0:
             print("  ERROR: failed to create venv-chatterbox.")
             return False
+    # Upgrade pip so we can stream download progress: pip's machine-readable
+    # `--progress-bar raw` (which works when output is piped, unlike the
+    # animated bar) needs pip >= 23.1, but a fresh venv ships an older one.
+    # Best effort — if the upgrade fails (e.g. offline), fall back to no bar.
+    print("  Upgrading pip in the Chatterbox env …")
+    raw_ok = _run([str(cpy), "-m", "pip", "install", "--upgrade", "pip"]) == 0
+    progress = ["--progress-bar", "raw"] if raw_ok else []
     # CUDA-matched torch first (same detection as the main setup).
     tag = envdetect.detect_cuda_tag()
     index = envdetect.torch_index_url(tag)
-    pip_torch = [str(cpy), "-m", "pip", "install", "torch", "torchaudio"]
+    pip_torch = [str(cpy), "-m", "pip", "install", *progress, "torch", "torchaudio"]
     if index:
         pip_torch += ["--index-url", index]
     print("  Installing PyTorch into the Chatterbox env …")
@@ -91,7 +98,7 @@ def _ensure_chatterbox_env() -> bool:
         print("  ERROR: torch install into venv-chatterbox failed.")
         return False
     print("  Installing chatterbox-tts into the Chatterbox env …")
-    if _run([str(cpy), "-m", "pip", "install", "-r",
+    if _run([str(cpy), "-m", "pip", "install", *progress, "-r",
              str(BACKEND_DIR / "requirements-chatterbox.txt")]) != 0:
         print("  ERROR: chatterbox-tts install failed.")
         return False
