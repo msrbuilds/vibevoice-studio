@@ -9,6 +9,7 @@ interface Props {
   onSelect: (name: string) => Promise<void>;
   onLoad: (name: string) => Promise<void>;
   onInstall: (name: string) => void;
+  onDownload: (name: string) => void;
 }
 
 export function EngineSelector({
@@ -18,6 +19,7 @@ export function EngineSelector({
   onSelect,
   onLoad,
   onInstall,
+  onDownload,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
@@ -188,6 +190,21 @@ export function EngineSelector({
                           }`}
                         >
                           {`Install ${e.display_name}`}
+                        </button>
+                      ) : e.downloaded === false ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onDownload(e.name);
+                            setOpen(false);
+                          }}
+                          className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                            isDark
+                              ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
+                              : "bg-teal-50 hover:bg-teal-100 text-teal-700"
+                          }`}
+                        >
+                          {`Download ${e.display_name}`}
                         </button>
                       ) : (
                         <button

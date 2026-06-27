@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 
 import { ActionBar } from "@/components/ActionBar";
 import { InstallChatterboxDialog } from "@/components/InstallChatterboxDialog";
+import { DownloadModelDialog } from "@/components/DownloadModelDialog";
 import { PlayerFooter } from "@/components/PlayerFooter";
 import { SegmentCard } from "@/components/SegmentCard";
 import { Sidebar } from "@/components/Sidebar";
@@ -68,6 +69,7 @@ export default function App() {
   const [stopExport, setStopExport] = useState(false);
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [installEngineOpen, setInstallEngineOpen] = useState(false);
+  const [downloadEngine, setDownloadEngine] = useState<string | null>(null);
   // Measured heights of the fixed top/bottom bars, so the segment list can
   // pad itself by exactly the rendered heights (avoids overlap if a bar
   // wraps to a second row at narrow viewport widths). Bumped initial
@@ -571,6 +573,7 @@ export default function App() {
             }
           }}
           onInstallEngine={() => setInstallEngineOpen(true)}
+          onDownloadEngine={(name) => setDownloadEngine(name)}
           onAddSegment={project.addSegment}
           onGenerateAll={handleGenerateAll}
           onExportJson={handleExportJson}
@@ -671,6 +674,28 @@ export default function App() {
             onClose={() => setInstallEngineOpen(false)}
             onInstalled={() => {
               void refreshEngines();
+            }}
+          />
+        )}
+        {downloadEngine && (
+          <DownloadModelDialog
+            isDark={isDark}
+            engineName={downloadEngine}
+            displayName={
+              engines.find((e) => e.name === downloadEngine)?.display_name ??
+              downloadEngine
+            }
+            onClose={() => setDownloadEngine(null)}
+            onDone={async () => {
+              const name = downloadEngine;
+              await refreshEngines();
+              try {
+                await setActiveEngine(name);
+                await ensureEngineLoaded(name);
+              } catch (err) {
+                showError(err, "Engine load failed");
+              }
+              setDownloadEngine(null);
             }}
           />
         )}
