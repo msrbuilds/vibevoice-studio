@@ -136,6 +136,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         chatterbox_default_cfg_weight=settings.chatterbox_default_cfg_weight,
         chatterbox_default_exaggeration=settings.chatterbox_default_exaggeration,
         chatterbox_watermark=settings.chatterbox_watermark,
+        omnivoice_model_id=settings.omnivoice_model_id,
+        omnivoice_num_step=settings.omnivoice_num_step,
     )
 
     # Wire each engine's built-in voice catalog into the registry so

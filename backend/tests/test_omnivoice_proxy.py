@@ -112,3 +112,22 @@ def test_installed_flag_requires_ready_marker(tmp_path):
     (venv / ".omnivoice-ready").write_text("ok", encoding="utf-8")
     assert eng.installed() is True
     assert eng.info()["installed"] is True
+
+
+def test_engine_manager_registers_omnivoice(tmp_path):
+    from backend.core.engine_manager import EngineManager
+
+    em = EngineManager(
+        default_engine="vibevoice",
+        voices_dir=tmp_path / "voices",
+        uploads_dir=tmp_path / "uploads",
+        model_id="vibevoice/VibeVoice-1.5B",
+        device_request="cpu",
+        state_dir=tmp_path,
+    )
+    names = [e.name for e in em.list_engines()]
+    assert "omnivoice" in names
+    eng = em.get_engine("omnivoice")
+    assert eng.display_name == "OmniVoice"
+    # Not installed in a bare test env (no marker) → installed flag is False.
+    assert eng.info()["installed"] is False

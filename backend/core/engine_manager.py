@@ -18,6 +18,7 @@ from typing import Any
 from .engines import Engine
 from .engines.chatterbox_engine import ChatterboxEngine
 from .engines.kokoro_engine import KokoroEngine
+from .engines.omnivoice_engine import OmniVoiceEngine
 from .engines.vibevoice_engine import VibeVoiceEngine
 
 log = logging.getLogger(__name__)
@@ -62,6 +63,8 @@ class EngineManager:
         chatterbox_default_cfg_weight: float = 0.5,
         chatterbox_default_exaggeration: float = 0.5,
         chatterbox_watermark: bool = True,
+        omnivoice_model_id: str = "k2-fsa/OmniVoice",
+        omnivoice_num_step: int = 32,
         state_dir: Path | None = None,
     ) -> None:
         self._voices_dir = Path(voices_dir)
@@ -86,6 +89,11 @@ class EngineManager:
                 default_exaggeration=chatterbox_default_exaggeration,
                 watermark=chatterbox_watermark,
                 device_request=device_request,
+            ),
+            "omnivoice": OmniVoiceEngine(
+                model_id=omnivoice_model_id,
+                device_request=device_request,
+                num_step=omnivoice_num_step,
             ),
         }
 

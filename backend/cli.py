@@ -46,7 +46,7 @@ def _parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--engine",
-        choices=["vibevoice", "kokoro", "chatterbox"],
+        choices=["vibevoice", "kokoro", "chatterbox", "omnivoice"],
         help="TTS engine to activate on startup. Persists across restarts.",
     )
     p.add_argument("--model", help="HF model id or local path (overrides settings.model_id, VibeVoice only)")

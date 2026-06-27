@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Active TTS engine. "vibevoice" (default), "kokoro", or "chatterbox".
     # The user's last choice is persisted in backend/.last_engine and
     # overrides this on next start.
-    default_engine: Literal["vibevoice", "kokoro", "chatterbox"] = "vibevoice"
+    default_engine: Literal["vibevoice", "kokoro", "chatterbox", "omnivoice"] = "vibevoice"
 
     # Model
     # Default: the community-maintained mirror at vibevoice/VibeVoice-1.5B
@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     # PerTh watermarking. On by default per Resemble AI's responsible-AI
     # policy. Set to false in .env to disable.
     chatterbox_watermark: bool = True
+
+    omnivoice_model_id: str = "k2-fsa/OmniVoice"
+    omnivoice_num_step: int = 32
 
     # Server
     host: str = "0.0.0.0"
