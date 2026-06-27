@@ -19,6 +19,7 @@ import { loadSample, type Sample } from "@/lib/samples";
 import { useProject } from "@/lib/store";
 import type { CachedAudio, Project, Speaker, SynthSpeaker } from "@/types/models";
 import { getDefaultCfgForEngine } from "@/lib/engineHints";
+import { effectiveMode } from "@/lib/omnivoice";
 
 type Theme = "light" | "dark";
 
@@ -26,11 +27,38 @@ function isSegmentCached(
   segment: { id: string; text: string; speakerId: string | null },
   cache: Record<string, CachedAudio>,
   speakers: Speaker[],
+  activeEngine: string | null,
 ): { cached: boolean; voice: string | null; signature: string } {
   const entry = cache[segment.id];
   if (!entry) return { cached: false, voice: null, signature: "" };
   const speaker = speakers.find((s) => s.id === segment.speakerId);
-  const voice = speaker?.voice ?? null;
+  if (!speaker) return { cached: false, voice: null, signature: "" };
+
+  if (activeEngine === "omnivoice") {
+    const mode = effectiveMode(speaker);
+    if (mode === "clone") {
+      const voice = speaker.voice;
+      if (!voice) return { cached: false, voice: null, signature: "" };
+      const signature = `${segment.text}::${voice}::clone`;
+      return {
+        cached: entry.text === segment.text && entry.voice === voice && (entry.mode ?? "clone") === "clone",
+        voice,
+        signature,
+      };
+    }
+    const design = mode === "design" ? (speaker.voiceDesign ?? "") : "";
+    const signature = `${segment.text}::${mode}::${design}`;
+    return {
+      cached:
+        entry.text === segment.text &&
+        entry.mode === mode &&
+        (entry.instruct ?? "") === design,
+      voice: null,
+      signature,
+    };
+  }
+
+  const voice = speaker.voice;
   if (!voice) return { cached: false, voice: null, signature: "" };
   const signature = `${segment.text}::${voice}::${segment.speakerId ?? ""}`;
   return { cached: entry.text === segment.text && entry.voice === voice, voice, signature };
@@ -166,19 +194,29 @@ export default function App() {
       const seg = project.segments.find((s) => s.id === segmentId);
       if (!seg || !seg.text.trim()) return;
       const speaker = project.speakers.find((s) => s.id === seg.speakerId);
-      if (!speaker || !speaker.voice) {
+      if (!speaker) {
+        showError("No speaker assigned to this segment.", "No speaker");
+        return;
+      }
+      const isOmni = activeEngine === "omnivoice";
+      const mode = isOmni ? effectiveMode(speaker) : "clone";
+      // A reference voice is required except for OmniVoice design/auto.
+      if (mode === "clone" && !speaker.voice) {
         showError("No voice assigned to the speaker. Pick one in the sidebar.", "No voice");
         return;
       }
+      const instruct = mode === "design" ? (speaker.voiceDesign ?? "") : undefined;
       const speakers: SynthSpeaker[] = [
-        { name: speaker.name, voice: speaker.voice },
+        {
+          name: speaker.name,
+          voice: speaker.voice,
+          ...(isOmni ? { voice_mode: mode } : {}),
+          ...(instruct ? { instruct } : {}),
+        },
       ];
 
       setGeneratingId(segmentId);
       try {
-        // The CFG slider is engine-aware: it maps to VibeVoice's
-        // cfg_scale (range ~0.5–5.0) or Chatterbox's cfg_weight
-        // (range 0.0–1.0, clamped server-side). Other engines ignore it.
         const isChatterbox = activeEngine === "chatterbox";
         const { audioData, cacheHash } = await synthesizeWav(seg.text, speakers, cfgScale, {
           forceRegenerate: options.forceRegenerate,
@@ -190,6 +228,8 @@ export default function App() {
           text: seg.text,
           voice: speaker.voice,
           ...(cacheHash ? { cacheHash } : {}),
+          ...(isOmni ? { mode } : {}),
+          ...(instruct ? { instruct } : {}),
         });
       } catch (err: unknown) {
         showError(err, "Synthesis failed");
@@ -197,7 +237,7 @@ export default function App() {
         setGeneratingId(null);
       }
     },
-    [project, showError, cfgScale, activeEngine],
+    [project, showError, cfgScale, exaggeration, activeEngine],
   );
 
   // ---- playback ----
@@ -220,7 +260,7 @@ export default function App() {
       try {
         const seg = project.segments.find((s) => s.id === segmentId);
         if (!seg) return;
-        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers);
+        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, activeEngine);
         if (!cached) {
           await generateFor(segmentId);
         }
@@ -277,7 +317,7 @@ export default function App() {
         setCurrentIndex(i);
         setPlayingId(seg.id);
         try {
-          const { cached } = isSegmentCached(seg, project.audioCache, project.speakers);
+          const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, activeEngine);
           if (!cached) {
             setGeneratingId(seg.id);
             try {
@@ -347,7 +387,7 @@ export default function App() {
       for (let i = 0; i < valid.length; i++) {
         const seg = valid[i]!;
         // Skip already-cached segments
-        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers);
+        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, activeEngine);
         if (cached) continue;
 
         setExportProgress(`Segment ${i + 1}/${valid.length}`);
@@ -488,7 +528,7 @@ export default function App() {
   const cachedCount = useMemo(
     () =>
       project.segments.filter((s) => {
-        const { cached } = isSegmentCached(s, project.audioCache, project.speakers);
+        const { cached } = isSegmentCached(s, project.audioCache, project.speakers, activeEngine);
         return cached;
       }).length,
     [project.segments, project.audioCache, project.speakers],
@@ -627,7 +667,7 @@ export default function App() {
 
             <div className="space-y-4">
               {project.segments.map((segment, index) => {
-                const { cached } = isSegmentCached(segment, project.audioCache, project.speakers);
+                const { cached } = isSegmentCached(segment, project.audioCache, project.speakers, activeEngine);
                 return (
                   <SegmentCard
                     key={segment.id}
