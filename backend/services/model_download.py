@@ -76,7 +76,11 @@ class ModelDownloader:
             raise ValueError(f"{engine} is not downloadable")
         with self._lock:
             if self._state == "downloading":
-                return self._snapshot_locked()  # coalesce onto the running job
+                if self._engine == engine:
+                    return self._snapshot_locked()  # coalesce onto the same job
+                raise ValueError(
+                    f"a download for {self._engine} is already in progress"
+                )
             repo_id = MODEL_CATALOG[engine]["repo_id"]
             self._engine = engine
             self._state = "downloading"
@@ -166,7 +170,7 @@ def _repo_total_bytes(repo_id: str) -> int | None:
     try:
         from huggingface_hub import HfApi
 
-        info = HfApi().model_info(repo_id, files_metadata=True)
+        info = HfApi().model_info(repo_id, files_metadata=True, timeout=10)
         total = 0
         for sib in info.siblings or []:
             size = getattr(sib, "size", None)

@@ -58,6 +58,22 @@ export function DownloadModelDialog({
   const poll = async () => {
     try {
       const s = await getModelDownloadStatus(engineName);
+      if (s.state === "idle") {
+        // We started a download but the server reports no job — it likely
+        // restarted and lost the in-memory state. Surface a retryable error
+        // instead of polling forever.
+        setStatus((prev) => ({
+          ...prev,
+          state: "error",
+          error:
+            "Download was interrupted (the server may have restarted). Retry to resume.",
+          log: [
+            ...prev.log,
+            "Download interrupted — server state was lost. Retry to resume.",
+          ],
+        }));
+        return;
+      }
       setStatus(s);
       if (s.state === "downloading") {
         timerRef.current = window.setTimeout(() => void poll(), 1000);
@@ -76,7 +92,7 @@ export function DownloadModelDialog({
 
   const begin = async () => {
     setStarted(true);
-    setStatus((prev) => ({ ...prev, state: "downloading", log: [] }));
+    setStatus((prev) => ({ ...prev, state: "downloading", error: null, log: [] }));
     try {
       await startModelDownload(engineName);
     } catch (err) {
@@ -162,7 +178,9 @@ export function DownloadModelDialog({
                   }`}
                 >
                   <div
-                    className="h-full bg-teal-500 transition-[width] duration-500"
+                    className={`h-full bg-teal-500 transition-[width] duration-500 ${
+                      status.total_bytes ? "" : "animate-pulse"
+                    }`}
                     style={{ width: `${status.total_bytes ? pct : 100}%` }}
                   />
                 </div>

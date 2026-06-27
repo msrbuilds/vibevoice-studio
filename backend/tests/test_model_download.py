@@ -115,6 +115,17 @@ def test_start_coalesces_while_downloading():
     assert dl.status()["state"] == "done"
 
 
+def test_start_rejects_other_engine_while_downloading():
+    def runner(repo_id, prog):
+        time.sleep(0.2)
+    dl = ModelDownloader(runner=runner)
+    dl.start("vibevoice")
+    with pytest.raises(ValueError):
+        dl.start("kokoro")  # different engine while one is in flight
+    _wait(dl)
+    assert dl.status()["engine"] == "vibevoice"
+
+
 def test_speed_and_eta_from_injected_clock():
     seq = iter([10.0, 11.0])  # two add_bytes calls -> two timestamped samples
     dl = ModelDownloader(runner=lambda r, p: None, clock=lambda: next(seq))
