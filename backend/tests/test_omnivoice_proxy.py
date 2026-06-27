@@ -68,9 +68,9 @@ def test_build_synth_msg_clone():
     assert msg["num_step"] == 24
 
 
-def test_build_synth_msg_requires_reference_audio():
+def test_build_synth_msg_clone_requires_reference_audio():
     eng = OmniVoiceEngine(worker_python=Path("x"), worker_script=Path("y"))
-    req = EngineSynthRequest(text="hi", voice_id="v")  # no reference_audio
+    req = EngineSynthRequest(text="hi", voice_id="v", voice_mode="clone")  # explicit clone, no ref
     with pytest.raises(ValueError):
         eng._build_synth_msg(req, "/out.wav")
 
@@ -131,3 +131,30 @@ def test_engine_manager_registers_omnivoice(tmp_path):
     assert eng.display_name == "OmniVoice"
     # Not installed in a bare test env (no marker) → installed flag is False.
     assert eng.info()["installed"] is False
+
+
+def test_build_synth_msg_design():
+    eng = OmniVoiceEngine(worker_python=Path("x"), worker_script=Path("y"), num_step=20)
+    req = EngineSynthRequest(text="hi", voice_id="", voice_mode="design", instruct="female, british accent")
+    msg = eng._build_synth_msg(req, "/out.wav")
+    assert msg["mode"] == "design"
+    assert msg["instruct"] == "female, british accent"
+    assert "ref_audio" not in msg
+    assert msg["num_step"] == 20
+
+
+def test_build_synth_msg_empty_design_becomes_auto():
+    eng = OmniVoiceEngine(worker_python=Path("x"), worker_script=Path("y"))
+    req = EngineSynthRequest(text="hi", voice_id="", voice_mode="design", instruct="   ")
+    msg = eng._build_synth_msg(req, "/out.wav")
+    assert msg["mode"] == "auto"
+    assert "instruct" not in msg
+
+
+def test_build_synth_msg_auto():
+    eng = OmniVoiceEngine(worker_python=Path("x"), worker_script=Path("y"))
+    req = EngineSynthRequest(text="hi", voice_id="", voice_mode="auto")
+    msg = eng._build_synth_msg(req, "/out.wav")
+    assert msg["mode"] == "auto"
+    assert "ref_audio" not in msg
+    assert "instruct" not in msg

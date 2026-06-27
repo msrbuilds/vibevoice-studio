@@ -158,22 +158,32 @@ class OmniVoiceEngine(Engine):
 
     # -- synthesis
     def _build_synth_msg(self, req: EngineSynthRequest, out_wav: str) -> dict:
-        """Build the worker 'synth' message. Spec A: clone mode only."""
+        """Build the worker 'synth' message, dispatching on voice_mode.
+
+        Mode resolution mirrors the frontend's effective-mode rule: an
+        explicit req.voice_mode wins; otherwise clone if a reference voice is
+        present, else auto. An empty design prompt downgrades to auto so a
+        blank box never errors.
+        """
         text = (req.text or "").strip()
         if not text:
             raise ValueError("text must be non-empty")
-        if not req.reference_audio:
-            raise ValueError(
-                "OmniVoice (Spec A) requires a reference voice for cloning; "
-                "auto/design modes arrive in Spec B."
-            )
+        mode = req.voice_mode or ("clone" if req.reference_audio else "auto")
+        instruct = (req.instruct or "").strip()
+        if mode == "design" and not instruct:
+            mode = "auto"
         msg: dict[str, Any] = {
             "op": "synth",
-            "mode": "clone",
+            "mode": mode,
             "text": text,
-            "ref_audio": req.reference_audio,
             "out_wav": out_wav,
         }
+        if mode == "clone":
+            if not req.reference_audio:
+                raise ValueError("OmniVoice clone mode requires a reference voice.")
+            msg["ref_audio"] = req.reference_audio
+        elif mode == "design":
+            msg["instruct"] = instruct
         if req.speed is not None:
             msg["speed"] = float(req.speed)
         if self._num_step is not None:
