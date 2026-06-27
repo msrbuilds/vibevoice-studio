@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { ActionBar } from "@/components/ActionBar";
-import { InstallChatterboxDialog } from "@/components/InstallChatterboxDialog";
+import { InstallEngineDialog } from "@/components/InstallEngineDialog";
 import { DownloadModelDialog } from "@/components/DownloadModelDialog";
 import { PlayerFooter } from "@/components/PlayerFooter";
 import { SegmentCard } from "@/components/SegmentCard";
@@ -68,7 +68,7 @@ export default function App() {
   const [exportProgress, setExportProgress] = useState("");
   const [stopExport, setStopExport] = useState(false);
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string } | null>(null);
-  const [installEngineOpen, setInstallEngineOpen] = useState(false);
+  const [installEngine, setInstallEngine] = useState<string | null>(null);
   const [downloadEngine, setDownloadEngine] = useState<string | null>(null);
   // Measured heights of the fixed top/bottom bars, so the segment list can
   // pad itself by exactly the rendered heights (avoids overlap if a bar
@@ -572,7 +572,7 @@ export default function App() {
               showError(err, "Engine load failed");
             }
           }}
-          onInstallEngine={() => setInstallEngineOpen(true)}
+          onInstallEngine={(name) => setInstallEngine(name)}
           onDownloadEngine={(name) => setDownloadEngine(name)}
           onAddSegment={project.addSegment}
           onGenerateAll={handleGenerateAll}
@@ -668,10 +668,14 @@ export default function App() {
           onExportAudio={handleExportAudio}
           onHeightChange={setPlayerFooterH}
         />
-        {installEngineOpen && (
-          <InstallChatterboxDialog
+        {installEngine && (
+          <InstallEngineDialog
             isDark={isDark}
-            onClose={() => setInstallEngineOpen(false)}
+            engineName={installEngine}
+            displayName={
+              engines.find((e) => e.name === installEngine)?.display_name ?? installEngine
+            }
+            onClose={() => setInstallEngine(null)}
             onInstalled={() => {
               void refreshEngines();
             }}

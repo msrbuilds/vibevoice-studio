@@ -92,10 +92,20 @@ const CHATTERBOX_HINTS: EngineCfgHints = {
   highlight: "Exaggeration",
 };
 
+// OmniVoice has no CFG knob — the engine ignores the field entirely. Show the
+// familiar slider as a visual cue; the value never affects output.
+const OMNIVOICE_HINTS: EngineCfgHints = {
+  ...VIBEVOICE_HINTS,
+  name: "omnivoice",
+  hint:
+    "OmniVoice does not use CFG — this slider is a no-op while OmniVoice is active. Voice fidelity comes from the reference clip.",
+};
+
 const HINTS_BY_ENGINE: Record<string, EngineCfgHints> = {
   vibevoice: VIBEVOICE_HINTS,
   kokoro: KOKORO_HINTS,
   chatterbox: CHATTERBOX_HINTS,
+  omnivoice: OMNIVOICE_HINTS,
 };
 
 /** Return the hints for an engine id, falling back to VibeVoice defaults. */

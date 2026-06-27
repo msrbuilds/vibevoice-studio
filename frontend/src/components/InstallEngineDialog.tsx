@@ -1,15 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
-import { getChatterboxInstallStatus, startChatterboxInstall } from "@/lib/api";
+import { getEngineInstallStatus, startEngineInstall } from "@/lib/api";
 import type { InstallStatus } from "@/types/models";
 
 interface Props {
   isDark: boolean;
+  engineName: string;
+  displayName: string;
   onClose: () => void;
   onInstalled: () => void;
 }
 
-export function InstallChatterboxDialog({ isDark, onClose, onInstalled }: Props) {
+export function InstallEngineDialog({
+  isDark,
+  engineName,
+  displayName,
+  onClose,
+  onInstalled,
+}: Props) {
   const [status, setStatus] = useState<InstallStatus>({
     state: "installing",
     log: [],
@@ -20,7 +28,7 @@ export function InstallChatterboxDialog({ isDark, onClose, onInstalled }: Props)
 
   const poll = async () => {
     try {
-      const s = await getChatterboxInstallStatus();
+      const s = await getEngineInstallStatus(engineName);
       setStatus(s);
       if (s.state === "installing") {
         timerRef.current = window.setTimeout(() => void poll(), 1000);
@@ -39,7 +47,7 @@ export function InstallChatterboxDialog({ isDark, onClose, onInstalled }: Props)
   const begin = async () => {
     setStatus({ state: "installing", log: [], returncode: null });
     try {
-      await startChatterboxInstall();
+      await startEngineInstall(engineName);
     } catch (err) {
       setStatus({
         state: "error",
@@ -83,10 +91,10 @@ export function InstallChatterboxDialog({ isDark, onClose, onInstalled }: Props)
             {installing && <Loader2 className="w-4 h-4 animate-spin text-teal-400" />}
             <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
               {installing
-                ? "Installing Chatterbox…"
+                ? `Installing ${displayName}…`
                 : done
-                  ? "Chatterbox installed"
-                  : "Chatterbox install failed"}
+                  ? `${displayName} installed`
+                  : `${displayName} install failed`}
             </span>
           </div>
           <button
@@ -108,9 +116,9 @@ export function InstallChatterboxDialog({ isDark, onClose, onInstalled }: Props)
         <div className="p-5 space-y-3">
           <p className={`text-sm ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
             {installing
-              ? "Building the isolated Chatterbox environment (venv + PyTorch + chatterbox-tts). This takes a few minutes."
+              ? `Building the isolated ${displayName} environment (venv + PyTorch + model package). This takes a few minutes.`
               : done
-                ? "Done. Close this dialog, then switch to Chatterbox in the engine menu."
+                ? `Done. Close this dialog, then switch to ${displayName} in the engine menu.`
                 : "The install failed. Review the log below and retry."}
           </p>
           <pre

@@ -134,15 +134,15 @@ export async function loadEngine(name: string): Promise<EngineInfo> {
   );
 }
 
-export async function startChatterboxInstall(): Promise<InstallStatus> {
+export async function startEngineInstall(name: string): Promise<InstallStatus> {
   return jsonOrThrow<InstallStatus>(
-    await fetch(`${API_BASE}/engines/chatterbox/install`, { method: "POST" }),
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/install`, { method: "POST" }),
   );
 }
 
-export async function getChatterboxInstallStatus(): Promise<InstallStatus> {
+export async function getEngineInstallStatus(name: string): Promise<InstallStatus> {
   return jsonOrThrow<InstallStatus>(
-    await fetch(`${API_BASE}/engines/chatterbox/install`),
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/install`),
   );
 }
 
