@@ -2,6 +2,7 @@
 
 import type {
   ConfigResponse,
+  DownloadStatus,
   EngineInfo,
   HealthResponse,
   InstallStatus,
@@ -142,6 +143,20 @@ export async function startChatterboxInstall(): Promise<InstallStatus> {
 export async function getChatterboxInstallStatus(): Promise<InstallStatus> {
   return jsonOrThrow<InstallStatus>(
     await fetch(`${API_BASE}/engines/chatterbox/install`),
+  );
+}
+
+export async function startModelDownload(name: string): Promise<DownloadStatus> {
+  return jsonOrThrow<DownloadStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/download`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function getModelDownloadStatus(name: string): Promise<DownloadStatus> {
+  return jsonOrThrow<DownloadStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/download`),
   );
 }
 

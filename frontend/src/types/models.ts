@@ -41,6 +41,7 @@ export interface EngineInfo {
   description: string;
   loaded: boolean;
   installed: boolean;
+  downloaded: boolean;
   supports_voice_cloning: boolean;
   sample_rate: number | null;
   max_speakers: number;
@@ -51,6 +52,20 @@ export interface EngineInfo {
 export interface InstallStatus {
   state: "not_installed" | "installing" | "installed" | "error";
   log: string[];
+  returncode: number | null;
+}
+
+export interface DownloadStatus {
+  engine: string | null;
+  state: "idle" | "downloading" | "done" | "error";
+  percent: number | null;
+  downloaded_bytes: number;
+  total_bytes: number | null;
+  speed_bps: number | null;
+  eta_sec: number | null;
+  current_file: string | null;
+  log: string[];
+  error: string | null;
   returncode: number | null;
 }
 
