@@ -170,3 +170,24 @@ def test_backend_port_parsing():
     assert studio._backend_port(["--device", "cuda", "--port", "9100"]) == 9100
     assert studio._backend_port(["--port=9200"]) == 9200
     assert studio._backend_port(["--port", "notanint"]) == 8880
+
+
+def test_cuda_version_to_omnivoice_tag():
+    # torch 2.8 wheels: cu128 (CUDA 12.8+/13.x), cu126 (12.6-12.7), else CPU.
+    assert envdetect.cuda_version_to_omnivoice_tag("13.2") == "cu128"
+    assert envdetect.cuda_version_to_omnivoice_tag("12.8") == "cu128"
+    assert envdetect.cuda_version_to_omnivoice_tag("12.6") == "cu126"
+    assert envdetect.cuda_version_to_omnivoice_tag("12.4") is None
+    assert envdetect.cuda_version_to_omnivoice_tag("11.8") is None
+    assert envdetect.cuda_version_to_omnivoice_tag(None) is None
+
+
+def test_omnivoice_torch_index_urls_present():
+    assert envdetect.torch_index_url("cu128") == "https://download.pytorch.org/whl/cu128"
+    assert envdetect.torch_index_url("cu126") == "https://download.pytorch.org/whl/cu126"
+
+
+def test_detect_omnivoice_cuda_tag_with_injected_runner():
+    smi = "Driver Version: 596.21       CUDA Version: 13.2"
+    assert envdetect.detect_omnivoice_cuda_tag(runner=lambda: smi) == "cu128"
+    assert envdetect.detect_omnivoice_cuda_tag(runner=lambda: None) is None

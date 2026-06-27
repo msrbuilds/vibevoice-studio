@@ -11,6 +11,8 @@ import shutil
 import subprocess
 
 CUDA_TAG_TO_INDEX: dict[str, str] = {
+    "cu128": "https://download.pytorch.org/whl/cu128",
+    "cu126": "https://download.pytorch.org/whl/cu126",
     "cu124": "https://download.pytorch.org/whl/cu124",
     "cu121": "https://download.pytorch.org/whl/cu121",
     "cu118": "https://download.pytorch.org/whl/cu118",
@@ -69,3 +71,36 @@ def detect_cuda_tag(runner=None) -> str | None:
     if text is None:
         return None
     return cuda_version_to_tag(parse_nvidia_smi_cuda_version(text))
+
+
+def cuda_version_to_omnivoice_tag(version: str | None) -> str | None:
+    """Map a CUDA runtime version to a torch 2.8 wheel tag for OmniVoice.
+
+    OmniVoice needs torch 2.8, whose CUDA builds are cu126 and cu128 (there is
+    no cu124 torch-2.8 wheel). Drivers below CUDA 12.6 fall back to the CPU
+    build. This is separate from `cuda_version_to_tag`, which targets the
+    torch 2.6 builds used by the main/Chatterbox venvs.
+    """
+    if not version:
+        return None
+    try:
+        major, minor = (int(p) for p in version.split(".")[:2])
+    except ValueError:
+        return None
+    if major >= 13:
+        return "cu128"
+    if major == 12:
+        if minor >= 8:
+            return "cu128"
+        if minor >= 6:
+            return "cu126"
+    return None
+
+
+def detect_omnivoice_cuda_tag(runner=None) -> str | None:
+    """Detect the torch-2.8 CUDA wheel tag for OmniVoice. `runner` is injectable."""
+    run = runner or _run_nvidia_smi
+    text = run()
+    if text is None:
+        return None
+    return cuda_version_to_omnivoice_tag(parse_nvidia_smi_cuda_version(text))
