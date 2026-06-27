@@ -161,3 +161,12 @@ def test_chatterbox_torch_tag_maps_driver_to_compatible_build():
     assert studio._chatterbox_torch_tag("cu118") == "cu118"
     assert studio._chatterbox_torch_tag(None) is None
     assert studio._chatterbox_torch_tag("cpu") is None
+
+
+def test_backend_port_parsing():
+    assert studio._backend_port([]) == 8880
+    assert studio._backend_port(["--device", "cuda"]) == 8880
+    assert studio._backend_port(["--port", "9000"]) == 9000
+    assert studio._backend_port(["--device", "cuda", "--port", "9100"]) == 9100
+    assert studio._backend_port(["--port=9200"]) == 9200
+    assert studio._backend_port(["--port", "notanint"]) == 8880

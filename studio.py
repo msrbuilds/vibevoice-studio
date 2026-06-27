@@ -17,6 +17,7 @@ import os
 import platform
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -324,8 +325,41 @@ def cmd_install_chatterbox(_args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------- start --
+def _backend_port(passthrough: list[str]) -> int:
+    """The port the backend will bind: --port from passthrough, else 8880."""
+    for i, a in enumerate(passthrough):
+        if a == "--port" and i + 1 < len(passthrough):
+            try:
+                return int(passthrough[i + 1])
+            except ValueError:
+                return 8880
+        if a.startswith("--port="):
+            try:
+                return int(a.split("=", 1)[1])
+            except ValueError:
+                return 8880
+    return 8880
+
+
+def _port_in_use(port: int, host: str = "127.0.0.1") -> bool:
+    """True if something is already accepting connections on host:port."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        return s.connect_ex((host, port)) == 0
+
+
 def cmd_start(args: argparse.Namespace) -> int:
     print(BANNER)
+    # Refuse to start a second backend on a port that's already serving — a
+    # stray old instance would silently load the model again and thrash VRAM.
+    port = _backend_port(args.passthrough)
+    if _port_in_use(port):
+        print(
+            f"ERROR: port {port} is already in use - a Voice Studio backend looks\n"
+            f"like it's already running. Stop it first (Ctrl+C in its terminal, or\n"
+            f"close the other window) so a second one doesn't load the model again."
+        )
+        return 1
     py = venv_python(REPO_ROOT)
     if not py.is_file():
         if _confirm("No venv found. Run setup now?"):
