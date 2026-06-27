@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from ..core.engine_manager import EngineLoadError, EngineManager, EngineNotFound
-from .deps import get_chatterbox_installer, get_engine_manager, get_model_downloader
+from .deps import get_engine_installers, get_engine_manager, get_model_downloader
 
 log = logging.getLogger(__name__)
 
@@ -132,19 +132,21 @@ def load_engine(
 
 
 @router.get("/{name}/install", response_model=InstallStatusModel)
-def install_status(name: str, installer=Depends(get_chatterbox_installer)) -> InstallStatusModel:
-    """Current install state for an installable engine (Chatterbox only)."""
-    if name != "chatterbox":
+def install_status(name: str, installers=Depends(get_engine_installers)) -> InstallStatusModel:
+    """Current install state for an installable engine (Chatterbox / OmniVoice)."""
+    inst = installers.get(name)
+    if inst is None:
         raise HTTPException(status_code=400, detail=f"{name} is not installable")
-    return InstallStatusModel(**installer.status())
+    return InstallStatusModel(**inst.status())
 
 
 @router.post("/{name}/install", response_model=InstallStatusModel)
-def start_install(name: str, installer=Depends(get_chatterbox_installer)) -> InstallStatusModel:
-    """Start (or coalesce onto a running) install of the isolated Chatterbox env."""
-    if name != "chatterbox":
+def start_install(name: str, installers=Depends(get_engine_installers)) -> InstallStatusModel:
+    """Start (or coalesce onto a running) install of an isolated engine env."""
+    inst = installers.get(name)
+    if inst is None:
         raise HTTPException(status_code=400, detail=f"{name} is not installable")
-    return InstallStatusModel(**installer.start())
+    return InstallStatusModel(**inst.start())
 
 
 @router.get("/{name}/download", response_model=DownloadStatusModel)

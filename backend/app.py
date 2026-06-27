@@ -37,7 +37,7 @@ from .api.voices import router as voices_router
 from .config import Settings, get_settings
 from .core.engine_manager import EngineManager
 from .core.exceptions import BackendError
-from .services.chatterbox_install import ChatterboxInstaller
+from .services.chatterbox_install import ChatterboxInstaller, EngineEnvInstaller
 from .services.model_download import ModelDownloader
 from .services.join_cache import JoinCache
 from .services.synth_cache import SynthCache
@@ -173,7 +173,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.synth_cache = synth_cache
     app.state.join_cache = join_cache
     app.state.synth_service = synth_service
-    app.state.chatterbox_installer = ChatterboxInstaller()
+    app.state.engine_installers = {
+        "chatterbox": ChatterboxInstaller(),
+        "omnivoice": EngineEnvInstaller("install-omnivoice"),
+    }
     app.state.model_downloader = ModelDownloader()
 
     # ---- routers

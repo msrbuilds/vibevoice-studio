@@ -9,6 +9,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from backend.services.chatterbox_install import (  # noqa: E402
     ChatterboxInstaller,
+    EngineEnvInstaller,
     _format_progress,
 )
 
@@ -72,7 +73,7 @@ def _make_client(installer):
     from backend.api.engines import router
     app = FastAPI()
     app.include_router(router)
-    app.state.chatterbox_installer = installer
+    app.state.engine_installers = {"chatterbox": installer}
     return TestClient(app)
 
 
@@ -120,3 +121,34 @@ def test_progress_lines_collapse_to_one_updating_line():
     assert prog[0] == "  downloading 100% (1000.0 / 1000.0 MB)"
     assert "Collecting torch" in log
     assert "Successfully installed torch" in log
+
+
+def test_engine_env_installer_runs_given_subcommand():
+    seen = {}
+    def runner():
+        seen["ran"] = True
+        yield "line", None
+        yield None, 0
+    inst = EngineEnvInstaller("install-omnivoice", runner=runner)
+    inst.start()
+    _wait(inst)
+    assert seen.get("ran") is True
+    assert inst.status()["state"] == "installed"
+
+
+def test_install_endpoint_supports_omnivoice():
+    omni = EngineEnvInstaller("install-omnivoice", runner=_fake_runner(["hi"], 0))
+    cb = ChatterboxInstaller(runner=_fake_runner([], 0))
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from backend.api.engines import router
+    app = FastAPI()
+    app.include_router(router)
+    app.state.engine_installers = {"chatterbox": cb, "omnivoice": omni}
+    client = TestClient(app)
+    assert client.get("/api/engines/omnivoice/install").json()["state"] == "not_installed"
+    assert client.post("/api/engines/omnivoice/install").status_code == 200
+    _wait(omni)
+    assert "hi" in client.get("/api/engines/omnivoice/install").json()["log"]
+    # Unknown / non-installable engine still 400s.
+    assert client.get("/api/engines/kokoro/install").status_code == 400

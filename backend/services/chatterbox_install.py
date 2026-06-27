@@ -1,6 +1,6 @@
-"""Background installer for the isolated Chatterbox environment.
+"""Background installer for isolated engine environments.
 
-Runs `python studio.py install-chatterbox` in a daemon thread, streaming its
+Runs `python studio.py <subcommand>` in a daemon thread, streaming its
 merged stdout/stderr into a capped log buffer. State machine:
     not_installed -> installing -> installed | error
 
@@ -42,10 +42,10 @@ def _format_progress(line: str) -> str | None:
     return f"{_PROGRESS_PREFIX}{pct}% ({done / mb:.1f} / {total / mb:.1f} MB)"
 
 
-def _default_runner(repo_root: Path) -> Iterator[RunnerItem]:
-    """Spawn `python studio.py install-chatterbox` and stream its output."""
+def _default_runner(repo_root: Path, subcommand: str) -> Iterator[RunnerItem]:
+    """Spawn `python studio.py <subcommand>` and stream its output."""
     proc = subprocess.Popen(
-        [sys.executable, "studio.py", "install-chatterbox"],
+        [sys.executable, "studio.py", subcommand],
         cwd=str(repo_root),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,  # merge so a single stream is drained to EOF
@@ -59,12 +59,24 @@ def _default_runner(repo_root: Path) -> Iterator[RunnerItem]:
     yield None, proc.returncode
 
 
-class ChatterboxInstaller:
-    """Thread-safe install state machine for the isolated Chatterbox env."""
+class EngineEnvInstaller:
+    """Thread-safe install state machine for an isolated engine env.
 
-    def __init__(self, *, runner: Runner | None = None, repo_root: Path | None = None) -> None:
+    Drives `python studio.py <subcommand>` in a daemon thread, streaming its
+    merged stdout/stderr into a capped log buffer. State machine:
+        not_installed -> installing -> installed | error
+    """
+
+    def __init__(
+        self,
+        subcommand: str,
+        *,
+        runner: Runner | None = None,
+        repo_root: Path | None = None,
+    ) -> None:
         self._repo_root = repo_root or _REPO_ROOT
-        self._runner: Runner = runner or (lambda: _default_runner(self._repo_root))
+        self._subcommand = subcommand
+        self._runner: Runner = runner or (lambda: _default_runner(self._repo_root, self._subcommand))
         self._lock = threading.Lock()
         self._state = "not_installed"
         self._log: list[str] = []
@@ -125,3 +137,10 @@ class ChatterboxInstaller:
         with self._lock:
             self._returncode = rc
             self._state = "installed" if rc == 0 else "error"
+
+
+class ChatterboxInstaller(EngineEnvInstaller):
+    """Backward-compatible alias: the isolated Chatterbox env installer."""
+
+    def __init__(self, *, runner: Runner | None = None, repo_root: Path | None = None) -> None:
+        super().__init__("install-chatterbox", runner=runner, repo_root=repo_root)

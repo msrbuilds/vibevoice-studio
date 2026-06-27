@@ -20,8 +20,8 @@ def get_engine_manager(request: Request) -> EngineManager:
     return request.app.state.engine_manager  # type: ignore[no-any-return]
 
 
-def get_chatterbox_installer(request: Request):
-    return request.app.state.chatterbox_installer  # type: ignore[no-any-return]
+def get_engine_installers(request: Request) -> dict:
+    return request.app.state.engine_installers  # type: ignore[no-any-return]
 
 
 def get_model_downloader(request: Request):
