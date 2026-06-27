@@ -292,6 +292,8 @@ export interface DownloadSegmentPayload {
   cfg_weight?: number;
   exaggeration?: number;
   language_id?: string;
+  voice_mode?: "clone" | "design" | "auto";
+  instruct?: string;
 }
 
 export async function downloadPodcast(

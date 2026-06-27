@@ -41,7 +41,7 @@ function isSegmentCached(
       if (!voice) return { cached: false, voice: null, signature: "" };
       const signature = `${segment.text}::${voice}::clone`;
       return {
-        cached: entry.text === segment.text && entry.voice === voice && (entry.mode ?? "clone") === "clone",
+        cached: entry.text === segment.text && entry.voice === voice && entry.mode === "clone",
         voice,
         signature,
       };
@@ -473,29 +473,42 @@ export default function App() {
       cfg_weight?: number;
       exaggeration?: number;
       language_id?: string;
+      voice_mode?: "clone" | "design" | "auto";
+      instruct?: string;
     }[] = [];
     const isChatterbox = activeEngine === "chatterbox";
+    const isOmni = activeEngine === "omnivoice";
     for (const seg of valid) {
       const speaker = project.speakers.find((s) => s.id === seg.speakerId);
-      const voiceId = speaker?.voice;
-      if (!voiceId) {
+      if (!speaker) {
+        showError(
+          `Segment has no speaker assigned (text: "${seg.text.slice(0, 40)}…").`,
+          "Missing speaker",
+        );
+        return;
+      }
+      const mode = isOmni ? effectiveMode(speaker) : "clone";
+      if (mode === "clone" && !speaker.voice) {
         showError(
           `Segment has no voice assigned (text: "${seg.text.slice(0, 40)}…").`,
           "Missing voice",
         );
         return;
       }
+      const instruct = mode === "design" ? (speaker.voiceDesign ?? "") : undefined;
       // Pass the per-segment cache hash so the backend can detect when a
       // segment was regenerated and avoid serving a stale joined WAV.
       const cached = project.audioCache[seg.id];
       const cache_hash = cached?.cacheHash || undefined;
       payload.push({
         text: seg.text,
-        voice: voiceId,
+        voice: speaker.voice,
         cfg_scale: cfgScale,
         ...(cache_hash ? { cache_hash } : {}),
         ...(isChatterbox && cfgScale != null ? { cfg_weight: cfgScale } : {}),
         ...(isChatterbox ? { exaggeration } : {}),
+        ...(isOmni ? { voice_mode: mode } : {}),
+        ...(instruct ? { instruct } : {}),
       });
     }
 
@@ -524,7 +537,7 @@ export default function App() {
       setIsExporting(false);
       setExportProgress("");
     }
-  }, [project, showError, cfgScale, activeEngine]);
+  }, [project, showError, cfgScale, exaggeration, activeEngine]);
 
   // ---- derived state ----
 
