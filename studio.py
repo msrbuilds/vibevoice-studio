@@ -205,25 +205,25 @@ def _ensure_omnivoice_env() -> bool:
              str(BACKEND_DIR / "requirements-omnivoice.txt")]) != 0:
         print("  ERROR: omnivoice install failed.")
         return False
-    # 2. Swap in the CUDA build of the SAME torch version for GPU. --no-deps
-    #    avoids re-resolving deps from the wheel-only CUDA index.
+    # 2. Swap in the CUDA build of torch+torchaudio for GPU. Do NOT pin to the
+    #    version pip just installed from PyPI: PyPI routinely ships a newer
+    #    torch than the CUDA wheel index publishes (e.g. PyPI has torch 2.12.x
+    #    while download.pytorch.org/whl/cu128 tops out at 2.11.x), so pinning
+    #    the exact version 404s ("No matching distribution for torch==2.12.1+
+    #    cu128"). Instead let pip pick the newest matching torch+torchaudio
+    #    pair the CUDA index actually has (OmniVoice only needs torch>=2.4). On
+    #    Windows the CUDA wheels are self-contained, so --no-deps is safe.
     ov_tag = envdetect.detect_omnivoice_cuda_tag()
     index = envdetect.torch_index_url(ov_tag) if ov_tag else None
     if index:
-        tv = _pip_pkg_version(opy, "torch")
-        av = _pip_pkg_version(opy, "torchaudio")
-        if tv:
-            specs = [f"torch=={tv}+{ov_tag}"]
-            if av:
-                specs.append(f"torchaudio=={av}+{ov_tag}")
-            print(f"  Installing the CUDA build of torch {tv} ({ov_tag}) for GPU …")
-            if _run([str(opy), "-m", "pip", "install", *progress, *net, "--force-reinstall",
-                     "--no-deps", "--index-url", index, *specs]) != 0:
-                print("  ERROR: CUDA torch install failed.")
-                return False
+        print(f"  Installing the CUDA build of torch+torchaudio ({ov_tag}) for GPU …")
+        if _run([str(opy), "-m", "pip", "install", *progress, *net, "--force-reinstall",
+                 "--no-deps", "--index-url", index, "torch", "torchaudio"]) != 0:
+            print("  ERROR: CUDA torch install failed.")
+            return False
     else:
-        print("  No torch-2.8 CUDA build for this driver — leaving the default "
-              "(CPU) torch in place. OmniVoice will run on CPU (slow).")
+        print("  No matching torch CUDA build for this driver — leaving the "
+              "default (CPU) torch in place. OmniVoice will run on CPU (slow).")
     try:
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text("ok\n", encoding="utf-8")
