@@ -93,7 +93,9 @@ export interface SynthBase64Response {
 
 export interface SynthSpeaker {
   name: string;
-  voice: string; // Voice.id
+  voice: string; // Voice.id (may be empty for OmniVoice design/auto)
+  voice_mode?: "clone" | "design" | "auto";
+  instruct?: string;
 }
 
 // App-level types
@@ -103,6 +105,10 @@ export interface Speaker {
   name: string;
   voice: string; // Voice.id
   color: string;
+  // OmniVoice only: per-speaker voice mode + design prompt (optional; other
+  // engines ignore). Mode is derived when unset — see lib/omnivoice.ts.
+  omnivoiceMode?: "clone" | "design" | "auto";
+  voiceDesign?: string;
 }
 
 export interface Segment {
@@ -116,6 +122,9 @@ export interface CachedAudio {
   text: string;
   voice: string;
   cacheHash?: string;
+  // OmniVoice: what mode/prompt produced this, so the cached badge stays honest.
+  mode?: "clone" | "design" | "auto";
+  instruct?: string;
 }
 
 export interface Project {
