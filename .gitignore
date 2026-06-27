@@ -12,7 +12,12 @@ __pycache__/
 
 # Virtual environments
 venv/
+# Isolated per-engine venvs (Chatterbox, OmniVoice, …). The glob covers any
+# future `venv-<engine>/`; these hold bundled deps (e.g. Gradio's frontend =
+# thousands of JS chunks) and must never be tracked.
+venv-*/
 venv-chatterbox/
+venv-omnivoice/
 .venv/
 env/
 .env
