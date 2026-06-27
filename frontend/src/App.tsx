@@ -271,7 +271,7 @@ export default function App() {
         setPlayingId((id) => (id === segmentId ? null : id));
       }
     },
-    [project, generateFor, playCached, showError],
+    [project, generateFor, playCached, showError, activeEngine],
   );
 
   const handleStop = useCallback(() => {
@@ -336,7 +336,7 @@ export default function App() {
       setCurrentIndex(-1);
       setPlayingId(null);
     }
-  }, [project, generateFor, playCached, showError]);
+  }, [project, generateFor, playCached, showError, activeEngine]);
 
   const handleStopAll = useCallback(() => {
     stopAllRef.current = true;
@@ -364,14 +364,19 @@ export default function App() {
         return;
       }
       const sp = project.speakers.find((s) => s.id === seg.speakerId);
-      if (!sp || !sp.voice) {
+      if (!sp) {
+        showError("Some segments have no speaker assigned.", "Missing speaker");
+        return;
+      }
+      const spMode = activeEngine === "omnivoice" ? effectiveMode(sp) : "clone";
+      if (spMode === "clone" && !sp.voice) {
         showError(
           "Some segments have no voice. Assign voices in the sidebar first.",
           "Missing voice",
         );
         return;
       }
-      speakersUsed.add(sp.voice);
+      if (sp.voice) speakersUsed.add(sp.voice);  // design/auto carry no voice
     }
     if (speakersUsed.size > 4) {
       showError(
@@ -404,7 +409,7 @@ export default function App() {
       setIsExporting(false);
       setExportProgress("");
     }
-  }, [project, generateFor, showError]);
+  }, [project, generateFor, showError, activeEngine]);
 
   // ---- import / export json ----
 
@@ -531,7 +536,7 @@ export default function App() {
         const { cached } = isSegmentCached(s, project.audioCache, project.speakers, activeEngine);
         return cached;
       }).length,
-    [project.segments, project.audioCache, project.speakers],
+    [project.segments, project.audioCache, project.speakers, activeEngine],
   );
   const busy = isPlayingAll || isExporting || generatingId !== null;
 
