@@ -246,19 +246,30 @@ class ChatterboxEngine(Engine):
                 raise RuntimeError(f"Chatterbox worker pipe broke: {exc}") from exc
             if not expect_reply:
                 return {"ok": True}
-            line = self._proc.stdout.readline()
-            if not line:
-                # Worker closed stdout (crashed/exited). Let the stderr
-                # drain thread catch up so we can include the reason.
-                if self._stderr_thread is not None:
-                    self._stderr_thread.join(timeout=1.0)
-                stderr = self._recent_stderr()
-                self._kill()
-                raise RuntimeError(
-                    "Chatterbox worker closed unexpectedly"
-                    + (f": {stderr}" if stderr else "")
-                )
-            return json.loads(line)
+            # Read until a JSON reply. Tolerate non-protocol noise on stdout
+            # (library banners / model-download progress) by skipping any line
+            # that isn't valid JSON, rather than crashing on it.
+            while True:
+                line = self._proc.stdout.readline()
+                if not line:
+                    # Worker closed stdout (crashed/exited). Let the stderr
+                    # drain thread catch up so we can include the reason.
+                    if self._stderr_thread is not None:
+                        self._stderr_thread.join(timeout=1.0)
+                    stderr = self._recent_stderr()
+                    self._kill()
+                    raise RuntimeError(
+                        "Chatterbox worker closed unexpectedly"
+                        + (f": {stderr}" if stderr else "")
+                    )
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                try:
+                    return json.loads(stripped)
+                except json.JSONDecodeError:
+                    log.debug("chatterbox worker non-protocol stdout: %s", stripped[:200])
+                    continue
 
     def _start_stderr_drain(self) -> None:
         """Continuously drain the worker's stderr on a daemon thread so its

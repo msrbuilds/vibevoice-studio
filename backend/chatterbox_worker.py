@@ -21,9 +21,16 @@ travels over the pipe.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import wave
+
+# Protocol output. main() replaces this with the REAL stdout and then points
+# fd 1 (Python AND C-level) at stderr, so anything the model load prints
+# (banners, HF/tqdm progress) goes to stderr and can never corrupt the
+# newline-delimited JSON the parent reads.
+_OUT = sys.stdout
 
 
 def _log(msg: str) -> None:
@@ -31,8 +38,8 @@ def _log(msg: str) -> None:
 
 
 def _reply(obj: dict) -> None:
-    sys.stdout.write(json.dumps(obj) + "\n")
-    sys.stdout.flush()
+    _OUT.write(json.dumps(obj) + "\n")
+    _OUT.flush()
 
 
 def _write_wav_int16(path: str, samples, sample_rate: int) -> None:
@@ -144,6 +151,17 @@ class _Worker:
 
 
 def main() -> int:
+    global _OUT
+    # Reserve the real stdout for protocol replies, then point fd 1 — for both
+    # Python prints and C-level/library writes — at stderr so model-load noise
+    # can't corrupt the JSON stream the parent reads.
+    _OUT = os.fdopen(os.dup(1), "w", encoding="utf-8", buffering=1)
+    try:
+        os.dup2(2, 1)
+    except OSError:
+        pass
+    sys.stdout = sys.stderr
+
     worker = _Worker()
     for line in sys.stdin:
         line = line.strip()
