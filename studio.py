@@ -61,6 +61,24 @@ def chatterbox_ready_marker(repo_root: Path) -> Path:
     return repo_root / "backend" / "venv-chatterbox" / ".chatterbox-ready"
 
 
+def omnivoice_venv_python(repo_root: Path) -> Path:
+    """Path to the ISOLATED OmniVoice venv's Python interpreter."""
+    venv = repo_root / "backend" / "venv-omnivoice"
+    if os.name == "nt":
+        return venv / "Scripts" / "python.exe"
+    return venv / "bin" / "python"
+
+
+def omnivoice_ready_marker(repo_root: Path) -> Path:
+    """Sentinel written only after a FULL successful OmniVoice install.
+
+    Mirrors chatterbox_ready_marker: the venv Python exists right after
+    `python -m venv`, long before packages are installed, so only this
+    marker (written last) means "fully installed".
+    """
+    return repo_root / "backend" / "venv-omnivoice" / ".omnivoice-ready"
+
+
 def _chatterbox_torch_tag(detected_tag: str | None) -> str | None:
     """Pick a CUDA wheel build for Chatterbox's pinned torch.
 
@@ -156,6 +174,63 @@ def _ensure_chatterbox_env() -> bool:
         print(f"  ERROR: could not write ready marker: {exc}")
         return False
     print("  Chatterbox environment ready.")
+    return True
+
+
+def _ensure_omnivoice_env() -> bool:
+    """Create backend/venv-omnivoice and install omnivoice into it.
+
+    OmniVoice can't share any existing venv (transformers>=5.3.0 + torch 2.8),
+    so it gets its own environment with a CUDA-matched torch + omnivoice.
+    Returns True on success, False on any failure.
+    """
+    marker = omnivoice_ready_marker(REPO_ROOT)
+    try:
+        marker.unlink()
+    except OSError:
+        pass
+    opy = omnivoice_venv_python(REPO_ROOT)
+    if not opy.is_file():
+        print("  Creating isolated OmniVoice environment (backend/venv-omnivoice) …")
+        if _run([sys.executable, "-m", "venv", str(BACKEND_DIR / "venv-omnivoice")]) != 0:
+            print("  ERROR: failed to create venv-omnivoice.")
+            return False
+    print("  Upgrading pip in the OmniVoice env …")
+    raw_ok = _run([str(opy), "-m", "pip", "install", "--upgrade", "pip"]) == 0
+    progress = ["--progress-bar", "raw"] if raw_ok else []
+    net = ["--retries", "10", "--timeout", "120"]
+    # 1. Install omnivoice FIRST (pulls a torch build to satisfy its pin).
+    print("  Installing omnivoice into the OmniVoice env …")
+    if _run([str(opy), "-m", "pip", "install", *progress, *net, "-r",
+             str(BACKEND_DIR / "requirements-omnivoice.txt")]) != 0:
+        print("  ERROR: omnivoice install failed.")
+        return False
+    # 2. Swap in the CUDA build of the SAME torch version for GPU. --no-deps
+    #    avoids re-resolving deps from the wheel-only CUDA index.
+    ov_tag = envdetect.detect_omnivoice_cuda_tag()
+    index = envdetect.torch_index_url(ov_tag) if ov_tag else None
+    if index:
+        tv = _pip_pkg_version(opy, "torch")
+        av = _pip_pkg_version(opy, "torchaudio")
+        if tv:
+            specs = [f"torch=={tv}+{ov_tag}"]
+            if av:
+                specs.append(f"torchaudio=={av}+{ov_tag}")
+            print(f"  Installing the CUDA build of torch {tv} ({ov_tag}) for GPU …")
+            if _run([str(opy), "-m", "pip", "install", *progress, *net, "--force-reinstall",
+                     "--no-deps", "--index-url", index, *specs]) != 0:
+                print("  ERROR: CUDA torch install failed.")
+                return False
+    else:
+        print("  No torch-2.8 CUDA build for this driver — leaving the default "
+              "(CPU) torch in place. OmniVoice will run on CPU (slow).")
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text("ok\n", encoding="utf-8")
+    except OSError as exc:
+        print(f"  ERROR: could not write ready marker: {exc}")
+        return False
+    print("  OmniVoice environment ready.")
     return True
 
 
@@ -324,6 +399,14 @@ def cmd_install_chatterbox(_args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_install_omnivoice(_args: argparse.Namespace) -> int:
+    """Non-interactive: build/refresh the isolated OmniVoice env. Used by the
+    backend's in-UI installer. Returns 0 on success, 1 on failure."""
+    print(BANNER)
+    ok = _ensure_omnivoice_env()
+    return 0 if ok else 1
+
+
 # ---------------------------------------------------------------- start --
 def _backend_port(passthrough: list[str]) -> int:
     """The port the backend will bind: --port from passthrough, else 8880."""
@@ -479,6 +562,7 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("models", help="re-open the model picker")
     sub.add_parser("install-chatterbox", help="build the isolated Chatterbox env (non-interactive)")
+    sub.add_parser("install-omnivoice", help="build the isolated OmniVoice env (non-interactive)")
 
     args = parser.parse_args(argv)
     if args.command == "setup":
@@ -487,6 +571,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_models(args)
     if args.command == "install-chatterbox":
         return cmd_install_chatterbox(args)
+    if args.command == "install-omnivoice":
+        return cmd_install_omnivoice(args)
     if args.command == "start":
         return cmd_start(args)
     parser.print_help()

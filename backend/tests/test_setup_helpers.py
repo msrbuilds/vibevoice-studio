@@ -191,3 +191,32 @@ def test_detect_omnivoice_cuda_tag_with_injected_runner():
     smi = "Driver Version: 596.21       CUDA Version: 13.2"
     assert envdetect.detect_omnivoice_cuda_tag(runner=lambda: smi) == "cu128"
     assert envdetect.detect_omnivoice_cuda_tag(runner=lambda: None) is None
+
+
+def test_omnivoice_venv_python_path_shape():
+    repo = Path("/repo")
+    p = studio.omnivoice_venv_python(repo)
+    assert p.name in ("python.exe", "python")
+    assert "venv-omnivoice" in p.parts
+
+
+def test_omnivoice_ready_marker_path():
+    repo = Path("/repo")
+    m = studio.omnivoice_ready_marker(repo)
+    assert m.name == ".omnivoice-ready"
+    assert "venv-omnivoice" in m.parts
+
+
+def test_install_omnivoice_subcommand_success(monkeypatch):
+    calls = {"n": 0}
+    def _fake():
+        calls["n"] += 1
+        return True
+    monkeypatch.setattr(studio, "_ensure_omnivoice_env", _fake)
+    assert studio.main(["install-omnivoice"]) == 0
+    assert calls["n"] == 1
+
+
+def test_install_omnivoice_subcommand_failure(monkeypatch):
+    monkeypatch.setattr(studio, "_ensure_omnivoice_env", lambda: False)
+    assert studio.main(["install-omnivoice"]) == 1

@@ -1,0 +1,6 @@
+# OmniVoice runs in an ISOLATED venv (backend/venv-omnivoice). It pins
+# transformers>=5.3.0 and torch 2.8, which conflict with the main venv
+# (VibeVoice transformers==4.51.3) and the Chatterbox venv (transformers==5.2.0).
+# torch is installed separately with the right CUDA wheel by studio.py, so it
+# is intentionally NOT pinned here.
+omnivoice
