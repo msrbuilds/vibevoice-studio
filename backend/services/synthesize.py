@@ -50,6 +50,8 @@ class Speaker:
     """One speaker in a script."""
     name: str
     voice_id: str  # VoiceRegistry id (i.e. filename stem)
+    voice_mode: str | None = None  # OmniVoice: clone|design|auto
+    instruct: str | None = None    # OmniVoice design-mode prompt
 
 
 @dataclass

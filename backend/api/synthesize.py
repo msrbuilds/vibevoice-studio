@@ -54,7 +54,12 @@ def synthesize(
             SynthRequest(
                 text=body.text,
                 speakers=[
-                    ServiceSpeaker(name=sp.name, voice_id=sp.voice)
+                    ServiceSpeaker(
+                        name=sp.name,
+                        voice_id=sp.voice,
+                        voice_mode=sp.voice_mode,
+                        instruct=sp.instruct,
+                    )
                     for sp in body.speakers
                 ],
                 cfg_scale=body.cfg_scale if body.cfg_scale is not None else svc.default_cfg_scale,

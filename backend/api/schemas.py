@@ -95,7 +95,14 @@ ConfigResponse.model_rebuild()
 
 class SynthSpeakerModel(BaseModel):
     name: str = Field(..., min_length=1, max_length=64)
-    voice: str = Field(..., min_length=1, description="Voice id (filename stem) to use for this speaker")
+    # Voice id (filename stem). Empty is allowed for OmniVoice design/auto
+    # modes, which carry no reference voice; clone-mode "voice required" is
+    # enforced downstream by voice resolution.
+    voice: str = Field("", max_length=256, description="Voice id; may be empty for OmniVoice design/auto")
+    # OmniVoice only: "clone" | "design" | "auto". None for other engines.
+    voice_mode: Literal["clone", "design", "auto"] | None = None
+    # OmniVoice design-mode attribute prompt.
+    instruct: str | None = None
 
 
 class SynthRequestBody(BaseModel):

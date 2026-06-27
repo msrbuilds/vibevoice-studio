@@ -74,6 +74,11 @@ class EngineSynthRequest:
     # by Chatterbox Multilingual to pick the right text tokenizer. Falls
     # back to the engine's default when None.
     language_id: str | None = None
+    # --- OmniVoice only (other engines ignore) ---
+    # Voice generation mode: "clone" (ref_audio), "design" (instruct), "auto".
+    voice_mode: str | None = None
+    # Free-text speaker-attribute prompt used when voice_mode == "design".
+    instruct: str | None = None
 
 
 class Engine(abc.ABC):
