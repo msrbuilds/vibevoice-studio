@@ -184,27 +184,19 @@ def _repo_total_bytes(repo_id: str) -> int | None:
         return None
 
 
-def _make_progress_tqdm(progress: Progress):
-    """A tqdm subclass that folds per-file byte deltas into `progress`.
-
-    huggingface_hub creates one byte-unit bar per downloading file plus a
-    "Fetching N files" item-unit bar. We count only byte bars (`unit == "B"`)
-    so the item bar never double-counts.
-    """
-    from tqdm.auto import tqdm as _tqdm
-
-    class _ProgressTqdm(_tqdm):
-        def update(self, n=1):
-            if n and getattr(self, "unit", None) == "B":
-                progress.add_bytes(int(n), getattr(self, "desc", None) or None)
-            return super().update(n)
-
-    return _ProgressTqdm
-
-
 def _default_runner(repo_id: str, progress: Progress) -> None:
-    """Download `repo_id` into the local HF cache with live byte progress."""
+    """Download `repo_id` into the local HF cache with live byte progress.
+
+    huggingface_hub ≥0.36 does NOT propagate ``tqdm_class`` to individual
+    file downloads (only to the outer file-count bar), so a tqdm subclass
+    cannot intercept byte-level progress. Instead we poll the local blobs
+    directory every 0.5 s and push size deltas so the UI bar advances.
+    """
+    import threading
+    from pathlib import Path as _Path
+
     from huggingface_hub import snapshot_download
+    from huggingface_hub.constants import HF_HUB_CACHE
 
     progress.log(f"Resolving {repo_id} …")
     total = _repo_total_bytes(repo_id)
@@ -213,5 +205,43 @@ def _default_runner(repo_id: str, progress: Progress) -> None:
         progress.log(f"Total download size: {total / (1024 * 1024):.0f} MB")
     else:
         progress.log("Total size unknown; reporting bytes downloaded.")
-    snapshot_download(repo_id, tqdm_class=_make_progress_tqdm(progress))
-    progress.log("Download complete.")
+
+    # HF stores blobs (complete + *.incomplete in-progress) at:
+    # {HF_HUB_CACHE}/models--{org}--{name}/blobs/
+    blobs_dir = (
+        _Path(HF_HUB_CACHE)
+        / f"models--{repo_id.replace('/', '--')}"
+        / "blobs"
+    )
+
+    def _dir_bytes(path: _Path) -> int:
+        try:
+            return sum(f.stat().st_size for f in path.iterdir() if f.is_file())
+        except OSError:
+            return 0
+
+    # Bytes already cached before this download started (resume scenario).
+    baseline = _dir_bytes(blobs_dir)
+    if baseline > 0:
+        progress.add_bytes(baseline)  # show pre-cached bytes immediately
+
+    _polled: list[int] = [0]  # bytes reported so far via polling (delta from baseline)
+    _stop = threading.Event()
+
+    def _poll() -> None:
+        while not _stop.is_set():
+            _stop.wait(0.5)
+            written = _dir_bytes(blobs_dir) - baseline
+            delta = written - _polled[0]
+            if delta > 0:
+                progress.add_bytes(delta)
+                _polled[0] = written
+
+    poll_thread = threading.Thread(target=_poll, daemon=True, name="dl-poll")
+    poll_thread.start()
+    try:
+        snapshot_download(repo_id)
+        progress.log("Download complete.")
+    finally:
+        _stop.set()
+        poll_thread.join(timeout=2.0)

@@ -157,25 +157,6 @@ def test_speed_window_includes_start_anchor():
     assert s["eta_sec"] == 2.0       # remaining 400 / 200 bps
 
 
-import io  # noqa: E402
-
-from backend.services.model_download import _make_progress_tqdm  # noqa: E402
-
-
-def test_progress_tqdm_counts_only_byte_unit_bars():
-    dl = ModelDownloader(runner=lambda r, p: None)
-    cls = _make_progress_tqdm(Progress(dl))
-
-    # Keep the bar enabled (so tqdm sets self.unit) but send its output to a
-    # buffer instead of the terminal — matches the real enabled-bar path.
-    byte_bar = cls(total=100, unit="B", file=io.StringIO())
-    byte_bar.update(40)
-    assert dl.status()["downloaded_bytes"] == 40
-
-    item_bar = cls(total=5, unit="it", file=io.StringIO())  # "Fetching N files" bar
-    item_bar.update(3)
-    assert dl.status()["downloaded_bytes"] == 40  # unchanged — item bar ignored
-
 
 def _make_client(downloader):
     from fastapi import FastAPI

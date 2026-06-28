@@ -32,7 +32,7 @@ MODEL_CATALOG: dict[str, dict[str, str]] = {
     },
     "omnivoice": {
         "repo_id": "k2-fsa/OmniVoice",
-        "size": "~1.6 GB",
+        "size": "~3.3 GB",
         "label": "OmniVoice",
     },
 }

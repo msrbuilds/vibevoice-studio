@@ -15,7 +15,7 @@ interface Props {
 const MODEL_SIZES: Record<string, string> = {
   vibevoice: "~5.4 GB",
   kokoro: "~350 MB",
-  omnivoice: "~1.6 GB",
+  omnivoice: "~3.3 GB",
 };
 
 const fmtBytes = (b: number): string =>
