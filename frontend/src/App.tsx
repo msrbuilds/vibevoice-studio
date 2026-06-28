@@ -642,6 +642,7 @@ export default function App() {
         voices={displayedVoices}
         config={config}
         theme={theme}
+        onThemeToggle={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
         onUploadVoice={uploadVoice}
         onRemoveVoice={removeVoice}
         onUpdateVoiceMeta={handleUpdateVoiceMeta}
@@ -801,9 +802,6 @@ export default function App() {
 
       <ControlPanel
         isDark={isDark}
-        theme={theme}
-        onThemeToggle={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-        config={config}
         engines={engines}
         activeEngine={activeEngine}
         onSelectEngine={async (name) => {

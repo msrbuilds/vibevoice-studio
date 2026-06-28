@@ -3,11 +3,13 @@ import { useState } from "react";
 import type { ConfigResponse, Voice, VoiceMetadata } from "@/types/models";
 import { UploadVoiceDialog } from "./UploadVoiceDialog";
 import { VoiceMetaDialog } from "./VoiceMetaDialog";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface Props {
   voices: Voice[];
   config: ConfigResponse | null;
   theme: "light" | "dark";
+  onThemeToggle: () => void;
   onUploadVoice: (file: File, meta: VoiceMetadata) => Promise<unknown>;
   onRemoveVoice: (id: string) => Promise<void>;
   onUpdateVoiceMeta: (voiceId: string, meta: VoiceMetadata) => Promise<unknown>;
@@ -20,6 +22,7 @@ export function VoiceLibrary({
   voices,
   config,
   theme,
+  onThemeToggle,
   onUploadVoice,
   onRemoveVoice,
   onUpdateVoiceMeta,
@@ -162,6 +165,28 @@ export function VoiceLibrary({
             )}
           </ul>
         </section>
+        )}
+      </div>
+
+      {/* Footer — appearance + backend info, pinned to the bottom of the sidebar */}
+      <div className={`p-4 border-t space-y-4 shrink-0 ${border}`}>
+        <section>
+          <h2 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
+            Appearance
+          </h2>
+          <ThemeToggle theme={theme} onToggle={onThemeToggle} />
+        </section>
+        {config && (
+          <section>
+            <h2 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
+              Backend
+            </h2>
+            <div className={`text-xs space-y-0.5 ${subtle} flex items-center gap-4`}>
+              <div>device: <span className={bodyText}>{config.device}</span></div>
+              <div>dtype: <span className={bodyText}>{config.dtype}</span></div>
+              <div>sr: <span className={bodyText}>{config.sampling_rate} Hz</span></div>
+            </div>
+          </section>
         )}
       </div>
 

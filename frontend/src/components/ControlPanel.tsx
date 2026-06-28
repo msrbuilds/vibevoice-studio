@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Moon, PanelRightClose, PanelRightOpen, Sun } from "lucide-react";
-import type { ConfigResponse, EngineInfo } from "@/types/models";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import type { EngineInfo } from "@/types/models";
 import { EngineSelector } from "./EngineSelector";
 import { CfgScaleBody } from "./CfgScaleControl";
-import { ThemeToggle } from "./ThemeToggle";
 import { getCfgHints } from "@/lib/engineHints";
 import { ExaggerationBody } from "./ExaggerationControl";
 import { CacheBody, useCacheData } from "./CachePanel";
@@ -12,9 +11,6 @@ const LS_KEY = "vs.controlPanel.open";
 
 interface Props {
   isDark: boolean;
-  theme: "light" | "dark";
-  onThemeToggle: () => void;
-  config: ConfigResponse | null;
   engines: EngineInfo[];
   activeEngine: string | null;
   onSelectEngine: (name: string) => Promise<void>;
@@ -29,9 +25,6 @@ interface Props {
 
 export function ControlPanel({
   isDark,
-  theme,
-  onThemeToggle,
-  config,
   engines,
   activeEngine,
   onSelectEngine,
@@ -58,8 +51,6 @@ export function ControlPanel({
   const surface = isDark ? "bg-zinc-950" : "bg-white";
   const border = isDark ? "border-zinc-800" : "border-gray-200";
   const heading = isDark ? "text-zinc-500" : "text-gray-500";
-  const subtle = isDark ? "text-zinc-500" : "text-gray-500";
-  const bodyText = isDark ? "text-zinc-300" : "text-gray-700";
   const iconBtn = isDark
     ? "text-zinc-400 hover:text-teal-400"
     : "text-gray-400 hover:text-teal-600";
@@ -68,7 +59,6 @@ export function ControlPanel({
   const isChatterbox = activeEngine === "chatterbox";
 
   if (collapsed) {
-    const ThemeIcon = theme === "dark" ? Sun : Moon;
     return (
       <aside
         className={`w-12 shrink-0 border-l flex flex-col items-center pt-4 transition-colors ${surface} ${border}`}
@@ -80,14 +70,6 @@ export function ControlPanel({
           title="Open control panel"
         >
           <PanelRightOpen className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onThemeToggle}
-          className={`p-2 rounded-lg transition-colors mt-2 ${iconBtn}`}
-          title="Toggle theme"
-        >
-          <ThemeIcon className="w-5 h-5" />
         </button>
       </aside>
     );
@@ -180,28 +162,6 @@ export function ControlPanel({
             Refresh cache list
           </button>
         </section>
-
-        {/* Appearance section */}
-        <section>
-          <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
-            Appearance
-          </h3>
-          <ThemeToggle theme={theme} onToggle={onThemeToggle} />
-        </section>
-
-        {/* Backend section */}
-        {config && (
-          <section>
-            <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
-              Backend
-            </h3>
-            <div className={`text-xs space-y-0.5 ${subtle} flex items-center gap-4`}>
-              <div>device: <span className={bodyText}>{config.device}</span></div>
-              <div>dtype: <span className={bodyText}>{config.dtype}</span></div>
-              <div>sr: <span className={bodyText}>{config.sampling_rate} Hz</span></div>
-            </div>
-          </section>
-        )}
       </div>
     </aside>
   );
