@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from ..services.synth_cache import SynthCache
@@ -15,6 +16,20 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cache", tags=["cache"])
 
 
+def _derive_name(text: str | None, hash: str) -> str:
+    """Derive a human-readable name from synthesis text.
+
+    Takes the first 6 whitespace-split words, joins them, trims to <=48 chars.
+    Falls back to "Generation <hash8>" when text is absent or empty.
+    """
+    if text and text.strip():
+        words = text.split()[:6]
+        name = " ".join(words)[:48].strip()
+        if name:
+            return name
+    return f"Generation {hash[:8]}"
+
+
 class CacheEntryInfo(BaseModel):
     hash: str
     sample_rate: int
@@ -22,6 +37,9 @@ class CacheEntryInfo(BaseModel):
     inference_ms: int
     size_bytes: int
     created_at: float
+    text: str | None = None
+    voice: str | None = None
+    name: str
 
 
 class CacheListResponse(BaseModel):
@@ -36,6 +54,9 @@ class CacheListResponse(BaseModel):
 def list_cache(cache: SynthCache = Depends(get_synth_cache)) -> CacheListResponse:
     entries = []
     for e in cache.list():
+        # Exclude join- export bundles — they have no single text/voice
+        if e.hash.startswith("join-"):
+            continue
         try:
             size = e.wav_path.stat().st_size
         except OSError:
@@ -48,6 +69,9 @@ def list_cache(cache: SynthCache = Depends(get_synth_cache)) -> CacheListRespons
                 inference_ms=e.inference_ms,
                 size_bytes=size,
                 created_at=e.created_at,
+                text=e.text,
+                voice=e.voice,
+                name=_derive_name(e.text, e.hash),
             )
         )
     return CacheListResponse(
@@ -57,6 +81,18 @@ def list_cache(cache: SynthCache = Depends(get_synth_cache)) -> CacheListRespons
         max_entries=cache._max_entries,  # noqa: SLF001 (intentional read)
         entries=entries,
     )
+
+
+@router.get("/{content_hash}/audio")
+def get_cache_audio(
+    content_hash: str,
+    cache: SynthCache = Depends(get_synth_cache),
+) -> Response:
+    """Stream a cached WAV file for playback or download."""
+    entry = cache.get(content_hash)
+    if entry is None or not entry.wav_path.is_file():
+        raise HTTPException(status_code=404, detail=f"cache entry not found: {content_hash}")
+    return Response(content=entry.wav_path.read_bytes(), media_type="audio/wav")
 
 
 @router.delete("", status_code=200)
