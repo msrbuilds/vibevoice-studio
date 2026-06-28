@@ -191,11 +191,14 @@ def test_concurrent_load_calls_popen_once(tmp_path, monkeypatch):
     import threading
     import subprocess as _subprocess
 
-    popen_count = [0]
+    popen_count = 0
+    count_lock = threading.Lock()
     real_popen = _subprocess.Popen
 
     def counting_popen(*args, **kwargs):
-        popen_count[0] += 1
+        nonlocal popen_count
+        with count_lock:
+            popen_count += 1
         return real_popen(*args, **kwargs)
 
     monkeypatch.setattr(
@@ -205,18 +208,26 @@ def test_concurrent_load_calls_popen_once(tmp_path, monkeypatch):
 
     eng = _make_stub_engine(tmp_path)
     barrier = threading.Barrier(2)
+    thread_errors = []
+    errors_lock = threading.Lock()
 
     def load_with_barrier():
         barrier.wait()
-        eng.load()
+        try:
+            eng.load()
+        except Exception as exc:  # noqa: BLE001
+            with errors_lock:
+                thread_errors.append(exc)
 
     threads = [threading.Thread(target=load_with_barrier) for _ in range(2)]
     for t in threads:
         t.start()
     for t in threads:
-        t.join(timeout=15.0)
+        t.join(timeout=3.0)
 
-    assert popen_count[0] == 1
+    assert not any(t.is_alive() for t in threads), "threads did not finish — possible deadlock"
+    assert thread_errors == [], f"threads raised: {thread_errors}"
+    assert popen_count == 1
     assert eng.is_loaded() is True
     eng.unload()
 
