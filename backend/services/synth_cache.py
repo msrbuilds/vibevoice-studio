@@ -33,6 +33,8 @@ class CacheEntry:
     duration_sec: float
     inference_ms: int
     created_at: float
+    text: str | None = None
+    voice: str | None = None
 
 
 def compute_hash(text: str, voice: str, cfg_scale: float, voice_samples: list[str]) -> str:
@@ -114,6 +116,8 @@ class SynthCache:
                     duration_sec=float(data["duration_sec"]),
                     inference_ms=int(data["inference_ms"]),
                     created_at=float(data.get("created_at", meta.stat().st_mtime)),
+                    text=data.get("text"),
+                    voice=data.get("voice"),
                 )
                 loaded += 1
             except Exception as exc:  # noqa: BLE001
@@ -141,6 +145,8 @@ class SynthCache:
         sample_rate: int,
         duration_sec: float,
         inference_ms: int,
+        text: str | None = None,
+        voice: str | None = None,
     ) -> tuple[CacheEntry, str | None]:
         """Write a cache entry. Returns (entry, old_content_hash_or_None).
 
@@ -164,6 +170,7 @@ class SynthCache:
         wav_path = self._dir / f"{content_hash}.wav"
         meta_path = self._dir / f"{content_hash}.json"
         wav_path.write_bytes(wav_bytes)
+        now = time.time()
         meta_path.write_text(
             json.dumps(
                 {
@@ -171,7 +178,9 @@ class SynthCache:
                     "sample_rate": sample_rate,
                     "duration_sec": duration_sec,
                     "inference_ms": inference_ms,
-                    "created_at": time.time(),
+                    "created_at": now,
+                    "text": text,
+                    "voice": voice,
                 }
             ),
             encoding="utf-8",
@@ -182,7 +191,9 @@ class SynthCache:
             sample_rate=sample_rate,
             duration_sec=duration_sec,
             inference_ms=inference_ms,
-            created_at=time.time(),
+            created_at=now,
+            text=text,
+            voice=voice,
         )
         self._index[content_hash] = entry
         self._maybe_evict()
@@ -196,6 +207,8 @@ class SynthCache:
         sample_rate: int,
         duration_sec: float,
         inference_ms: int,
+        text: str | None = None,
+        voice: str | None = None,
     ) -> CacheEntry:
         """Replace one cached entry with another, deleting the old file.
 
@@ -220,6 +233,7 @@ class SynthCache:
         wav_path = self._dir / f"{new_content_hash}.wav"
         meta_path = self._dir / f"{new_content_hash}.json"
         wav_path.write_bytes(wav_bytes)
+        now = time.time()
         meta_path.write_text(
             json.dumps(
                 {
@@ -227,7 +241,9 @@ class SynthCache:
                     "sample_rate": sample_rate,
                     "duration_sec": duration_sec,
                     "inference_ms": inference_ms,
-                    "created_at": time.time(),
+                    "created_at": now,
+                    "text": text,
+                    "voice": voice,
                 }
             ),
             encoding="utf-8",
@@ -238,7 +254,9 @@ class SynthCache:
             sample_rate=sample_rate,
             duration_sec=duration_sec,
             inference_ms=inference_ms,
-            created_at=time.time(),
+            created_at=now,
+            text=text,
+            voice=voice,
         )
         self._index[new_content_hash] = entry
         self._maybe_evict()

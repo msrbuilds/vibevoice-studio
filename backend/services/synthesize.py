@@ -307,6 +307,8 @@ class SynthService:
                 engine_name=target_name,
                 engine_req=engine_req,
                 cache_hash_for_write=content_hash,
+                cache_text=req.text,
+                cache_voice=req.speakers[0].voice_id,
             )
 
         # Multi-speaker: synthesize each chunk separately, then concatenate
@@ -420,6 +422,8 @@ class SynthService:
         engine_name: str,
         engine_req: EngineSynthRequest,
         cache_hash_for_write: str | None,
+        cache_text: str | None = None,
+        cache_voice: str | None = None,
     ) -> SynthResult:
         with self._thread_lock:
             try:
@@ -438,6 +442,8 @@ class SynthService:
                     sample_rate=result.sample_rate,
                     duration_sec=result.duration_sec,
                     inference_ms=result.inference_ms,
+                    text=cache_text,
+                    voice=cache_voice,
                 )
             except Exception as exc:  # noqa: BLE001
                 log.debug("Failed to write cache entry %s: %s", cache_hash_for_write, exc)
