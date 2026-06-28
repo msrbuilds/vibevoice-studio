@@ -13,6 +13,10 @@ export interface TtsBuffer {
   text: string;
   voiceId: string | null;
   language: string | null;
+  // OmniVoice only: per-buffer voice mode + design prompt. Other engines
+  // ignore these. Mode is derived when unset (see lib/omnivoice.ts).
+  omnivoiceMode?: "clone" | "design" | "auto";
+  voiceDesign?: string;
 }
 
 export interface Voice {

@@ -14,7 +14,13 @@ function readTts(): TtsBuffer {
     const raw = localStorage.getItem(TTS_KEY);
     if (!raw) return EMPTY_TTS;
     const p = JSON.parse(raw) as Partial<TtsBuffer>;
-    return { text: p.text ?? "", voiceId: p.voiceId ?? null, language: p.language ?? null };
+    return {
+      text: p.text ?? "",
+      voiceId: p.voiceId ?? null,
+      language: p.language ?? null,
+      omnivoiceMode: p.omnivoiceMode,
+      voiceDesign: p.voiceDesign,
+    };
   } catch {
     return EMPTY_TTS;
   }
@@ -27,6 +33,8 @@ export interface UseProjectModeApi {
   setTtsText: (text: string) => void;
   setTtsVoice: (voiceId: string | null) => void;
   setTtsLanguage: (language: string | null) => void;
+  setTtsOmniMode: (mode: "clone" | "design" | "auto") => void;
+  setTtsVoiceDesign: (voiceDesign: string) => void;
 }
 
 export function useProjectMode(): UseProjectModeApi {
@@ -44,6 +52,23 @@ export function useProjectMode(): UseProjectModeApi {
   const setTtsText = useCallback((text: string) => setTts((t) => ({ ...t, text })), []);
   const setTtsVoice = useCallback((voiceId: string | null) => setTts((t) => ({ ...t, voiceId })), []);
   const setTtsLanguage = useCallback((language: string | null) => setTts((t) => ({ ...t, language })), []);
+  const setTtsOmniMode = useCallback(
+    (omnivoiceMode: "clone" | "design" | "auto") => setTts((t) => ({ ...t, omnivoiceMode })),
+    [],
+  );
+  const setTtsVoiceDesign = useCallback(
+    (voiceDesign: string) => setTts((t) => ({ ...t, voiceDesign })),
+    [],
+  );
 
-  return { mode, setMode, tts, setTtsText, setTtsVoice, setTtsLanguage };
+  return {
+    mode,
+    setMode,
+    tts,
+    setTtsText,
+    setTtsVoice,
+    setTtsLanguage,
+    setTtsOmniMode,
+    setTtsVoiceDesign,
+  };
 }

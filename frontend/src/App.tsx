@@ -24,7 +24,7 @@ import { loadSample, loadTtsSample, type Sample, type TtsSample } from "@/lib/sa
 import { useProject } from "@/lib/store";
 import type { CachedAudio, Project, Speaker, SynthSpeaker } from "@/types/models";
 import { getDefaultCfgForEngine } from "@/lib/engineHints";
-import { effectiveMode } from "@/lib/omnivoice";
+import { effectiveMode, type OmniMode } from "@/lib/omnivoice";
 
 const TTS_SEG_ID = "__tts__";
 
@@ -428,19 +428,40 @@ export default function App() {
   // ---- TTS mode generation ----
 
   const generateTts = useCallback(async () => {
-    const voice = displayedVoices.find((v) => v.id === pm.tts.voiceId) ?? null;
-    if (!voice) { showError("Select a voice in the library first.", "No voice"); return; }
     if (!pm.tts.text.trim()) return;
+    const isOmni = activeEngine === "omnivoice";
+    const voice = displayedVoices.find((v) => v.id === pm.tts.voiceId) ?? null;
+    const mode: OmniMode = isOmni
+      ? effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode })
+      : "clone";
+    // A reference voice is required except for OmniVoice design/auto.
+    if (mode === "clone" && !voice) {
+      showError("Select a voice in the library first.", "No voice");
+      return;
+    }
+    const instruct = mode === "design" ? (pm.tts.voiceDesign ?? "") : undefined;
     setGeneratingId(TTS_SEG_ID);
     try {
       const isChatterbox = activeEngine === "chatterbox";
-      const speakers: SynthSpeaker[] = [{ name: "Voice", voice: voice.id }];
+      const speakers: SynthSpeaker[] = [{
+        name: "Voice",
+        voice: voice?.id ?? "",
+        ...(isOmni ? { voice_mode: mode } : {}),
+        ...(instruct ? { instruct } : {}),
+      }];
       const { audioData, cacheHash } = await synthesizeWav(pm.tts.text, speakers, cfgScale, {
         cfgWeight: isChatterbox ? cfgScale : null,
         exaggeration: isChatterbox ? exaggeration : null,
         languageId: isCloningLangEngine ? (pm.tts.language ?? undefined) : undefined,
       });
-      project.cacheAudio(TTS_SEG_ID, { audioData, text: pm.tts.text, voice: voice.id, ...(cacheHash ? { cacheHash } : {}) });
+      project.cacheAudio(TTS_SEG_ID, {
+        audioData,
+        text: pm.tts.text,
+        voice: voice?.id ?? "",
+        ...(cacheHash ? { cacheHash } : {}),
+        ...(isOmni ? { mode } : {}),
+        ...(instruct ? { instruct } : {}),
+      });
     } catch (err) { showError(err, "Synthesis failed"); }
     finally { setGeneratingId(null); }
   }, [pm.tts, displayedVoices, activeEngine, cfgScale, exaggeration, isCloningLangEngine, project, showError]);
@@ -696,6 +717,11 @@ export default function App() {
               showLanguage={engineLanguages.length > 0}
               language={pm.tts.language}
               onLanguageChange={pm.setTtsLanguage}
+              isOmni={activeEngine === "omnivoice"}
+              omniMode={effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode })}
+              onOmniModeChange={pm.setTtsOmniMode}
+              voiceDesign={pm.tts.voiceDesign ?? ""}
+              onVoiceDesignChange={pm.setTtsVoiceDesign}
               busy={busy}
               isGenerating={generatingId === TTS_SEG_ID}
               onGenerate={() => void generateTts()}
