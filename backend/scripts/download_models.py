@@ -30,6 +30,11 @@ MODEL_CATALOG: dict[str, dict[str, str]] = {
         "size": "~500 MB",
         "label": "Chatterbox V3",
     },
+    "omnivoice": {
+        "repo_id": "k2-fsa/OmniVoice",
+        "size": "~1.6 GB",
+        "label": "OmniVoice",
+    },
 }
 
 

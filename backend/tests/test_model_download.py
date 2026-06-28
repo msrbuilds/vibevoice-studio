@@ -211,3 +211,28 @@ def test_download_endpoint_start_and_status():
     assert s["state"] == "done"
     assert s["downloaded_bytes"] == 10
     assert s["percent"] == 100.0
+
+
+def test_start_accepts_omnivoice():
+    captured = {}
+    def runner(repo_id, prog):
+        captured["repo_id"] = repo_id
+    dl = ModelDownloader(runner=runner)
+    dl.start("omnivoice")
+    _wait(dl)
+    s = dl.status()
+    assert s["engine"] == "omnivoice"
+    assert s["state"] == "done"
+    assert captured["repo_id"] == "k2-fsa/OmniVoice"
+
+
+def test_download_endpoint_accepts_omnivoice():
+    def runner(repo_id, prog):
+        prog.set_total(10)
+        prog.add_bytes(10, "f")
+    dl = ModelDownloader(runner=runner)
+    client = _make_client(dl)
+    assert client.get("/api/engines/omnivoice/download").json()["state"] == "idle"
+    assert client.post("/api/engines/omnivoice/download").status_code == 200
+    _wait(dl)
+    assert client.get("/api/engines/omnivoice/download").json()["state"] == "done"

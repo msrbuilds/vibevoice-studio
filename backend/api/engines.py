@@ -55,7 +55,7 @@ class DownloadStatusModel(BaseModel):
     returncode: int | None
 
 
-_DOWNLOADABLE = {"vibevoice", "kokoro"}
+_DOWNLOADABLE = {"vibevoice", "kokoro", "omnivoice"}
 
 
 class ActivateRequest(BaseModel):

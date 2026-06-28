@@ -18,7 +18,7 @@ from typing import Callable, Deque, Optional, Tuple
 from backend.scripts.download_models import MODEL_CATALOG
 
 #: Engines whose weights this downloader can fetch (in-process engines).
-DOWNLOADABLE: frozenset[str] = frozenset({"vibevoice", "kokoro"})
+DOWNLOADABLE: frozenset[str] = frozenset({"vibevoice", "kokoro", "omnivoice"})
 
 _MAX_LOG_LINES = 500
 _SPEED_WINDOW = 30  # number of (ts, bytes) samples kept for speed/ETA
