@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Moon, PanelRightClose, PanelRightOpen, Sun } from "lucide-react";
 import type { ConfigResponse, EngineInfo } from "@/types/models";
 import { EngineSelector } from "./EngineSelector";
 import { CfgScaleBody } from "./CfgScaleControl";
 import { ThemeToggle } from "./ThemeToggle";
 import { getCfgHints } from "@/lib/engineHints";
+import { ExaggerationBody } from "./ExaggerationControl";
+import { CacheBody, useCacheData } from "./CachePanel";
 
 const LS_KEY = "vs.controlPanel.open";
 
@@ -47,6 +49,8 @@ export function ControlPanel({
     return typeof window !== "undefined" ? window.innerWidth < 1200 : false;
   });
 
+  const { data: cacheData, busy: cacheBusy, refresh: cacheRefresh, onClear: onCacheClear, onDelete: onCacheDelete } = useCacheData();
+
   useEffect(() => {
     localStorage.setItem(LS_KEY, collapsed ? "false" : "true");
   }, [collapsed]);
@@ -64,9 +68,10 @@ export function ControlPanel({
   const isChatterbox = activeEngine === "chatterbox";
 
   if (collapsed) {
+    const ThemeIcon = theme === "dark" ? Sun : Moon;
     return (
       <aside
-        className={`w-12 shrink-0 h-screen border-l flex flex-col items-center pt-4 transition-colors ${surface} ${border}`}
+        className={`w-12 shrink-0 border-l flex flex-col items-center pt-4 transition-colors ${surface} ${border}`}
       >
         <button
           type="button"
@@ -76,13 +81,21 @@ export function ControlPanel({
         >
           <PanelRightOpen className="w-5 h-5" />
         </button>
+        <button
+          type="button"
+          onClick={onThemeToggle}
+          className={`p-2 rounded-lg transition-colors mt-2 ${iconBtn}`}
+          title="Toggle theme"
+        >
+          <ThemeIcon className="w-5 h-5" />
+        </button>
       </aside>
     );
   }
 
   return (
     <aside
-      className={`w-80 shrink-0 h-screen border-l flex flex-col transition-colors ${surface} ${border}`}
+      className={`w-80 shrink-0 border-l flex flex-col transition-colors ${surface} ${border}`}
     >
       {/* Header */}
       <div className={`p-4 border-b flex items-center justify-between ${border}`}>
@@ -142,6 +155,32 @@ export function ControlPanel({
           )}
         </section>
 
+        {/* Cache section */}
+        <section>
+          <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
+            Cache
+          </h3>
+          <CacheBody
+            isDark={isDark}
+            data={cacheData}
+            busy={cacheBusy}
+            onClear={onCacheClear}
+            onDelete={onCacheDelete}
+          />
+          <button
+            type="button"
+            onClick={() => void cacheRefresh()}
+            disabled={cacheBusy}
+            className={`w-full text-xs font-medium py-1 rounded mt-1 ${
+              isDark
+                ? "text-zinc-400 hover:text-zinc-200"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Refresh cache list
+          </button>
+        </section>
+
         {/* Appearance section */}
         <section>
           <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
@@ -168,75 +207,3 @@ export function ControlPanel({
   );
 }
 
-function ExaggerationBody({
-  isDark,
-  value,
-  onChange,
-}: {
-  isDark: boolean;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  const set = (n: number) => {
-    // Clamp to a safe range so a runaway slider doesn't crash generation.
-    onChange(Math.max(0.0, Math.min(2.0, n)));
-  };
-  const summary = value.toFixed(2);
-  return (
-    <div className="p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <span
-          className={`text-xs font-medium ${
-            isDark ? "text-zinc-400" : "text-gray-600"
-          }`}
-        >
-          Value
-        </span>
-        <span className="text-sm font-mono text-teal-400">{summary}</span>
-      </div>
-      <input
-        type="range"
-        min={0.0}
-        max={1.5}
-        step={0.05}
-        value={value}
-        onChange={(e) => set(Number(e.target.value))}
-        className="w-full accent-teal-500"
-      />
-      <div
-        className={`flex justify-between text-[10px] ${
-          isDark ? "text-zinc-600" : "text-gray-400"
-        }`}
-      >
-        <span>neutral</span>
-        <span>expressive</span>
-        <span>very dramatic</span>
-      </div>
-
-      <div className="flex items-center gap-2 pt-1">
-        {[0.0, 0.3, 0.5, 0.7, 1.0].map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            onClick={() => set(preset)}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors border ${
-              Math.abs(value - preset) < 0.025
-                ? "bg-teal-600 text-white border-teal-500"
-                : isDark
-                  ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
-            }`}
-          >
-            {preset.toFixed(1)}
-          </button>
-        ))}
-      </div>
-
-      <p className={`text-xs ${isDark ? "text-zinc-500" : "text-gray-500"}`}>
-        Chatterbox-only. Higher values make the speaker sound more
-        dramatic; lower values are calmer. Pairs with the
-        <span className="text-teal-400"> CFG weight</span> slider above.
-      </p>
-    </div>
-  );
-}
