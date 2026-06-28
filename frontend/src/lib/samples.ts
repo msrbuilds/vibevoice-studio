@@ -17,6 +17,14 @@ export interface Sample {
   segments: SampleSegment[];
 }
 
+export interface TtsSample {
+  id: string;
+  name: string;
+  description: string;
+  text: string;
+  voice?: string; // suggested voice id; falls back to first available at load
+}
+
 const SPEAKER_COLORS = [
   "#3b82f6", // blue
   "#10b981", // emerald
@@ -37,7 +45,7 @@ const DEFAULT_MALE_VOICE = "en_Mike";
 const DEFAULT_URDU_MALE_VOICE = "ur_Hamza";
 const DEFAULT_VOICE = DEFAULT_FEMALE_VOICE;
 
-export const SAMPLES: Sample[] = [
+export const PODCAST_SAMPLES: Sample[] = [
   {
     id: "interview",
     name: "Two-host interview",
@@ -207,6 +215,71 @@ export const SAMPLES: Sample[] = [
       },
     ],
   },
+  {
+    id: "urdu-podcast-native",
+    name: "اردو پوڈکاسٹ (Urdu, two hosts)",
+    description: "A two-host Urdu chat in native Nastaʿlīq script.",
+    speakers: [
+      { name: "Ayesha", voice: DEFAULT_FEMALE_VOICE, color: SPEAKER_COLORS[0]! },
+      { name: "Hamza", voice: DEFAULT_URDU_MALE_VOICE, color: SPEAKER_COLORS[1]! },
+    ],
+    segments: [
+      { speaker: "Ayesha", text: "السلام علیکم حمزہ، کیسے ہیں آپ؟ بہت دنوں بعد آج پوڈکاسٹ پر مل رہے ہیں۔" },
+      { speaker: "Hamza", text: "وعلیکم السلام عائشہ، میں بالکل ٹھیک ہوں، شکریہ۔ ہاں، بہت دن ہو گئے۔ آج ہم ایک دلچسپ موضوع پر بات کریں گے۔" },
+      { speaker: "Ayesha", text: "جی بالکل۔ آج کا موضوع یہ ہے کہ ہم مصنوعی ذہانت سے اپنی روزمرہ زندگی میں کیسے مدد لے سکتے ہیں۔" },
+      { speaker: "Hamza", text: "دیکھیے، مصنوعی ذہانت اب صرف سائنس فکشن نہیں رہی۔ اب یہ ہمارے فون میں، ہمارے گھر میں، اور ہمارے اسٹوڈیو میں بھی موجود ہے۔" },
+      { speaker: "Ayesha", text: "اور سب سے اچھی بات یہ ہے کہ یہ سب آپ کے اپنے کمپیوٹر پر ہو رہا ہے، کسی کلاؤڈ پر نہیں۔ آپ کی پرائیویسی محفوظ رہتی ہے۔" },
+      { speaker: "Hamza", text: "بالکل۔ تو سننے والو، آپ بھی آزمائیں۔ شکریہ عائشہ، آج کے لیے اتنا ہی۔ اللہ حافظ۔" },
+    ],
+  },
+  {
+    id: "hindi-podcast-native",
+    name: "हिन्दी पॉडकास्ट (Hindi, two hosts)",
+    description: "A two-host Hindi chat in native Devanagari script.",
+    speakers: [
+      { name: "Ayesha", voice: DEFAULT_FEMALE_VOICE, color: SPEAKER_COLORS[0]! },
+      { name: "Hamza", voice: DEFAULT_URDU_MALE_VOICE, color: SPEAKER_COLORS[1]! },
+    ],
+    segments: [
+      { speaker: "Ayesha", text: "नमस्ते हम्ज़ा, आप कैसे हैं? बहुत दिनों बाद आज पॉडकास्ट पर मिल रहे हैं।" },
+      { speaker: "Hamza", text: "नमस्ते आयशा, मैं बिलकुल ठीक हूँ, शुक्रिया। हाँ, बहुत दिन हो गए। आज हम एक दिलचस्प विषय पर बात करेंगे।" },
+      { speaker: "Ayesha", text: "जी बिलकुल। आज का विषय यह है कि हम कृत्रिम बुद्धिमत्ता से अपने रोज़मर्रा के जीवन में कैसे मदद ले सकते हैं।" },
+      { speaker: "Hamza", text: "देखिए, कृत्रिम बुद्धिमत्ता अब सिर्फ़ साइंस फ़िक्शन नहीं रही। अब यह हमारे फ़ोन में, हमारे घर में, और हमारे स्टूडियो में भी मौजूद है।" },
+      { speaker: "Ayesha", text: "और सबसे अच्छी बात यह है कि यह सब आपके अपने कंप्यूटर पर हो रहा है, किसी क्लाउड पर नहीं। आपकी निजता सुरक्षित रहती है।" },
+      { speaker: "Hamza", text: "बिलकुल। तो सुनने वालो, आप भी आज़माएँ। शुक्रिया आयशा, आज के लिए इतना ही। नमस्ते।" },
+    ],
+  },
+];
+
+export const TTS_SAMPLES: TtsSample[] = [
+  {
+    id: "tts-narration-en",
+    name: "English narration",
+    description: "A short single-voice narration passage.",
+    text: "The morning fog rolled in from the bay, slow and deliberate, as if the city itself were exhaling. Elena pulled her coat tighter and walked faster, the streetlights still casting pale halos into the grey.",
+    voice: DEFAULT_FEMALE_VOICE,
+  },
+  {
+    id: "tts-tutorial-en",
+    name: "How-to blurb",
+    description: "A friendly explanatory paragraph.",
+    text: "Welcome! In the next two minutes I'll show you how to set up a fully local text-to-speech pipeline. Everything runs on your own machine, so your scripts and voices never leave your computer.",
+    voice: DEFAULT_MALE_VOICE,
+  },
+  {
+    id: "tts-urdu-native",
+    name: "اردو تحریر (Urdu narration)",
+    description: "A single-voice Urdu narration in native script.",
+    text: "خوش آمدید! یہ آواز مکمل طور پر آپ کے اپنے کمپیوٹر پر بنائی جا رہی ہے، بغیر انٹرنیٹ کے۔ آپ کوئی بھی تحریر لکھیں اور اسے قدرتی آواز میں سنیں۔ یہ ٹیکنالوجی اب ہر کسی کی پہنچ میں ہے۔",
+    voice: DEFAULT_URDU_MALE_VOICE,
+  },
+  {
+    id: "tts-hindi-native",
+    name: "हिन्दी पाठ (Hindi narration)",
+    description: "A single-voice Hindi narration in native script.",
+    text: "स्वागत है! यह आवाज़ पूरी तरह आपके अपने कंप्यूटर पर बनाई जा रही है, बिना इंटरनेट के। आप कोई भी पाठ लिखें और उसे प्राकृतिक आवाज़ में सुनें। यह तकनीक अब हर किसी की पहुँच में है।",
+    voice: DEFAULT_FEMALE_VOICE,
+  },
 ];
 
 export function loadSample(sample: Sample): {
@@ -227,4 +300,8 @@ export function loadSample(sample: Sample): {
     speakerId: nameToId.get(seg.speaker) ?? speakers[0]?.id ?? null,
   }));
   return { segments, speakers };
+}
+
+export function loadTtsSample(sample: TtsSample): { text: string; voiceId: string | null } {
+  return { text: sample.text, voiceId: sample.voice ?? null };
 }
