@@ -17,6 +17,11 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/engines", tags=["engines"])
 
 
+class EngineLanguageModel(BaseModel):
+    code: str
+    label: str
+
+
 class EngineInfoModel(BaseModel):
     name: str
     display_name: str
@@ -29,6 +34,7 @@ class EngineInfoModel(BaseModel):
     max_speakers: int
     default_cfg_scale: float | None
     active: bool
+    languages: list[EngineLanguageModel] = []
 
 
 class EnginesListResponse(BaseModel):
@@ -73,6 +79,7 @@ def _to_model(info: dict) -> EngineInfoModel:
         max_speakers=info["max_speakers"],
         default_cfg_scale=info["default_cfg_scale"],
         active=info.get("active", False),
+        languages=[EngineLanguageModel(**lang) for lang in info.get("languages", [])],
     )
 
 

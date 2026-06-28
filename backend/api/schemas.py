@@ -74,6 +74,11 @@ class ErrorResponse(BaseModel):
 
 # ---- engines ----
 
+class EngineLanguageModel(BaseModel):
+    code: str
+    label: str
+
+
 class EngineInfoModel(BaseModel):
     name: str
     display_name: str
@@ -84,6 +89,7 @@ class EngineInfoModel(BaseModel):
     sample_rate: int | None = None
     max_speakers: int
     default_cfg_scale: float | None = None
+    languages: list[EngineLanguageModel] = []
     active: bool = False
 
 
