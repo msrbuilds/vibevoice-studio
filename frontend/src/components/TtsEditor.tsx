@@ -1,7 +1,8 @@
+import { useEffect, useRef } from "react";
 import { Loader2, Play, RefreshCw } from "lucide-react";
 import type { EngineLanguage, Voice } from "@/types/models";
 import { textStats, fmtDuration } from "@/lib/textStats";
-import { DESIGN_CHIPS, appendDesignChip, type OmniMode } from "@/lib/omnivoice";
+import { DESIGN_CHIPS, NONVERBAL_TAGS, appendDesignChip, type OmniMode } from "@/lib/omnivoice";
 import { LanguageSelect } from "./LanguageSelect";
 
 interface Props {
@@ -36,6 +37,35 @@ export function TtsEditor(props: Props) {
   const selectBg = isDark ? "bg-zinc-800 border-zinc-700 text-white" : "bg-white border-gray-300 text-gray-900";
   const sub = isDark ? "text-zinc-500" : "text-gray-500";
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pendingCaret = useRef<number | null>(null);
+
+  // After a tag insertion changes the text, restore the caret just past the
+  // inserted tag (the textarea is controlled, so we do this post-render).
+  useEffect(() => {
+    if (pendingCaret.current != null && textareaRef.current) {
+      const pos = pendingCaret.current;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(pos, pos);
+      pendingCaret.current = null;
+    }
+  }, [text]);
+
+  // Insert a non-verbal tag at the cursor (or replace the selection), padding
+  // with spaces so it never glues to adjacent words.
+  const insertTag = (tag: string) => {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? text.length;
+    const end = el?.selectionEnd ?? text.length;
+    const before = text.slice(0, start);
+    const after = text.slice(end);
+    const lead = before.length > 0 && !/\s$/.test(before) ? " " : "";
+    const trail = after.length === 0 || !/^\s/.test(after) ? " " : "";
+    const chunk = `${lead}${tag}${trail}`;
+    pendingCaret.current = before.length + chunk.length;
+    onTextChange(before + chunk + after);
+  };
+
   // Show the "Voice: X" note for any non-OmniVoice engine, and for OmniVoice
   // only in clone mode (design/auto carry no reference voice).
   const showVoiceNote = !isOmni || omniMode === "clone";
@@ -59,11 +89,37 @@ export function TtsEditor(props: Props) {
   return (
     <div className="max-w-3xl mx-auto w-full space-y-3">
       <textarea
+        ref={textareaRef}
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         placeholder="Type or paste text to synthesize…"
         className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-teal-500 ${inputBg}`}
       />
+
+      {/* OmniVoice inline non-verbal sounds — insert a tag at the cursor */}
+      {isOmni && (
+        <div className="space-y-1.5">
+          <div className={`text-xs ${sub}`}>
+            Non-verbal sounds — click to insert at the cursor
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {NONVERBAL_TAGS.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => insertTag(tag)}
+                className={`px-1.5 py-0.5 text-[11px] font-mono rounded border transition-colors ${
+                  isDark
+                    ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
+                    : "border-gray-300 text-gray-500 hover:border-teal-500 hover:text-teal-600"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* OmniVoice voice mode: Clone / Design / Auto */}
       {isOmni && (

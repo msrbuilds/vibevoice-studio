@@ -37,6 +37,26 @@ export const DESIGN_CHIPS: string[] = [
   "whisper",
 ];
 
+// Inline non-verbal sound tags OmniVoice understands. Inserting one of these
+// directly into the input text produces an expressive non-verbal sound, e.g.
+//   "[laughter] You really got me."
+// The text is passed to the model verbatim, so this is purely an input-helper.
+export const NONVERBAL_TAGS: string[] = [
+  "[laughter]",
+  "[sigh]",
+  "[confirmation-en]",
+  "[question-en]",
+  "[question-ah]",
+  "[question-oh]",
+  "[question-ei]",
+  "[question-yi]",
+  "[surprise-ah]",
+  "[surprise-oh]",
+  "[surprise-wa]",
+  "[surprise-yo]",
+  "[dissatisfaction-hnn]",
+];
+
 /**
  * The speaker's effective OmniVoice mode. An explicit choice wins; otherwise
  * clone if a reference voice is set, else auto. Keeping it derived means
