@@ -2,17 +2,39 @@
 
 export type OmniMode = "clone" | "design" | "auto";
 
-// One-tap chips that append to the design prompt. Order = display order.
+// One-tap chips that append to the design prompt. These MUST be drawn from
+// OmniVoice's official valid English instruct vocabulary — the worker rejects
+// any unknown item (e.g. "calm"/"energetic"/"warm" are NOT valid). Grouped
+// gender → age → pitch → accent → style; order = display order.
 export const DESIGN_CHIPS: string[] = [
+  // gender
   "female",
   "male",
+  // age
+  "child",
+  "teenager",
+  "young adult",
+  "middle-aged",
+  "elderly",
+  // pitch
+  "very low pitch",
   "low pitch",
+  "moderate pitch",
   "high pitch",
-  "british accent",
+  "very high pitch",
+  // accent
   "american accent",
+  "british accent",
+  "australian accent",
+  "canadian accent",
+  "indian accent",
+  "chinese accent",
+  "japanese accent",
+  "korean accent",
+  "russian accent",
+  "portuguese accent",
+  // style
   "whisper",
-  "energetic",
-  "calm",
 ];
 
 /**

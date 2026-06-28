@@ -176,7 +176,7 @@ function SpeakerRow({
             type="text"
             value={speaker.voiceDesign ?? ""}
             onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
-            placeholder="e.g. female, low pitch, british accent, warm"
+            placeholder="e.g. female, low pitch, british accent"
             className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText}`}
           />
           <div className="flex flex-wrap gap-1">

@@ -85,7 +85,7 @@ export function TtsEditor(props: Props) {
                 type="text"
                 value={voiceDesign}
                 onChange={(e) => onVoiceDesignChange(e.target.value)}
-                placeholder="e.g. female, low pitch, british accent, warm"
+                placeholder="e.g. female, low pitch, british accent"
                 className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-teal-500 ${selectBg}`}
               />
               <div className="flex flex-wrap gap-1">
