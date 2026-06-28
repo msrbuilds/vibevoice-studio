@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Cpu, Loader2, Volume2 } from "lucide-react";
+import { ChevronDown, Cpu, Loader2, Volume2, X } from "lucide-react";
 import type { EngineInfo } from "@/types/models";
 
 interface Props {
@@ -57,49 +57,78 @@ export function EngineSelector({
   };
 
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
+        onClick={() => setOpen(true)}
+        className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
           isDark
             ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
             : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
         }`}
         title="Switch TTS engine"
       >
-        <Cpu className="w-4 h-4" />
-        {summary}
+        <span className="flex items-center gap-2 min-w-0">
+          <Cpu className="w-4 h-4 shrink-0" />
+          <span className="truncate">{summary}</span>
+        </span>
+        <ChevronDown className="w-4 h-4 shrink-0 opacity-70" />
       </button>
 
       {open && (
         <div
-          className={`absolute right-0 top-full mt-2 w-96 rounded-lg shadow-xl border z-30 overflow-hidden ${
-            isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
-          }`}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
         >
+          {/* Backdrop */}
           <div
-            className={`px-4 py-3 border-b ${
-              isDark ? "border-zinc-800" : "border-gray-200"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Modal */}
+          <div
+            className={`relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-xl shadow-2xl border ${
+              isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
             }`}
           >
             <div
-              className={`text-sm font-semibold ${
-                isDark ? "text-white" : "text-gray-900"
+              className={`px-5 py-4 border-b flex items-start justify-between gap-3 shrink-0 ${
+                isDark ? "border-zinc-800" : "border-gray-200"
               }`}
             >
-              TTS engine
+              <div>
+                <div
+                  className={`text-sm font-semibold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  TTS engine
+                </div>
+                <div
+                  className={`text-xs mt-0.5 ${
+                    isDark ? "text-zinc-500" : "text-gray-500"
+                  }`}
+                >
+                  Switch between backends. Only one runs at a time.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className={`p-1 rounded transition-colors ${
+                  isDark
+                    ? "text-zinc-500 hover:text-zinc-300"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div
-              className={`text-xs mt-0.5 ${
-                isDark ? "text-zinc-500" : "text-gray-500"
-              }`}
-            >
-              Switch between backends. Only one runs at a time.
-            </div>
-          </div>
 
-          <ul className="max-h-80 overflow-y-auto">
+            <ul className="flex-1 overflow-y-auto">
             {engines.map((e) => {
               const isActive = e.name === activeName;
               const switching = switchingTo === e.name;
@@ -231,20 +260,21 @@ export function EngineSelector({
                 </li>
               );
             })}
-          </ul>
+            </ul>
 
-          <div
-            className={`px-4 py-2 text-[11px] border-t ${
-              isDark
-                ? "border-zinc-800 text-zinc-500"
-                : "border-gray-200 text-gray-500"
-            }`}
-          >
-            Switching unloads the current model. First synthesis may take
-            a few seconds while weights load.
+            <div
+              className={`px-5 py-3 text-[11px] border-t shrink-0 ${
+                isDark
+                  ? "border-zinc-800 text-zinc-500"
+                  : "border-gray-200 text-gray-500"
+              }`}
+            >
+              Switching unloads the current model. First synthesis may take
+              a few seconds while weights load.
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
