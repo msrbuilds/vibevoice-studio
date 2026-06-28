@@ -140,7 +140,7 @@ export function ControlPanel({
         {/* Cache section */}
         <section>
           <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
-            Cache
+            Recent generations
           </h3>
           <CacheBody
             isDark={isDark}
@@ -159,7 +159,7 @@ export function ControlPanel({
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Refresh cache list
+            Refresh list
           </button>
         </section>
       </div>
