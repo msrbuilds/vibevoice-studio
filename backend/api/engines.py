@@ -9,6 +9,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from ..core.engine_manager import EngineLoadError, EngineManager, EngineNotFound
+from ..services.model_download import DOWNLOADABLE as _DOWNLOADABLE
 from .deps import get_engine_installers, get_engine_manager, get_model_downloader
 
 log = logging.getLogger(__name__)
@@ -53,9 +54,6 @@ class DownloadStatusModel(BaseModel):
     log: list[str]
     error: str | None
     returncode: int | None
-
-
-_DOWNLOADABLE = {"vibevoice", "kokoro", "omnivoice"}
 
 
 class ActivateRequest(BaseModel):
