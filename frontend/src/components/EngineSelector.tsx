@@ -89,7 +89,7 @@ export function EngineSelector({
 
           {/* Modal */}
           <div
-            className={`relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-xl shadow-2xl border ${
+            className={`relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-xl shadow-2xl border ${
               isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
             }`}
           >
@@ -128,15 +128,15 @@ export function EngineSelector({
               </button>
             </div>
 
-            <ul className="flex-1 overflow-y-auto">
+            <ul className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
             {engines.map((e) => {
               const isActive = e.name === activeName;
               const switching = switchingTo === e.name;
               return (
                 <li
                   key={e.name}
-                  className={`px-4 py-3 border-b last:border-b-0 ${
-                    isDark ? "border-zinc-800" : "border-gray-100"
+                  className={`rounded-lg border p-4 ${
+                    isDark ? "border-zinc-800 bg-zinc-950/40" : "border-gray-200 bg-gray-50"
                   }`}
                 >
                   <div className="flex items-start gap-3">
