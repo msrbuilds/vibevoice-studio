@@ -189,7 +189,7 @@ export function EngineSelector({
                         {e.description}
                       </p>
                       <div
-                        className={`text-[10px] mt-1 ${
+                        className={`text-xs mt-1.5 ${
                           isDark ? "text-zinc-500" : "text-gray-500"
                         }`}
                       >
