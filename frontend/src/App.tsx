@@ -5,6 +5,8 @@ import { focusRing } from "@/lib/theme";
 import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { InstallEngineDialog } from "@/components/InstallEngineDialog";
 import { DownloadModelDialog } from "@/components/DownloadModelDialog";
+import { DeleteWeightsDialog } from "@/components/DeleteWeightsDialog";
+import { UninstallEngineDialog } from "@/components/UninstallEngineDialog";
 import { SegmentCard } from "@/components/SegmentCard";
 import { VoiceLibrary } from "@/components/VoiceLibrary";
 import { SpeakerRoster } from "@/components/SpeakerRoster";
@@ -117,6 +119,8 @@ export default function App() {
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [installEngine, setInstallEngine] = useState<string | null>(null);
   const [downloadEngine, setDownloadEngine] = useState<string | null>(null);
+  const [deleteWeightsEngine, setDeleteWeightsEngine] = useState<string | null>(null);
+  const [uninstallEngine, setUninstallEngine] = useState<string | null>(null);
 
   const playerRef = useRef<AudioPlayer>(new AudioPlayer());
   const stopAllRef = useRef(false);
@@ -871,6 +875,8 @@ export default function App() {
         }}
         onInstallEngine={(name) => setInstallEngine(name)}
         onDownloadEngine={(name) => setDownloadEngine(name)}
+        onDeleteWeights={(name) => setDeleteWeightsEngine(name)}
+        onUninstallEngine={(name) => setUninstallEngine(name)}
         cfgScale={cfgScale}
         onCfgScaleChange={setCfgScale}
         exaggeration={exaggeration}
@@ -909,6 +915,36 @@ export default function App() {
               showError(err, "Engine load failed");
             }
             setDownloadEngine(null);
+          }}
+        />
+      )}
+      {deleteWeightsEngine && (
+        <DeleteWeightsDialog
+          isDark={isDark}
+          engineName={deleteWeightsEngine}
+          displayName={
+            engines.find((e) => e.name === deleteWeightsEngine)?.display_name ??
+            deleteWeightsEngine
+          }
+          onClose={() => setDeleteWeightsEngine(null)}
+          onDone={async () => {
+            await refreshEngines();
+            setDeleteWeightsEngine(null);
+          }}
+        />
+      )}
+      {uninstallEngine && (
+        <UninstallEngineDialog
+          isDark={isDark}
+          engineName={uninstallEngine}
+          displayName={
+            engines.find((e) => e.name === uninstallEngine)?.display_name ??
+            uninstallEngine
+          }
+          onClose={() => setUninstallEngine(null)}
+          onUninstalled={async () => {
+            await refreshEngines();
+            setUninstallEngine(null);
           }}
         />
       )}

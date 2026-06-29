@@ -11,6 +11,8 @@ interface Props {
   onLoad: (name: string) => Promise<void>;
   onInstall: (name: string) => void;
   onDownload: (name: string) => void;
+  onDeleteWeights: (name: string) => void;
+  onUninstall: (name: string) => void;
 }
 
 export function EngineSelector({
@@ -21,6 +23,8 @@ export function EngineSelector({
   onLoad,
   onInstall,
   onDownload,
+  onDeleteWeights,
+  onUninstall,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
@@ -255,6 +259,44 @@ export function EngineSelector({
                               ? "Loading…"
                               : `Switch to ${e.display_name}`}
                         </button>
+                      )}
+                      {/* Secondary destructive actions — hidden for the active
+                          engine (switching away first is required). */}
+                      {!isActive && (e.downloaded || (e.installed && (e.name === "chatterbox" || e.name === "omnivoice"))) && (
+                        <div className="mt-1.5 flex items-center gap-3">
+                          {e.downloaded && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onDeleteWeights(e.name);
+                                setOpen(false);
+                              }}
+                              className={`text-[11px] font-medium transition-colors ${
+                                isDark
+                                  ? "text-zinc-400 hover:text-red-400"
+                                  : "text-gray-600 hover:text-red-700"
+                              } ${focusRing}`}
+                            >
+                              Delete weights
+                            </button>
+                          )}
+                          {e.installed && (e.name === "chatterbox" || e.name === "omnivoice") && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onUninstall(e.name);
+                                setOpen(false);
+                              }}
+                              className={`text-[11px] font-medium transition-colors ${
+                                isDark
+                                  ? "text-zinc-400 hover:text-red-400"
+                                  : "text-gray-600 hover:text-red-700"
+                              } ${focusRing}`}
+                            >
+                              Uninstall environment
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

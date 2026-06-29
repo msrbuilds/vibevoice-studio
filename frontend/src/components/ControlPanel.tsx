@@ -19,6 +19,8 @@ interface Props {
   onLoadEngine: (name: string) => Promise<void>;
   onInstallEngine: (name: string) => void;
   onDownloadEngine: (name: string) => void;
+  onDeleteWeights: (name: string) => void;
+  onUninstallEngine: (name: string) => void;
   cfgScale: number;
   onCfgScaleChange: (v: number) => void;
   exaggeration: number;
@@ -33,6 +35,8 @@ export function ControlPanel({
   onLoadEngine,
   onInstallEngine,
   onDownloadEngine,
+  onDeleteWeights,
+  onUninstallEngine,
   cfgScale,
   onCfgScaleChange,
   exaggeration,
@@ -112,6 +116,8 @@ export function ControlPanel({
             onLoad={onLoadEngine}
             onInstall={onInstallEngine}
             onDownload={onDownloadEngine}
+            onDeleteWeights={onDeleteWeights}
+            onUninstall={onUninstallEngine}
           />
         </section>
 
