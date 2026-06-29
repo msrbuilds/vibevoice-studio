@@ -1,5 +1,4 @@
 import { FileAudio, Play, Square, Volume2 } from "lucide-react";
-import { useIsNarrow } from "@/hooks/useIsNarrow";
 import { focusRing } from "@/lib/theme";
 
 interface Props {
@@ -27,32 +26,28 @@ export function InlinePlayer({
   onStopAll,
   onExportAudio,
 }: Props) {
-  const narrow = useIsNarrow();
-
   const subText = isPlayingAll
     ? `Playing ${currentIndex + 1}/${segmentCount}`
     : cachedCount > 0
       ? `${segmentCount} segment${segmentCount !== 1 ? "s" : ""} · ${cachedCount}/${validCount} generated`
       : `${segmentCount} segment${segmentCount !== 1 ? "s" : ""}`;
 
-  const downloadLabel = narrow ? <FileAudio className="w-5 h-5" /> : (
+  const downloadLabel = (
     <>
       <FileAudio className="w-5 h-5" />
-      Download Audio
+      <span className="@max-[1100px]:hidden">Download Audio</span>
     </>
   );
-
-  const playLabel = narrow ? <Play className="w-5 h-5" /> : (
+  const playLabel = (
     <>
       <Play className="w-5 h-5" />
-      Play Podcast
+      <span className="@max-[1100px]:hidden">Play Podcast</span>
     </>
   );
-
-  const stopLabel = narrow ? <Square className="w-5 h-5" /> : (
+  const stopLabel = (
     <>
       <Square className="w-5 h-5" />
-      Stop Podcast
+      <span className="@max-[1100px]:hidden">Stop Podcast</span>
     </>
   );
 
@@ -66,13 +61,11 @@ export function InlinePlayer({
         <div className="flex items-center gap-3 min-w-0">
           <Volume2 className="w-5 h-5 text-teal-400 shrink-0" />
           <div className="min-w-0">
-            {!narrow && (
-              <p className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                Full podcast
-              </p>
-            )}
+            <p className={`font-medium @max-[900px]:hidden ${isDark ? "text-white" : "text-gray-900"}`}>
+              Full podcast
+            </p>
             <p
-              className={`${narrow ? "text-sm" : "text-sm"} truncate ${
+              className={`text-sm truncate ${
                 isDark ? "text-zinc-400" : "text-gray-600"
               }`}
               title={subText}

@@ -2,7 +2,6 @@ import { Plus, RefreshCw } from "lucide-react";
 import { SampleMenu } from "./SampleMenu";
 import { ImportExportMenu } from "./ImportExportMenu";
 import { ModeToggle } from "./ModeToggle";
-import { useIsNarrow } from "@/hooks/useIsNarrow";
 import type { Sample, TtsSample } from "@/lib/samples";
 import type { ProjectMode } from "@/types/models";
 import { focusRing } from "@/lib/theme";
@@ -36,33 +35,6 @@ export function MiddleToolbar({
   onLoadPodcastSample,
   onLoadTtsSample,
 }: Props) {
-  const narrow = useIsNarrow();
-
-  const addLabel = narrow ? <Plus className="w-5 h-5" /> : (
-    <>
-      <Plus className="w-5 h-5" />
-      Add Segment
-    </>
-  );
-
-  const generateLabel = narrow ? <RefreshCw className="w-4 h-4" /> : (
-    <>
-      <RefreshCw className="w-4 h-4" />
-      Generate All
-      {validCount > 0 && (
-        <span
-          className={`text-xs ml-1 ${
-            cachedCount === validCount
-              ? "text-teal-200"
-              : "text-white"
-          }`}
-        >
-          {cachedCount}/{validCount}
-        </span>
-      )}
-    </>
-  );
-
   const generateDisabled = busy || cachedCount === validCount;
   const isPodcast = mode === "podcast";
 
@@ -84,7 +56,8 @@ export function MiddleToolbar({
             title="Add a new segment"
             className={`flex items-center gap-2 px-4 py-2.5 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
-            {addLabel}
+            <Plus className="w-5 h-5" />
+            <span className="@max-[1100px]:hidden">Add Segment</span>
           </button>
         )}
       </div>
@@ -104,7 +77,17 @@ export function MiddleToolbar({
                 : "bg-amber-700 hover:bg-amber-600 text-white"
             } ${focusRing}`}
           >
-            {generateLabel}
+            <RefreshCw className="w-4 h-4" />
+            <span className="@max-[1100px]:hidden">Generate All</span>
+            {validCount > 0 && (
+              <span
+                className={`text-xs ml-1 ${
+                  cachedCount === validCount ? "text-teal-100" : "text-white"
+                }`}
+              >
+                {cachedCount}/{validCount}
+              </span>
+            )}
           </button>
         )}
 

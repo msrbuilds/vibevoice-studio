@@ -691,7 +691,7 @@ export default function App() {
       />
 
       {/* MIDDLE column: sticky toolbar, scroll body, sticky player */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 @container">
         <MiddleToolbar
           validCount={validCount}
           cachedCount={cachedCount}
