@@ -52,7 +52,7 @@ export function VoiceLibrary({
   const danger = isDark
     ? "text-zinc-400 hover:text-red-400"
     : "text-gray-600 hover:text-red-700";
-  const empty = isDark ? "text-zinc-600" : "text-gray-400";
+  const empty = isDark ? "text-zinc-600" : "text-gray-600";
 
   return (
     <aside

@@ -167,7 +167,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
                     className={`transition-colors duration-700 ease-out ${
                       spoken
                         ? isDark ? "text-white" : "text-gray-900"
-                        : isDark ? "text-zinc-600" : "text-gray-400"
+                        : isDark ? "text-zinc-600" : "text-gray-600"
                     }`}
                   >
                     {t.part}
@@ -175,7 +175,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
                 );
               })
             ) : (
-              <span className={`text-base ${isDark ? "text-zinc-600" : "text-gray-400"}`}>
+              <span className={`text-base ${isDark ? "text-zinc-600" : "text-gray-600"}`}>
                 No text stored for this clip.
               </span>
             )}
