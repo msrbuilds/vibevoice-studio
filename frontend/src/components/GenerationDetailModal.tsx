@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Volume2, X } from "lucide-react";
 import type { CacheEntryInfo } from "@/lib/api";
 import { cacheAudioUrl } from "@/lib/api";
+import { isRtlText } from "@/lib/textStats";
 import { Waveform } from "./Waveform";
+
+// Highlight words this many seconds ahead of the audio cursor. Compensates for
+// the even-distribution approximation + perception (reading runs slightly
+// ahead of speech), so the highlight feels in sync rather than lagging.
+const HIGHLIGHT_LEAD_SEC = 0.18;
 
 interface Props {
   isDark: boolean;
@@ -32,6 +38,21 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
       audioRef.current?.pause();
     };
   }, []);
+
+  // While playing, sample currentTime every animation frame (~60fps) instead
+  // of relying on the `timeupdate` event (which fires only ~4x/sec and makes
+  // the word highlight visibly lag/step).
+  useEffect(() => {
+    if (!playing) return;
+    let raf = 0;
+    const tick = () => {
+      const a = audioRef.current;
+      if (a) setCurrentTime(a.currentTime);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -70,7 +91,10 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
     });
   }, [entry.text]);
   const wordCount = tokens.reduce((n, t) => (t.idx >= 0 ? n + 1 : n), 0);
-  const spokenWords = progress * wordCount;
+  const leadProgress =
+    duration > 0 ? Math.min(1, (currentTime + HIGHLIGHT_LEAD_SEC) / duration) : 0;
+  const spokenWords = leadProgress * wordCount;
+  const rtl = isRtlText(entry.text);
 
   return (
     <div
@@ -125,11 +149,12 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
-          {/* Full text — words brighten left-to-right as the audio plays */}
+          {/* Full text — words brighten as the audio plays (RTL-aware) */}
           <div
+            dir={rtl ? "rtl" : "ltr"}
             className={`text-2xl font-medium leading-relaxed max-h-64 overflow-y-auto rounded-lg p-5 whitespace-pre-wrap ${
-              isDark ? "bg-zinc-800/40" : "bg-gray-50"
-            }`}
+              rtl ? "text-right" : "text-left"
+            } ${isDark ? "bg-zinc-800/40" : "bg-gray-50"}`}
           >
             {entry.text ? (
               tokens.map((t, i) => {
