@@ -120,3 +120,87 @@ def test_model_deleter_unloads_loaded_engine():
     d.start("vibevoice")
     _wait_deleter(d)
     assert fake.unloaded is True
+
+
+# ---------------------------------------------------------------------------
+# EngineEnvUninstaller
+# ---------------------------------------------------------------------------
+
+def _wait_uninstaller(u, timeout=5.0):
+    deadline = time.time() + timeout
+    while time.time() < deadline and u.status()["state"] == "uninstalling":
+        time.sleep(0.02)
+
+
+def test_uninstaller_initial_idle():
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+    u = EngineEnvUninstaller("chatterbox", em=None, venv_dir=Path("/nope"), remover=lambda p: None)
+    assert u.status()["state"] == "idle"
+
+
+def test_uninstaller_removes_existing_venv(tmp_path):
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+    venv = tmp_path / "venv-chatterbox"
+    venv.mkdir()
+    removed = []
+    u = EngineEnvUninstaller(
+        "chatterbox", em=None, venv_dir=venv, remover=lambda p: removed.append(p)
+    )
+    u.start()
+    _wait_uninstaller(u)
+    s = u.status()
+    assert s["state"] == "uninstalled"
+    assert removed == [venv]
+
+
+def test_uninstaller_missing_venv_is_idempotent(tmp_path):
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+    removed = []
+    u = EngineEnvUninstaller(
+        "omnivoice", em=None, venv_dir=tmp_path / "absent", remover=lambda p: removed.append(p)
+    )
+    u.start()
+    _wait_uninstaller(u)
+    assert u.status()["state"] == "uninstalled"
+    assert removed == []
+
+
+def test_uninstaller_error_state(tmp_path):
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+    venv = tmp_path / "venv-chatterbox"
+    venv.mkdir()
+
+    def boom(p):
+        raise OSError("file in use")
+
+    u = EngineEnvUninstaller("chatterbox", em=None, venv_dir=venv, remover=boom)
+    u.start()
+    _wait_uninstaller(u)
+    s = u.status()
+    assert s["state"] == "error"
+    assert "file in use" in (s["error"] or "")
+
+
+def test_uninstaller_unloads_loaded_engine(tmp_path):
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+
+    class FakeEngine:
+        def __init__(self):
+            self.unloaded = False
+        def is_loaded(self):
+            return True
+        def unload(self):
+            self.unloaded = True
+
+    fake = FakeEngine()
+
+    class FakeEM:
+        def get_engine(self, name):
+            return fake
+
+    venv = tmp_path / "venv-chatterbox"
+    venv.mkdir()
+    u = EngineEnvUninstaller("chatterbox", em=FakeEM(), venv_dir=venv, remover=lambda p: None)
+    u.start()
+    _wait_uninstaller(u)
+    assert fake.unloaded is True
