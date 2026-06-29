@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
 from ..services.synth_cache import SynthCache
@@ -88,11 +88,16 @@ def get_cache_audio(
     content_hash: str,
     cache: SynthCache = Depends(get_synth_cache),
 ) -> Response:
-    """Stream a cached WAV file for playback or download."""
+    """Serve a cached WAV file for playback or download.
+
+    Uses FileResponse so Starlette advertises `Accept-Ranges: bytes` and
+    honors `Range` requests (206 partial content) — without this the browser
+    can't seek the <audio> element (currentTime snaps back to 0).
+    """
     entry = cache.get(content_hash)
     if entry is None or not entry.wav_path.is_file():
         raise HTTPException(status_code=404, detail=f"cache entry not found: {content_hash}")
-    return Response(content=entry.wav_path.read_bytes(), media_type="audio/wav")
+    return FileResponse(entry.wav_path, media_type="audio/wav")
 
 
 @router.delete("", status_code=200)

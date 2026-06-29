@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Volume2, X } from "lucide-react";
 import type { CacheEntryInfo } from "@/lib/api";
 import { cacheAudioUrl } from "@/lib/api";
@@ -57,6 +57,21 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
 
   const audioUrl = cacheAudioUrl(entry.hash);
 
+  // Split the text into tokens, tagging each non-whitespace token with its
+  // word index so we can light words up left-to-right as playback advances.
+  // (TTS engines don't give per-word timestamps, so we approximate with an
+  // even distribution across the clip duration.)
+  const tokens = useMemo(() => {
+    const parts = (entry.text ?? "").split(/(\s+)/);
+    let wi = 0;
+    return parts.map((part) => {
+      const isSpace = part === "" || /^\s+$/.test(part);
+      return { part, idx: isSpace ? -1 : wi++ };
+    });
+  }, [entry.text]);
+  const wordCount = tokens.reduce((n, t) => (t.idx >= 0 ? n + 1 : n), 0);
+  const spokenWords = progress * wordCount;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -110,14 +125,31 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
-          {/* Full text */}
+          {/* Full text — words brighten left-to-right as the audio plays */}
           <div
-            className={`text-lg leading-relaxed max-h-48 overflow-y-auto rounded-lg p-4 whitespace-pre-wrap ${
-              isDark ? "bg-zinc-800/60 text-zinc-200" : "bg-gray-50 text-gray-800"
+            className={`text-2xl font-medium leading-relaxed max-h-64 overflow-y-auto rounded-lg p-5 whitespace-pre-wrap ${
+              isDark ? "bg-zinc-800/40" : "bg-gray-50"
             }`}
           >
-            {entry.text ?? (
-              <span className={isDark ? "text-zinc-600" : "text-gray-400"}>
+            {entry.text ? (
+              tokens.map((t, i) => {
+                if (t.idx < 0) return <span key={i}>{t.part}</span>;
+                const spoken = t.idx < spokenWords;
+                return (
+                  <span
+                    key={i}
+                    className={`transition-colors duration-200 ${
+                      spoken
+                        ? isDark ? "text-white" : "text-gray-900"
+                        : isDark ? "text-zinc-600" : "text-gray-400"
+                    }`}
+                  >
+                    {t.part}
+                  </span>
+                );
+              })
+            ) : (
+              <span className={`text-base ${isDark ? "text-zinc-600" : "text-gray-400"}`}>
                 No text stored for this clip.
               </span>
             )}
