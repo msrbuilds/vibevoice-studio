@@ -163,7 +163,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
                 return (
                   <span
                     key={i}
-                    className={`transition-colors duration-200 ${
+                    className={`transition-colors duration-700 ease-out ${
                       spoken
                         ? isDark ? "text-white" : "text-gray-900"
                         : isDark ? "text-zinc-600" : "text-gray-400"
