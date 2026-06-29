@@ -40,7 +40,7 @@ export function MiddleToolbar({
 
   return (
     <div
-      className={`flex flex-wrap items-center justify-between gap-3 p-4 border-b ${
+      className={`flex flex-wrap items-center justify-between gap-2 @[1200px]:gap-3 p-3 @[1200px]:p-4 border-b ${
         isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
       }`}
     >

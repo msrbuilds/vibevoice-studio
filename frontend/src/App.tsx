@@ -27,6 +27,9 @@ import { useProject } from "@/lib/store";
 import type { CachedAudio, Project, Speaker, SynthSpeaker } from "@/types/models";
 import { getDefaultCfgForEngine } from "@/lib/engineHints";
 import { effectiveMode, type OmniMode } from "@/lib/omnivoice";
+import { TooNarrowBanner } from "@/components/TooNarrowBanner";
+import { useViewportWidth } from "@/hooks/useViewportWidth";
+import { showNarrowBanner } from "@/lib/layout";
 
 const TTS_SEG_ID = "__tts__";
 
@@ -629,6 +632,8 @@ export default function App() {
     }
   }, [project, showError, cfgScale, exaggeration, activeEngine]);
 
+  const viewportWidth = useViewportWidth();
+
   // ---- derived state ----
 
   const isDark = theme === "dark";
@@ -692,6 +697,7 @@ export default function App() {
 
       {/* MIDDLE column: sticky toolbar, scroll body, sticky player */}
       <main className="flex-1 flex flex-col min-w-0 @container">
+        {showNarrowBanner(viewportWidth) && <TooNarrowBanner isDark={isDark} />}
         <MiddleToolbar
           validCount={validCount}
           cachedCount={cachedCount}
