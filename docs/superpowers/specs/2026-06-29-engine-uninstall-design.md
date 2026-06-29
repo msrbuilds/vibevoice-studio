@@ -23,10 +23,12 @@ Allow users to reclaim disk space by (a) deleting downloaded model weights for a
 |---|---|---|
 | VibeVoice | `backend/models/hub/models--vibevoice--VibeVoice-1.5B/` | n/a (in-process, no isolated env) |
 | Kokoro | `backend/models/hub/models--hexgrad--Kokoro-82M/` | n/a (in-process) |
-| Chatterbox | `backend/models/hub/models--ResembleAI--chatterbox/` | `backend/venv-chatterbox/` + `.chatterbox-ready` |
-| OmniVoice | `backend/models/hub/models--k2-fsa--OmniVoice/` | `backend/venv-omnivoice/` + `.omnivoice-ready` |
+| Chatterbox | `backend/models/hub/models--ResembleAI--chatterbox/` | `backend/venv-chatterbox/` (whole dir) |
+| OmniVoice | `backend/models/hub/models--k2-fsa--OmniVoice/` | `backend/venv-omnivoice/` (whole dir) |
 
 The HF cache layout uses dashes instead of slashes: `models--{org}--{repo}`.
+
+**Ready-marker note:** The `.{engine}-ready` marker file lives *inside* the venv directory (`backend/venv-chatterbox/.chatterbox-ready`, `backend/venv-omnivoice/.omnivoice-ready` — confirmed in `chatterbox_engine.py:_ready_marker`, `omnivoice_engine.py:_ready_marker`, and `studio.py`). So removing the venv directory with a single `shutil.rmtree` deletes the marker too — no separate `unlink` step is needed. After removal, `engine.installed()` (which probes the marker) returns `False` automatically.
 
 ---
 
@@ -50,13 +52,37 @@ class ModelDeleter:
 DELETABLE: frozenset[str]  # {vibevoice, kokoro, omnivoice, chatterbox}
 ```
 
-The HF cache path is derived from the engine's `repo_id` in `MODEL_CATALOG`:
-- `repo_id = "vibevoice/VibeVoice-1.5B"` → dir `models--vibevoice--VibeVoice-1.5B`
-- Full path: `<hf_cache_dir>/models--{org}--{repo}/`
+The HF cache path is derived from the engine's `repo_id` in `MODEL_CATALOG`. **Preferred (robust) approach:** locate the repo's actual cache dir via the snapshot resolver rather than hand-building a path, then delete the whole repo dir:
 
-Where `hf_cache_dir` is `backend/models/hub/` (set via `HF_HOME`/`HUGGINGFACE_HUB_CACHE` env vars in `core/hf_paths.py`).
+```python
+def _repo_cache_dir(repo_id: str) -> Path | None:
+    """Return the `models--{org}--{repo}` dir in the HF cache, or None if absent.
 
-**Note on `downloaded()` for Chatterbox:** The base `Engine.downloaded()` returns `True` by default. `ChatterboxEngine` currently inherits this, which means the UI would always see `downloaded=True` for Chatterbox even before its weights exist. `ChatterboxEngine.downloaded()` must be overridden to probe `backend/models/hub/models--ResembleAI--chatterbox/` (same pattern as `VibeVoiceEngine` and `KokoroEngine` do via `model_cache.py::model_downloaded`). This override is part of this feature's scope.
+    Resolve via snapshot_download(local_files_only=True) → that returns
+    .../models--org--repo/snapshots/<rev>; walk up two levels to the repo root.
+    Falling back to the documented layout if resolution fails.
+    """
+    try:
+        from huggingface_hub import snapshot_download
+        snap = Path(snapshot_download(repo_id, local_files_only=True))
+        return snap.parent.parent  # snapshots/<rev> -> snapshots -> repo root
+    except Exception:
+        # Not cached, or partial — fall back to the documented layout so a
+        # partial/corrupt download can still be cleaned up.
+        from huggingface_hub.constants import HF_HUB_CACHE
+        cand = Path(HF_HUB_CACHE) / f"models--{repo_id.replace('/', '--')}"
+        return cand if cand.exists() else None
+```
+
+Deleting the entire `models--{org}--{repo}/` dir removes blobs + snapshots + refs together, so a subsequent `model_downloaded(repo_id)` probe correctly returns `False`. (Layout for reference: `repo_id="vibevoice/VibeVoice-1.5B"` → `models--vibevoice--VibeVoice-1.5B`; cache root `backend/models/hub/`, set via `HF_HOME`/`HUGGINGFACE_HUB_CACHE` in `core/hf_paths.py`.)
+
+**Note on `downloaded()` for Chatterbox (in scope):** The base `Engine.downloaded()` returns `True` by default. `ChatterboxEngine` currently inherits this (confirmed — no override), so the UI always sees `downloaded=True` for Chatterbox even before its weights exist, and the "Delete weights" button can't gate correctly. Add an override copied verbatim from `OmniVoiceEngine.downloaded()` (its closest sibling — also an isolated engine whose weights live in the shared HF cache):
+
+```python
+def downloaded(self) -> bool:
+    from ..model_cache import model_downloaded
+    return model_downloaded(self._model_id)  # self._model_id == "ResembleAI/chatterbox"
+```
 
 **Safety:** before deleting, if the engine is currently loaded, call `engine.unload()` via `EngineManager` to release file handles.
 
@@ -85,14 +111,12 @@ class OmniVoiceUninstaller(EngineEnvUninstaller): ...
 ```
 
 **What it removes for `chatterbox`:**
-- `backend/venv-chatterbox/` (rmtree)
-- `backend/.chatterbox-ready` (unlink, ignore if absent)
+- `backend/venv-chatterbox/` (single `rmtree` — the `.chatterbox-ready` marker is inside this dir, so it goes too)
 
 **What it removes for `omnivoice`:**
-- `backend/venv-omnivoice/` (rmtree)
-- `backend/.omnivoice-ready` (unlink, ignore if absent)
+- `backend/venv-omnivoice/` (single `rmtree` — `.omnivoice-ready` is inside)
 
-**Safety:** unload the engine first if loaded (same as model_delete.py).
+**Safety (Windows file lock — critical):** A loaded Chatterbox/OmniVoice engine holds an open `venv-{engine}/Scripts/python.exe` worker subprocess. On Windows you **cannot** `rmtree` a directory containing a running executable — the rmtree will fail with a permission error. So the uninstaller MUST call `engine.unload()` (which kills the worker subprocess) and wait for the process to exit **before** rmtree. The uninstaller resolves the engine via `EngineManager.get_engine(name)` and calls `.unload()` if `.is_loaded()`. Same unload-first applies to model_delete.py (weights may be mmap'd by a loaded model).
 
 **Status fields:**
 ```python
@@ -220,10 +244,10 @@ In the engine card (`<li>` for each engine), add secondary action buttons below 
 
 Button styling: small, text-only with a red tint — `text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300`. No background — low visual weight so it doesn't compete with the primary action button.
 
-**State-gating:**
-- "Delete weights" shown only when `engine.downloaded === true`
-- "Uninstall environment" shown only when `engine.installed === true` AND engine is Chatterbox or OmniVoice (i.e., `engine.installed` is a boolean, not the default `true`)
-- Neither button shown when the engine is currently active (switching away first is required) — OR show them disabled with a tooltip "Switch to another engine first"
+**State-gating (definitive):**
+- "Delete weights" shown only when `engine.downloaded === true`.
+- "Uninstall environment" shown only when `engine.installed === true` AND engine name is `chatterbox` or `omnivoice` (the only two with isolated venvs).
+- **Both destructive actions are hidden for the currently-active engine** (`engine.active === true`). Rationale: deleting weights / removing the venv of the engine you're actively using would unload it mid-session (and on Windows, unload-first is required anyway). The user must switch to another engine first; then the buttons appear on the now-inactive card. This is simpler and safer than disabled-with-tooltip, and avoids a "deleted the model out from under myself" footgun.
 
 ### `frontend/src/App.tsx` additions
 
