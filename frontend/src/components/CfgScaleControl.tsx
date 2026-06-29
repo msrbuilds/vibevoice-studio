@@ -55,7 +55,7 @@ export function CfgScaleBody({ isDark, value, onChange, hints }: Props) {
         step={h.step}
         value={value}
         onChange={(e) => set(Number(e.target.value))}
-        className="w-full accent-orange-500"
+        className="w-full accent-orange-500 border rounded-lg h-2 cursor-pointer"
       />
       <div
         className={`flex justify-between text-[10px] ${

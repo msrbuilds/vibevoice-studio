@@ -148,7 +148,7 @@ export function SegmentCard({
               value={segment.speakerId ?? ""}
               onChange={(e) => onUpdate(segment.id, "speakerId", e.target.value)}
               disabled={isActive || busy}
-              className={`flex-1 px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${focusRing} ${
+              className={`flex-1 px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${
                 isDark
                   ? "bg-zinc-800 border-zinc-700 text-white"
                   : "bg-white border-gray-300 text-gray-900"
@@ -219,7 +219,7 @@ export function SegmentCard({
           placeholder="Enter text for this segment…"
           disabled={isActive || busy}
           rows={3}
-          className={`w-full px-3 py-2.5 rounded-lg text-sm border resize-none focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing} ${
+          className={`w-full px-3 py-2.5 rounded-lg text-sm border resize-none focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
             isDark
               ? "bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500"
               : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"

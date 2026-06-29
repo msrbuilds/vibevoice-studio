@@ -106,7 +106,7 @@ function SpeakerRow({
         type="text"
         value={speaker.name}
         onChange={(e) => onUpdate({ name: e.target.value })}
-        className={`flex-1 bg-transparent text-sm font-medium focus:outline-none focus:ring-1 focus:ring-orange-500/50 rounded px-1 ${inputText}`}
+        className={`flex-1 bg-transparent text-sm font-medium focus:outline-none focus:border-b focus:border-orange-500 rounded px-1 ${inputText}`}
       />
       {canDelete && (
         <button
@@ -125,7 +125,7 @@ function SpeakerRow({
     <select
       value={speaker.voice}
       onChange={(e) => onSetVoice(e.target.value)}
-      className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
+      className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText}`}
     >
       <option value="">Select voice…</option>
       {voices.map((v) => (
@@ -181,7 +181,7 @@ function SpeakerRow({
             value={speaker.voiceDesign ?? ""}
             onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
             placeholder="e.g. female, low pitch, british accent"
-            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
+            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText}`}
           />
           <div className="flex flex-wrap gap-1">
             {DESIGN_CHIPS.map((chip) => (

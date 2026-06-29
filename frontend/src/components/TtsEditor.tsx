@@ -95,7 +95,7 @@ export function TtsEditor(props: Props) {
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         placeholder="Type or paste text to synthesize…"
-        className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-orange-500 ${inputBg} ${focusRing}`}
+        className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-orange-500 ${inputBg}`}
       />
 
       {/* OmniVoice inline non-verbal sounds — insert a tag at the cursor */}
@@ -144,7 +144,7 @@ export function TtsEditor(props: Props) {
                 value={voiceDesign}
                 onChange={(e) => onVoiceDesignChange(e.target.value)}
                 placeholder="e.g. female, low pitch, british accent"
-                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-orange-500 ${selectBg} ${focusRing}`}
+                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-orange-500 ${selectBg}`}
               />
               <div className="flex flex-wrap gap-1">
                 {DESIGN_CHIPS.map((chip) => (

@@ -95,7 +95,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Amelia"
-              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500 ${focusRing}`}
+              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500`}
             />
           </label>
 
@@ -105,7 +105,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as typeof gender)}
-                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} focus:outline-none focus:border-orange-500 ${focusRing}`}
+                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} focus:outline-none focus:border-orange-500`}
               >
                 <option value="">—</option>
                 <option value="woman">Woman</option>
@@ -121,7 +121,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
                 onChange={(e) => setLanguage(e.target.value)}
                 placeholder="en"
                 maxLength={8}
-                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500 ${focusRing}`}
+                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500`}
               />
             </label>
           </div>
