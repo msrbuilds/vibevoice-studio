@@ -167,6 +167,14 @@ class ChatterboxEngine(Engine):
         # venv-chatterbox/{Scripts|bin}/python[.exe]).
         return self._worker_python.parent.parent / ".chatterbox-ready"
 
+    def downloaded(self) -> bool:
+        # Chatterbox weights live in the shared HF cache (backend/models/), which
+        # both the main process and the isolated worker read. Probe it so the UI
+        # can gate the Delete-weights button. Mirrors OmniVoiceEngine.downloaded().
+        from ..model_cache import model_downloaded
+
+        return model_downloaded(self._model_id)
+
     def engine_info(self) -> dict[str, Any]:
         device = self._device_request
         if device == "auto":
