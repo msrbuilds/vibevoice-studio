@@ -1,4 +1,5 @@
 import type { ProjectMode } from "@/types/models";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   isDark: boolean;
@@ -12,8 +13,8 @@ export function ModeToggle({ isDark, mode, onChange }: Props) {
     <button type="button" onClick={() => onChange(m)}
       className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
         mode === m ? "bg-teal-600 text-white"
-        : isDark ? "text-zinc-400 hover:text-zinc-200" : "text-gray-500 hover:text-gray-700"
-      }`}>
+        : isDark ? "text-zinc-400 hover:text-zinc-200" : "text-gray-600 hover:text-gray-700"
+      } ${focusRing}`}>
       {label}
     </button>
   );

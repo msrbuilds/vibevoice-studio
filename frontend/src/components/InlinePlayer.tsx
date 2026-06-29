@@ -1,5 +1,6 @@
 import { FileAudio, Play, Square, Volume2 } from "lucide-react";
 import { useIsNarrow } from "@/hooks/useIsNarrow";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   segmentCount: number;
@@ -72,7 +73,7 @@ export function InlinePlayer({
             )}
             <p
               className={`${narrow ? "text-sm" : "text-sm"} truncate ${
-                isDark ? "text-zinc-500" : "text-gray-500"
+                isDark ? "text-zinc-400" : "text-gray-600"
               }`}
               title={subText}
             >
@@ -90,9 +91,9 @@ export function InlinePlayer({
               title="Download joined WAV"
               className={`flex items-center gap-2 px-5 py-3 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${
                 isDark
-                  ? "bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 text-white disabled:text-zinc-500"
-                  : "bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 text-gray-900 disabled:text-gray-400"
-              }`}
+                  ? "bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 text-white disabled:text-zinc-400"
+                  : "bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 text-gray-900 disabled:text-gray-600"
+              } ${focusRing}`}
             >
               {downloadLabel}
             </button>
@@ -103,7 +104,7 @@ export function InlinePlayer({
               type="button"
               onClick={onStopAll}
               title="Stop playback"
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors"
+              className={`flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors ${focusRing}`}
             >
               {stopLabel}
             </button>
@@ -113,7 +114,7 @@ export function InlinePlayer({
               onClick={onPlayAll}
               disabled={validCount === 0 || isExporting}
               title={`Play through all ${segmentCount} segments in order`}
-              className="flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-500 disabled:bg-zinc-700 text-white disabled:text-zinc-500 rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+              className={`flex items-center gap-2 px-6 py-3 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
             >
               {playLabel}
             </button>

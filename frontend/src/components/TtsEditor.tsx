@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Loader2, Play, RefreshCw, Square } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import type { EngineLanguage, Voice } from "@/types/models";
 import { textStats, fmtDuration } from "@/lib/textStats";
 import { DESIGN_CHIPS, NONVERBAL_TAGS, appendDesignChip, type OmniMode } from "@/lib/omnivoice";
@@ -36,7 +37,7 @@ export function TtsEditor(props: Props) {
   const stats = textStats(text);
   const inputBg = isDark ? "bg-zinc-900 border-zinc-800 text-white" : "bg-white border-gray-200 text-gray-900";
   const selectBg = isDark ? "bg-zinc-800 border-zinc-700 text-white" : "bg-white border-gray-300 text-gray-900";
-  const sub = isDark ? "text-zinc-500" : "text-gray-500";
+  const sub = isDark ? "text-zinc-400" : "text-gray-600";
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingCaret = useRef<number | null>(null);
@@ -81,7 +82,7 @@ export function TtsEditor(props: Props) {
           : isDark
             ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-      }`}
+      } ${focusRing}`}
     >
       {label}
     </button>
@@ -94,7 +95,7 @@ export function TtsEditor(props: Props) {
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         placeholder="Type or paste text to synthesize…"
-        className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-teal-500 ${inputBg}`}
+        className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-teal-500 ${inputBg} ${focusRing}`}
       />
 
       {/* OmniVoice inline non-verbal sounds — insert a tag at the cursor */}
@@ -112,8 +113,8 @@ export function TtsEditor(props: Props) {
                 className={`px-1.5 py-0.5 text-[11px] font-mono rounded border transition-colors ${
                   isDark
                     ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
-                    : "border-gray-300 text-gray-500 hover:border-teal-500 hover:text-teal-600"
-                }`}
+                    : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                } ${focusRing}`}
               >
                 {tag}
               </button>
@@ -143,7 +144,7 @@ export function TtsEditor(props: Props) {
                 value={voiceDesign}
                 onChange={(e) => onVoiceDesignChange(e.target.value)}
                 placeholder="e.g. female, low pitch, british accent"
-                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-teal-500 ${selectBg}`}
+                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-teal-500 ${selectBg} ${focusRing}`}
               />
               <div className="flex flex-wrap gap-1">
                 {DESIGN_CHIPS.map((chip) => (
@@ -154,8 +155,8 @@ export function TtsEditor(props: Props) {
                     className={`px-1.5 py-0.5 text-[11px] rounded border transition-colors ${
                       isDark
                         ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
-                        : "border-gray-300 text-gray-500 hover:border-teal-500 hover:text-teal-600"
-                    }`}
+                        : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                    } ${focusRing}`}
                   >
                     {chip}
                   </button>
@@ -183,14 +184,14 @@ export function TtsEditor(props: Props) {
             </span>
           )}
           <button type="button" onClick={onGenerate} disabled={busy || !text.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white transition-colors">
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-amber-700 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white transition-colors ${focusRing}`}>
             {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Generate
           </button>
           <button type="button" onClick={onPlay} disabled={busy && !isPlaying}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isPlaying
-                ? "bg-teal-600 hover:bg-teal-500 text-white"
-                : isDark ? "bg-zinc-800 hover:bg-zinc-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"}`}>
+                ? "bg-teal-700 hover:bg-teal-600 text-white"
+                : isDark ? "bg-zinc-800 hover:bg-zinc-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"} ${focusRing}`}>
             {isPlaying ? <><Square className="w-4 h-4" /> Stop</> : <><Play className="w-4 h-4" /> Play</>}
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { Check, Loader2, Play, RefreshCw, Square, Trash2 } from "lucide-react";
 import { Download } from "lucide-react";
 import type { Segment, Speaker } from "@/types/models";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   segment: Segment;
@@ -107,7 +108,7 @@ export function SegmentCard({
               type="button"
               onClick={onDownload}
               disabled={isActive || busy}
-              className="p-2 text-zinc-500 hover:text-teal-400 hover:bg-teal-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`p-2 text-zinc-400 hover:text-teal-400 hover:bg-teal-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}
               title="Download this segment as WAV"
             >
               <Download className="w-4 h-4" />
@@ -118,7 +119,7 @@ export function SegmentCard({
               type="button"
               onClick={() => onRemove(segment.id)}
               disabled={isActive || busy}
-              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}
               title="Delete segment"
             >
               <Trash2 className="w-4 h-4" />
@@ -147,7 +148,7 @@ export function SegmentCard({
               value={segment.speakerId ?? ""}
               onChange={(e) => onUpdate(segment.id, "speakerId", e.target.value)}
               disabled={isActive || busy}
-              className={`flex-1 px-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${
+              className={`flex-1 px-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${focusRing} ${
                 isDark
                   ? "bg-zinc-800 border-zinc-700 text-white"
                   : "bg-white border-gray-300 text-gray-900"
@@ -170,8 +171,8 @@ export function SegmentCard({
           className={`mt-5 flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${
             isCached
               ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700"
-              : "bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-700 text-white disabled:text-zinc-500"
-          }`}
+              : "bg-amber-700 hover:bg-amber-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400"
+          } ${focusRing}`}
           title={isCached ? "Force a fresh take (bypass cache)" : "Generate audio for this segment"}
         >
           {isGenerating ? (
@@ -186,7 +187,7 @@ export function SegmentCard({
           <button
             type="button"
             onClick={onStop}
-            className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors"
+            className={`mt-5 flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors ${focusRing}`}
           >
             <Square className="w-4 h-4" />
             Stop
@@ -196,7 +197,7 @@ export function SegmentCard({
             type="button"
             onClick={onPlay}
             disabled={!segment.text.trim() || busy}
-            className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800/50 text-white disabled:text-zinc-600 rounded-lg font-medium transition-colors border border-zinc-700 disabled:cursor-not-allowed"
+            className={`mt-5 flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800/50 text-white disabled:text-zinc-600 rounded-lg font-medium transition-colors border border-zinc-700 disabled:cursor-not-allowed ${focusRing}`}
           >
             <Play className="w-4 h-4" />
             Play
@@ -218,7 +219,7 @@ export function SegmentCard({
           placeholder="Enter text for this segment…"
           disabled={isActive || busy}
           rows={3}
-          className={`w-full px-4 py-3 rounded-lg text-sm border resize-none focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`w-full px-4 py-3 rounded-lg text-sm border resize-none focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing} ${
             isDark
               ? "bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500"
               : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, Cpu, Loader2, Volume2, X } from "lucide-react";
 import type { EngineInfo } from "@/types/models";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   isDark: boolean;
@@ -65,7 +66,7 @@ export function EngineSelector({
           isDark
             ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
             : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
-        }`}
+        } ${focusRing}`}
         title="Switch TTS engine"
       >
         <span className="flex items-center gap-2 min-w-0">
@@ -108,7 +109,7 @@ export function EngineSelector({
                 </div>
                 <div
                   className={`text-xs mt-0.5 ${
-                    isDark ? "text-zinc-500" : "text-gray-500"
+                    isDark ? "text-zinc-400" : "text-gray-600"
                   }`}
                 >
                   Switch between backends. Only one runs at a time.
@@ -119,9 +120,9 @@ export function EngineSelector({
                 onClick={() => setOpen(false)}
                 className={`p-1 rounded transition-colors ${
                   isDark
-                    ? "text-zinc-500 hover:text-zinc-300"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
+                    ? "text-zinc-400 hover:text-zinc-300"
+                    : "text-gray-600 hover:text-gray-600"
+                } ${focusRing}`}
                 title="Close"
               >
                 <X className="w-5 h-5" />
@@ -146,7 +147,7 @@ export function EngineSelector({
                           ? "bg-teal-600/20 text-teal-400"
                           : isDark
                             ? "bg-zinc-800 text-zinc-400"
-                            : "bg-gray-100 text-gray-500"
+                            : "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {switching ? (
@@ -190,7 +191,7 @@ export function EngineSelector({
                       </p>
                       <div
                         className={`text-xs mt-1.5 ${
-                          isDark ? "text-zinc-500" : "text-gray-500"
+                          isDark ? "text-zinc-400" : "text-gray-600"
                         }`}
                       >
                         {e.supports_voice_cloning
@@ -216,7 +217,7 @@ export function EngineSelector({
                             isDark
                               ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
                               : "bg-teal-50 hover:bg-teal-100 text-teal-700"
-                          }`}
+                          } ${focusRing}`}
                         >
                           {`Install ${e.display_name}`}
                         </button>
@@ -231,7 +232,7 @@ export function EngineSelector({
                             isDark
                               ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
                               : "bg-teal-50 hover:bg-teal-100 text-teal-700"
-                          }`}
+                          } ${focusRing}`}
                         >
                           {`Download ${e.display_name}`}
                         </button>
@@ -246,7 +247,7 @@ export function EngineSelector({
                               : isDark
                                 ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
                                 : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                          }`}
+                          } ${focusRing}`}
                         >
                           {isActive
                             ? "Currently active"
@@ -265,8 +266,8 @@ export function EngineSelector({
             <div
               className={`px-5 py-3 text-[11px] border-t shrink-0 ${
                 isDark
-                  ? "border-zinc-800 text-zinc-500"
-                  : "border-gray-200 text-gray-500"
+                  ? "border-zinc-800 text-zinc-400"
+                  : "border-gray-200 text-gray-600"
               }`}
             >
               Switching unloads the current model. First synthesis may take

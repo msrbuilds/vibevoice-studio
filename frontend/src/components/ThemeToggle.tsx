@@ -1,4 +1,5 @@
 import { Moon, Sun } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   theme: "light" | "dark";
@@ -15,7 +16,7 @@ export function ThemeToggle({ theme, onToggle }: Props) {
         isDark
           ? "border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 text-zinc-300"
           : "border-gray-300 hover:border-gray-400 hover:bg-gray-100 text-gray-700"
-      }`}
+      } ${focusRing}`}
       title="Toggle theme"
     >
       {isDark ? (

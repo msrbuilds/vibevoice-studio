@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 
 import { InstallEngineDialog } from "@/components/InstallEngineDialog";
 import { DownloadModelDialog } from "@/components/DownloadModelDialog";
@@ -662,7 +663,7 @@ export default function App() {
           <p className="text-sm text-zinc-400 mb-4">
             Could not reach <code className="text-teal-300">/api/config</code>: {configError}
           </p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-400">
             Start the backend in another terminal:
             <br />
             <code className="text-zinc-300">cd backend &amp;&amp; python cli.py --device cpu</code>
@@ -759,7 +760,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setStopExport(true)}
-                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium"
+                    className={`px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium ${focusRing}`}
                   >
                     Cancel
                   </button>

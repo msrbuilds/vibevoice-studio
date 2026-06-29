@@ -4,6 +4,7 @@ import type { ConfigResponse, Voice, VoiceMetadata } from "@/types/models";
 import { UploadVoiceDialog } from "./UploadVoiceDialog";
 import { VoiceMetaDialog } from "./VoiceMetaDialog";
 import { ThemeToggle } from "./ThemeToggle";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   voices: Voice[];
@@ -41,16 +42,16 @@ export function VoiceLibrary({
   // reads as a distinct panel from the main content.
   const surface = isDark ? "bg-zinc-950" : "bg-white";
   const border = isDark ? "border-zinc-800" : "border-gray-200";
-  const heading = isDark ? "text-zinc-500" : "text-gray-500";
+  const heading = isDark ? "text-zinc-400" : "text-gray-600";
   const bodyText = isDark ? "text-zinc-300" : "text-gray-700";
-  const subtle = isDark ? "text-zinc-500" : "text-gray-500";
+  const subtle = isDark ? "text-zinc-400" : "text-gray-600";
   const iconBtn = isDark
     ? "text-zinc-400 hover:text-teal-400"
-    : "text-gray-400 hover:text-teal-600";
+    : "text-gray-600 hover:text-teal-600";
   const hover = isDark ? "hover:bg-zinc-900" : "hover:bg-gray-100";
   const danger = isDark
-    ? "text-zinc-500 hover:text-red-400"
-    : "text-gray-400 hover:text-red-600";
+    ? "text-zinc-400 hover:text-red-400"
+    : "text-gray-600 hover:text-red-700";
   const empty = isDark ? "text-zinc-600" : "text-gray-400";
 
   return (
@@ -92,7 +93,7 @@ export function VoiceLibrary({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingVoice(v); }}
-                  className={`p-1 ${iconBtn}`}
+                  className={`p-1 ${iconBtn} ${focusRing}`}
                   title="Edit name / gender / language"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -119,7 +120,7 @@ export function VoiceLibrary({
             <button
               type="button"
               onClick={() => setUploadOpen(true)}
-              className={`p-1 transition-colors ${iconBtn}`}
+              className={`p-1 transition-colors ${iconBtn} ${focusRing}`}
               title="Upload voice"
             >
               <Plus className="w-4 h-4" />
@@ -142,7 +143,7 @@ export function VoiceLibrary({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingVoice(v); }}
-                  className={`p-1 ${iconBtn}`}
+                  className={`p-1 ${iconBtn} ${focusRing}`}
                   title="Edit name / gender / language"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -150,7 +151,7 @@ export function VoiceLibrary({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); void onRemoveVoice(v.id); }}
-                  className={`p-1 ${danger}`}
+                  className={`p-1 ${danger} ${focusRing}`}
                   title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

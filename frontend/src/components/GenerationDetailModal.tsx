@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Volume2, X } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import type { CacheEntryInfo } from "@/lib/api";
 import { cacheAudioUrl } from "@/lib/api";
 import { isRtlText } from "@/lib/textStats";
@@ -127,7 +128,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
               {(entry.name ?? "").trim() || `Generation ${entry.hash.slice(0, 8)}`}
             </div>
             <div
-              className={`text-xs mt-0.5 ${isDark ? "text-zinc-500" : "text-gray-500"}`}
+              className={`text-xs mt-0.5 ${isDark ? "text-zinc-400" : "text-gray-600"}`}
             >
               {entry.duration_sec.toFixed(1)}s
               {entry.voice ? ` · ${entry.voice}` : ""}
@@ -138,9 +139,9 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
             onClick={onClose}
             className={`p-1 rounded transition-colors shrink-0 ${
               isDark
-                ? "text-zinc-500 hover:text-zinc-300"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
+                ? "text-zinc-400 hover:text-zinc-300"
+                : "text-gray-600 hover:text-gray-600"
+            } ${focusRing}`}
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -201,7 +202,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
                 isDark
                   ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
                   : "bg-teal-50 hover:bg-teal-100 text-teal-700"
-              }`}
+              } ${focusRing}`}
               title={playing ? "Pause" : "Play"}
             >
               {playing ? (
@@ -219,13 +220,13 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
               step={0.001}
               value={progress}
               onChange={(e) => handleSeek(parseFloat(e.target.value))}
-              className="flex-1 accent-teal-500"
+              className={`flex-1 accent-teal-500 ${focusRing}`}
             />
 
             {/* Time display */}
             <span
               className={`text-xs tabular-nums shrink-0 ${
-                isDark ? "text-zinc-400" : "text-gray-500"
+                isDark ? "text-zinc-400" : "text-gray-600"
               }`}
             >
               {formatTime(currentTime)} / {formatTime(duration)}
@@ -233,7 +234,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
 
             {/* Volume */}
             <Volume2
-              className={`w-4 h-4 shrink-0 ${isDark ? "text-zinc-500" : "text-gray-400"}`}
+              className={`w-4 h-4 shrink-0 ${isDark ? "text-zinc-400" : "text-gray-600"}`}
             />
             <input
               type="range"
@@ -242,7 +243,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
               step={0.01}
               value={volume}
               onChange={handleVolumeChange}
-              className="w-20 accent-teal-500"
+              className={`w-20 accent-teal-500 ${focusRing}`}
             />
           </div>
         </div>

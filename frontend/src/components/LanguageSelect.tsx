@@ -1,4 +1,5 @@
 import type { EngineLanguage } from "@/types/models";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   isDark: boolean;
@@ -14,7 +15,7 @@ export function LanguageSelect({ isDark, languages, value, onChange }: Props) {
     <select
       value={value ?? languages[0]!.code}
       onChange={(e) => onChange(e.target.value)}
-      className={`border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg}`}
+      className={`border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${focusRing}`}
     >
       {languages.map((l) => (
         <option key={l.code} value={l.code}>{l.label}</option>

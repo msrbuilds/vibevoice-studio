@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, X } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import { getModelDownloadStatus, startModelDownload } from "@/lib/api";
 import type { DownloadStatus } from "@/types/models";
 
@@ -157,8 +158,8 @@ export function DownloadModelDialog({
                 ? "opacity-40 cursor-not-allowed"
                 : isDark
                   ? "hover:bg-zinc-800 text-zinc-400"
-                  : "hover:bg-gray-100 text-gray-500"
-            }`}
+                  : "hover:bg-gray-100 text-gray-600"
+            } ${focusRing}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -187,7 +188,7 @@ export function DownloadModelDialog({
                 </div>
                 <div
                   className={`flex justify-between text-[11px] ${
-                    isDark ? "text-zinc-400" : "text-gray-500"
+                    isDark ? "text-zinc-400" : "text-gray-600"
                   }`}
                 >
                   <span>
@@ -219,7 +220,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 hover:bg-teal-500 text-white"
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-teal-700 hover:bg-teal-600 text-white ${focusRing}`}
               >
                 {`Download (${sizeLabel})`}
               </button>
@@ -228,7 +229,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 hover:bg-teal-500 text-white"
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-teal-700 hover:bg-teal-600 text-white ${focusRing}`}
               >
                 Retry
               </button>
@@ -243,7 +244,7 @@ export function DownloadModelDialog({
                   : isDark
                     ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
+              } ${focusRing}`}
             >
               {started ? "Close" : "Cancel"}
             </button>

@@ -4,6 +4,7 @@ import {
   getCfgHints,
   type EngineCfgHints,
 } from "@/lib/engineHints";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   isDark: boolean;
@@ -58,7 +59,7 @@ export function CfgScaleBody({ isDark, value, onChange, hints }: Props) {
       />
       <div
         className={`flex justify-between text-[10px] ${
-          isDark ? "text-zinc-600" : "text-gray-400"
+          isDark ? "text-zinc-600" : "text-gray-600"
         }`}
       >
         <span>{h.minLabel}</span>
@@ -84,7 +85,7 @@ export function CfgScaleBody({ isDark, value, onChange, hints }: Props) {
                   : isDark
                     ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
-              }`}
+              } ${focusRing}`}
             >
               {preset.toFixed(h.precision)}
             </button>
@@ -93,7 +94,7 @@ export function CfgScaleBody({ isDark, value, onChange, hints }: Props) {
       </div>
 
       {h.hint && (
-        <p className={`text-xs ${isDark ? "text-zinc-500" : "text-gray-500"}`}>
+        <p className={`text-xs ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
           {h.highlight ? (
             <>
               {h.hint.split(h.highlight)[0]}
@@ -124,7 +125,7 @@ export function CfgScaleControl({ isDark, value, onChange, hints }: Props) {
           isDark
             ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
             : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
-        }`}
+        } ${focusRing}`}
         title="Voice cloning fidelity (CFG scale)"
       >
         <SlidersHorizontal className="w-4 h-4" />
@@ -151,7 +152,7 @@ export function CfgScaleControl({ isDark, value, onChange, hints }: Props) {
                 Voice fidelity (CFG)
               </div>
               <div
-                className={`text-xs mt-0.5 ${isDark ? "text-zinc-500" : "text-gray-500"}`}
+                className={`text-xs mt-0.5 ${isDark ? "text-zinc-400" : "text-gray-600"}`}
               >
                 Tradeoff: clone strength vs. naturalness
               </div>
@@ -161,9 +162,9 @@ export function CfgScaleControl({ isDark, value, onChange, hints }: Props) {
               onClick={() => setOpen(false)}
               className={`p-1 rounded ${
                 isDark
-                  ? "text-zinc-500 hover:text-zinc-300"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
+                  ? "text-zinc-400 hover:text-zinc-300"
+                  : "text-gray-600 hover:text-gray-600"
+              } ${focusRing}`}
             >
               <X className="w-4 h-4" />
             </button>

@@ -1,3 +1,5 @@
+import { focusRing } from "@/lib/theme";
+
 /**
  * Voice expressiveness / exaggeration slider body — only relevant for
  * the Chatterbox Multilingual V3 engine. Shared between ControlPanel and
@@ -40,7 +42,7 @@ export function ExaggerationBody({
       />
       <div
         className={`flex justify-between text-[10px] ${
-          isDark ? "text-zinc-600" : "text-gray-400"
+          isDark ? "text-zinc-600" : "text-gray-600"
         }`}
       >
         <span>neutral</span>
@@ -60,14 +62,14 @@ export function ExaggerationBody({
                 : isDark
                   ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
-            }`}
+            } ${focusRing}`}
           >
             {preset.toFixed(1)}
           </button>
         ))}
       </div>
 
-      <p className={`text-xs ${isDark ? "text-zinc-500" : "text-gray-500"}`}>
+      <p className={`text-xs ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
         Chatterbox-only. Higher values make the speaker sound more
         dramatic; lower values are calmer. Pairs with the
         <span className="text-teal-400"> CFG weight</span> slider above.

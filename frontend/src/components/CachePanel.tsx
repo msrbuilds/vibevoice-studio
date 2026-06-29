@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Database, Download, FolderOpen, Pause, Play, Trash2, X } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import {
   cacheAudioUrl,
   clearCache,
@@ -177,7 +178,7 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
   if (!data) {
     return (
       <div className="px-4 py-6 text-center text-sm">
-        <span className={isDark ? "text-zinc-500" : "text-gray-500"}>
+        <span className={isDark ? "text-zinc-400" : "text-gray-600"}>
           Loading…
         </span>
       </div>
@@ -190,7 +191,7 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
       <div className="flex items-center justify-between mb-2">
         <h3
           className={`text-xs font-semibold uppercase tracking-wide ${
-            isDark ? "text-zinc-500" : "text-gray-500"
+            isDark ? "text-zinc-400" : "text-gray-600"
           }`}
         >
           Recent generations
@@ -203,9 +204,9 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
               onClick={() => void openCacheFolder()}
               className={`p-1 rounded transition-colors ${
                 isDark
-                  ? "text-zinc-500 hover:text-teal-400"
-                  : "text-gray-400 hover:text-teal-600"
-              }`}
+                  ? "text-zinc-400 hover:text-teal-400"
+                  : "text-gray-600 hover:text-teal-600"
+              } ${focusRing}`}
             >
               <FolderOpen className="w-4 h-4" />
             </button>
@@ -217,9 +218,9 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
             title="Clear all"
             className={`p-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
               isDark
-                ? "text-zinc-500 hover:text-red-400"
-                : "text-gray-400 hover:text-red-600"
-            }`}
+                ? "text-zinc-400 hover:text-red-400"
+                : "text-gray-600 hover:text-red-700"
+            } ${focusRing}`}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -231,7 +232,7 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
         {data.entries.length === 0 ? (
           <div
             className={`px-4 py-6 text-center text-sm ${
-              isDark ? "text-zinc-500" : "text-gray-500"
+              isDark ? "text-zinc-400" : "text-gray-600"
             }`}
           >
             No generations yet.
@@ -262,7 +263,7 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
                         : isDark
                           ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-300"
                           : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-                    }`}
+                    } ${focusRing}`}
                     title={isPlaying ? "Pause" : "Play"}
                   >
                     {isPlaying ? (
@@ -283,7 +284,7 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
                     </div>
                     <div
                       className={`text-xs mt-0.5 truncate ${
-                        isDark ? "text-zinc-500" : "text-gray-500"
+                        isDark ? "text-zinc-400" : "text-gray-600"
                       }`}
                     >
                       {e.duration_sec.toFixed(1)}s · {formatBytes(e.size_bytes)} · {formatDate(e.created_at)}
@@ -298,9 +299,9 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
                       disabled={busy}
                       className={`p-1 rounded transition-colors ${
                         isDark
-                          ? "text-zinc-500 hover:text-teal-400"
-                          : "text-gray-400 hover:text-teal-600"
-                      }`}
+                          ? "text-zinc-400 hover:text-teal-400"
+                          : "text-gray-600 hover:text-teal-600"
+                      } ${focusRing}`}
                       title="Download WAV"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -311,9 +312,9 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
                       disabled={busy}
                       className={`p-1 rounded transition-colors ${
                         isDark
-                          ? "text-zinc-500 hover:text-red-400"
-                          : "text-gray-400 hover:text-red-600"
-                      }`}
+                          ? "text-zinc-400 hover:text-red-400"
+                          : "text-gray-600 hover:text-red-700"
+                      } ${focusRing}`}
                       title="Delete this entry"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -347,7 +348,7 @@ export function CachePanel({ isDark, onCountChange }: Props) {
     <>
       <Database className="w-4 h-4" />
       Cache{" "}
-      <span className={`text-xs ${isDark ? "text-zinc-500" : "text-gray-500"}`}>
+      <span className={`text-xs ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
         {data.entry_count}/{data.max_entries}
       </span>
     </>
@@ -367,7 +368,7 @@ export function CachePanel({ isDark, onCountChange }: Props) {
           isDark
             ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
             : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
-        }`}
+        } ${focusRing}`}
         title="Persistent synthesis cache"
       >
         {summary}
@@ -385,9 +386,9 @@ export function CachePanel({ isDark, onCountChange }: Props) {
               onClick={() => setOpen(false)}
               className={`p-1 rounded ${
                 isDark
-                  ? "text-zinc-500 hover:text-zinc-300"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
+                  ? "text-zinc-400 hover:text-zinc-300"
+                  : "text-gray-600 hover:text-gray-600"
+              } ${focusRing}`}
             >
               <X className="w-4 h-4" />
             </button>

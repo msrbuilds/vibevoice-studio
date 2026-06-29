@@ -1,6 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import type { Speaker, Voice } from "@/types/models";
 import { DESIGN_CHIPS, appendDesignChip, effectiveMode, type OmniMode } from "@/lib/omnivoice";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   speakers: Speaker[];
@@ -23,10 +24,10 @@ export function SpeakerRoster({
   onRemoveSpeaker,
   onSetSpeakerVoice,
 }: Props) {
-  const heading = isDark ? "text-zinc-500" : "text-gray-500";
+  const heading = isDark ? "text-zinc-400" : "text-gray-600";
   const iconBtn = isDark
     ? "text-zinc-400 hover:text-teal-400"
-    : "text-gray-400 hover:text-teal-600";
+    : "text-gray-600 hover:text-teal-600";
 
   return (
     <section>
@@ -37,7 +38,7 @@ export function SpeakerRoster({
         <button
           type="button"
           onClick={onAddSpeaker}
-          className={`p-1 transition-colors ${iconBtn}`}
+          className={`p-1 transition-colors ${iconBtn} ${focusRing}`}
           title="Add speaker"
         >
           <Plus className="w-4 h-4" />
@@ -89,8 +90,8 @@ function SpeakerRow({
   const selectBorder = isDark ? "border-zinc-700" : "border-gray-300";
   const selectText = isDark ? "text-white" : "text-gray-900";
   const danger = isDark
-    ? "text-zinc-500 hover:text-red-400"
-    : "text-gray-400 hover:text-red-600";
+    ? "text-zinc-400 hover:text-red-400"
+    : "text-gray-600 hover:text-red-700";
 
   const nameHeader = (
     <div className="flex items-center gap-2 mb-2">
@@ -108,7 +109,7 @@ function SpeakerRow({
         <button
           type="button"
           onClick={onRemove}
-          className={`p-1 ${danger}`}
+          className={`p-1 ${danger} ${focusRing}`}
           title="Delete speaker"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -121,7 +122,7 @@ function SpeakerRow({
     <select
       value={speaker.voice}
       onChange={(e) => onSetVoice(e.target.value)}
-      className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText}`}
+      className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
     >
       <option value="">Select voice…</option>
       {voices.map((v) => (
@@ -155,7 +156,7 @@ function SpeakerRow({
           : isDark
             ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-      }`}
+      } ${focusRing}`}
     >
       {label}
     </button>
@@ -177,7 +178,7 @@ function SpeakerRow({
             value={speaker.voiceDesign ?? ""}
             onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
             placeholder="e.g. female, low pitch, british accent"
-            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText}`}
+            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
           />
           <div className="flex flex-wrap gap-1">
             {DESIGN_CHIPS.map((chip) => (
@@ -188,8 +189,8 @@ function SpeakerRow({
                 className={`px-1.5 py-0.5 text-[10px] rounded border transition-colors ${
                   isDark
                     ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
-                    : "border-gray-300 text-gray-500 hover:border-teal-500 hover:text-teal-600"
-                }`}
+                    : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                } ${focusRing}`}
               >
                 {chip}
               </button>
@@ -198,7 +199,7 @@ function SpeakerRow({
         </div>
       )}
       {mode === "auto" && (
-        <p className={`text-[11px] italic ${isDark ? "text-zinc-500" : "text-gray-500"}`}>
+        <p className={`text-[11px] italic ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
           OmniVoice will invent a voice for this speaker.
         </p>
       )}

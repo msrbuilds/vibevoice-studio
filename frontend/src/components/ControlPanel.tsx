@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import type { EngineInfo } from "@/types/models";
 import { EngineSelector } from "./EngineSelector";
 import { CfgScaleBody } from "./CfgScaleControl";
@@ -50,10 +51,10 @@ export function ControlPanel({
 
   const surface = isDark ? "bg-zinc-950" : "bg-white";
   const border = isDark ? "border-zinc-800" : "border-gray-200";
-  const heading = isDark ? "text-zinc-500" : "text-gray-500";
+  const heading = isDark ? "text-zinc-400" : "text-gray-600";
   const iconBtn = isDark
     ? "text-zinc-400 hover:text-teal-400"
-    : "text-gray-400 hover:text-teal-600";
+    : "text-gray-600 hover:text-teal-600";
 
   const cfgHints = getCfgHints(activeEngine);
   const isChatterbox = activeEngine === "chatterbox";
@@ -66,7 +67,7 @@ export function ControlPanel({
         <button
           type="button"
           onClick={() => setCollapsed(false)}
-          className={`p-2 rounded-lg transition-colors ${iconBtn}`}
+          className={`p-2 rounded-lg transition-colors ${iconBtn} ${focusRing}`}
           title="Open control panel"
         >
           <PanelRightOpen className="w-5 h-5" />
@@ -87,7 +88,7 @@ export function ControlPanel({
         <button
           type="button"
           onClick={() => setCollapsed(true)}
-          className={`p-1 rounded transition-colors ${iconBtn}`}
+          className={`p-1 rounded transition-colors ${iconBtn} ${focusRing}`}
           title="Collapse control panel"
         >
           <PanelRightClose className="w-4 h-4" />
@@ -153,8 +154,8 @@ export function ControlPanel({
             className={`w-full text-xs font-medium py-1 rounded mt-1 ${
               isDark
                 ? "text-zinc-400 hover:text-zinc-200"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+                : "text-gray-600 hover:text-gray-700"
+            } ${focusRing}`}
           >
             Refresh list
           </button>
