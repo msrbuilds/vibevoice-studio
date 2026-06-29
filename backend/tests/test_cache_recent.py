@@ -300,3 +300,20 @@ def test_audio_endpoint_404_for_missing(tmp_path):
     with TestClient(app) as client:
         resp = client.get("/api/cache/doesnotexist/audio")
         assert resp.status_code == 404
+
+
+def test_open_folder_invokes_file_manager(tmp_path, monkeypatch):
+    """POST /api/cache/folder opens the cache dir via the OS file manager."""
+    from fastapi.testclient import TestClient
+    import backend.api.cache as cache_api
+
+    app, cache = _make_cache_app(tmp_path / "cache")
+    opened: list = []
+    monkeypatch.setattr(cache_api, "_open_in_file_manager", lambda p: opened.append(p))
+
+    with TestClient(app) as client:
+        resp = client.post("/api/cache/folder")
+        assert resp.status_code == 200
+        assert resp.json()["opened"] == str(cache.dir)
+    # The opener was called exactly once with the cache directory.
+    assert len(opened) == 1 and str(opened[0]) == str(cache.dir)

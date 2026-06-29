@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import logging
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, Response
@@ -12,6 +16,21 @@ from ..services.synth_cache import SynthCache
 from .deps import get_synth_cache
 
 log = logging.getLogger(__name__)
+
+
+def _open_in_file_manager(path: Path) -> None:
+    """Open a directory in the host OS file manager.
+
+    This is a local-desktop-app convenience: the backend runs in the user's
+    own session, so revealing its own cache directory is safe (the path is the
+    server's, never user-supplied).
+    """
+    if sys.platform.startswith("win"):
+        os.startfile(str(path))  # type: ignore[attr-defined]  # noqa: S606 (Windows-only)
+    elif sys.platform == "darwin":
+        subprocess.run(["open", str(path)], check=False)
+    else:
+        subprocess.run(["xdg-open", str(path)], check=False)
 
 router = APIRouter(prefix="/api/cache", tags=["cache"])
 
@@ -98,6 +117,19 @@ def get_cache_audio(
     if entry is None or not entry.wav_path.is_file():
         raise HTTPException(status_code=404, detail=f"cache entry not found: {content_hash}")
     return FileResponse(entry.wav_path, media_type="audio/wav")
+
+
+@router.post("/folder", status_code=200)
+def open_cache_folder(cache: SynthCache = Depends(get_synth_cache)) -> dict:
+    """Open the synthesis-cache directory in the OS file manager."""
+    path = cache.dir
+    if not path.is_dir():
+        raise HTTPException(status_code=404, detail="cache directory not found")
+    try:
+        _open_in_file_manager(path)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"could not open folder: {exc}") from exc
+    return {"opened": str(path)}
 
 
 @router.delete("", status_code=200)

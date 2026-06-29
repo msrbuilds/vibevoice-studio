@@ -96,6 +96,13 @@ export function cacheAudioUrl(hash: string): string {
   return `/api/cache/${hash}/audio`;
 }
 
+/** Ask the local backend to open the cache directory in the OS file manager. */
+export async function openCacheFolder(): Promise<{ opened: string }> {
+  return jsonOrThrow<{ opened: string }>(
+    await fetch(`${API_BASE}/cache/folder`, { method: "POST" }),
+  );
+}
+
 export async function getHealth(): Promise<HealthResponse> {
   return jsonOrThrow<HealthResponse>(await fetch(`${API_BASE}/health`));
 }

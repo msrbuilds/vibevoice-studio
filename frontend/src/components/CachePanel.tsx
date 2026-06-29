@@ -5,6 +5,7 @@ import {
   clearCache,
   deleteCacheEntry,
   listCache,
+  openCacheFolder,
   type CacheEntryInfo,
   type CacheListResponse,
 } from "@/lib/api";
@@ -198,8 +199,8 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
           {data.directory && (
             <button
               type="button"
-              title={`Cache folder: ${data.directory} (click to copy path)`}
-              onClick={() => void navigator.clipboard?.writeText(data.directory)}
+              title={`Open cache folder: ${data.directory}`}
+              onClick={() => void openCacheFolder()}
               className={`p-1 rounded transition-colors ${
                 isDark
                   ? "text-zinc-500 hover:text-teal-400"
