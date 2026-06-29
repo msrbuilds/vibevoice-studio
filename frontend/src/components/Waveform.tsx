@@ -8,7 +8,7 @@ interface Props {
   height?: number;
 }
 
-const NUM_BARS = 72;
+const NUM_BARS = 128;
 
 /** Fetch + Web-Audio-decode a WAV, extract per-bucket peak amplitudes. */
 async function computePeaks(url: string): Promise<number[]> {
@@ -38,7 +38,7 @@ async function computePeaks(url: string): Promise<number[]> {
   }
 }
 
-export function Waveform({ url, progress, isDark, onSeek, height = 48 }: Props) {
+export function Waveform({ url, progress, isDark, onSeek, height = 140 }: Props) {
   const [peaks, setPeaks] = useState<number[] | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +70,7 @@ export function Waveform({ url, progress, isDark, onSeek, height = 48 }: Props) 
   return (
     <div
       ref={containerRef}
-      className="relative flex items-end gap-px cursor-pointer w-full select-none"
+      className="relative flex items-end gap-[2px] cursor-pointer w-full select-none"
       style={{ height }}
       onClick={handleClick}
       role="slider"
@@ -81,11 +81,11 @@ export function Waveform({ url, progress, isDark, onSeek, height = 48 }: Props) 
     >
       {bars.map((peak, i) => {
         const played = i / NUM_BARS < progress;
-        const barHeight = Math.max(peak * height, 4); // min 4 px so silence shows
+        const barHeight = Math.max(peak * height, 3); // min 3 px so silence shows
         return (
           <div
             key={i}
-            className={`w-[3px] rounded-full shrink-0 transition-colors ${
+            className={`flex-1 rounded-full transition-colors ${
               played
                 ? "bg-teal-500"
                 : isDark

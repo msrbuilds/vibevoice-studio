@@ -69,7 +69,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
 
       {/* Modal card */}
       <div
-        className={`relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl shadow-2xl border ${
+        className={`relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-xl shadow-2xl border ${
           isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
         }`}
       >
@@ -109,11 +109,11 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
           {/* Full text */}
           <div
-            className={`text-sm max-h-40 overflow-y-auto rounded-lg p-3 whitespace-pre-wrap ${
-              isDark ? "bg-zinc-800 text-zinc-300" : "bg-gray-50 text-gray-700"
+            className={`text-lg leading-relaxed max-h-48 overflow-y-auto rounded-lg p-4 whitespace-pre-wrap ${
+              isDark ? "bg-zinc-800/60 text-zinc-200" : "bg-gray-50 text-gray-800"
             }`}
           >
             {entry.text ?? (
@@ -124,13 +124,13 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
           </div>
 
           {/* Waveform */}
-          <div className="px-1">
+          <div className="px-1 py-2">
             <Waveform
               url={audioUrl}
               progress={progress}
               isDark={isDark}
               onSeek={handleSeek}
-              height={56}
+              height={160}
             />
           </div>
 
