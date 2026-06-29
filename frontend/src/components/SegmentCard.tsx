@@ -51,7 +51,7 @@ export function SegmentCard({
         ${isDark ? "bg-zinc-900" : "bg-white"}
         ${
           isActive
-            ? "border-teal-600/50"
+            ? "border-orange-600/50"
             : isDark
               ? "border-zinc-800 hover:border-zinc-700"
               : "border-gray-200 hover:border-gray-300"
@@ -60,7 +60,7 @@ export function SegmentCard({
       <span
         className={`absolute -left-0.5 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full transition-colors ${
           isActive
-            ? "bg-teal-500"
+            ? "bg-orange-500"
             : isCached
               ? "bg-green-500"
               : isDark
@@ -89,9 +89,9 @@ export function SegmentCard({
             </span>
           )}
           {isPlaying && !isGenerating && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-teal-600/20 rounded-full">
-              <span className="w-2 h-2 bg-teal-400 rounded-full animate-pulse" />
-              <span className="text-teal-300 text-xs font-medium">Playing…</span>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-orange-600/20 rounded-full">
+              <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+              <span className="text-orange-300 text-xs font-medium">Playing…</span>
             </span>
           )}
           {isCached && !isActive && (
@@ -108,7 +108,7 @@ export function SegmentCard({
               type="button"
               onClick={onDownload}
               disabled={isActive || busy}
-              className={`p-2 text-zinc-400 hover:text-teal-400 hover:bg-teal-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}
+              className={`p-2 text-zinc-400 hover:text-orange-400 hover:bg-orange-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}
               title="Download this segment as WAV"
             >
               <Download className="w-4 h-4" />
@@ -148,7 +148,7 @@ export function SegmentCard({
               value={segment.speakerId ?? ""}
               onChange={(e) => onUpdate(segment.id, "speakerId", e.target.value)}
               disabled={isActive || busy}
-              className={`flex-1 px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${focusRing} ${
+              className={`flex-1 px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${focusRing} ${
                 isDark
                   ? "bg-zinc-800 border-zinc-700 text-white"
                   : "bg-white border-gray-300 text-gray-900"
@@ -219,7 +219,7 @@ export function SegmentCard({
           placeholder="Enter text for this segment…"
           disabled={isActive || busy}
           rows={3}
-          className={`w-full px-3 py-2.5 rounded-lg text-sm border resize-none focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing} ${
+          className={`w-full px-3 py-2.5 rounded-lg text-sm border resize-none focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing} ${
             isDark
               ? "bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500"
               : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"

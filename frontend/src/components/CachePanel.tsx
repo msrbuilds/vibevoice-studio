@@ -219,8 +219,8 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
               onClick={() => void openCacheFolder()}
               className={`p-1 rounded transition-colors ${
                 isDark
-                  ? "text-zinc-400 hover:text-teal-400"
-                  : "text-gray-600 hover:text-teal-600"
+                  ? "text-zinc-400 hover:text-orange-400"
+                  : "text-gray-600 hover:text-orange-600"
               } ${focusRing}`}
             >
               <FolderOpen className="w-4 h-4" />
@@ -274,7 +274,7 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
                     disabled={busy}
                     className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
                       isPlaying
-                        ? "bg-teal-600/30 text-teal-400"
+                        ? "bg-orange-600/30 text-orange-400"
                         : isDark
                           ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-300"
                           : "bg-gray-200 hover:bg-gray-300 text-gray-600"
@@ -314,8 +314,8 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
                       disabled={busy}
                       className={`p-1 rounded transition-colors ${
                         isDark
-                          ? "text-zinc-400 hover:text-teal-400"
-                          : "text-gray-600 hover:text-teal-600"
+                          ? "text-zinc-400 hover:text-orange-400"
+                          : "text-gray-600 hover:text-orange-600"
                       } ${focusRing}`}
                       title="Download WAV"
                     >

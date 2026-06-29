@@ -144,7 +144,7 @@ export function EngineSelector({
                     <div
                       className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         isActive
-                          ? isDark ? "bg-teal-600/20 text-teal-400" : "bg-teal-100 text-teal-700"
+                          ? isDark ? "bg-orange-600/20 text-orange-400" : "bg-orange-100 text-orange-700"
                           : isDark
                             ? "bg-zinc-800 text-zinc-400"
                             : "bg-gray-200 text-gray-700"
@@ -166,7 +166,7 @@ export function EngineSelector({
                           {e.display_name}
                         </span>
                         {isActive && (
-                          <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-teal-600/20 text-teal-300" : "bg-teal-100 text-teal-700"}`}>
+                          <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-orange-600/20 text-orange-300" : "bg-orange-100 text-orange-700"}`}>
                             Active
                           </span>
                         )}
@@ -215,8 +215,8 @@ export function EngineSelector({
                           }}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isDark
-                              ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
-                              : "bg-teal-50 hover:bg-teal-100 text-teal-700"
+                              ? "bg-orange-700/40 hover:bg-orange-700/60 text-orange-200"
+                              : "bg-orange-50 hover:bg-orange-100 text-orange-700"
                           } ${focusRing}`}
                         >
                           {`Install ${e.display_name}`}
@@ -230,8 +230,8 @@ export function EngineSelector({
                           }}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isDark
-                              ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
-                              : "bg-teal-50 hover:bg-teal-100 text-teal-700"
+                              ? "bg-orange-700/40 hover:bg-orange-700/60 text-orange-200"
+                              : "bg-orange-50 hover:bg-orange-100 text-orange-700"
                           } ${focusRing}`}
                         >
                           {`Download ${e.display_name}`}
@@ -243,7 +243,7 @@ export function EngineSelector({
                           disabled={isActive}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isActive
-                              ? isDark ? "bg-teal-600/20 text-teal-300 cursor-default" : "bg-teal-100 text-teal-800 cursor-default"
+                              ? isDark ? "bg-orange-600/20 text-orange-300 cursor-default" : "bg-orange-100 text-orange-800 cursor-default"
                               : isDark
                                 ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
                                 : "bg-gray-200 hover:bg-gray-300 text-gray-900"

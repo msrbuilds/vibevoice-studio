@@ -56,8 +56,8 @@ export function ControlPanel({
   const border = isDark ? "border-zinc-800" : "border-gray-200";
   const heading = isDark ? "text-zinc-400" : "text-gray-600";
   const iconBtn = isDark
-    ? "text-zinc-400 hover:text-teal-400"
-    : "text-gray-600 hover:text-teal-600";
+    ? "text-zinc-400 hover:text-orange-400"
+    : "text-gray-600 hover:text-orange-600";
 
   const cfgHints = getCfgHints(activeEngine);
   const isChatterbox = activeEngine === "chatterbox";
@@ -84,7 +84,7 @@ export function ControlPanel({
       className={`w-80 shrink-0 border-l flex flex-col transition-colors ${surface} ${border}`}
     >
       {/* Header */}
-      <div className={`p-4 border-b flex items-center justify-between ${border}`}>
+      <div className={`p-4 xxl:p-5 border-b flex items-center justify-between ${border}`}>
         <h2 className={`text-xs font-semibold uppercase tracking-wide ${heading}`}>
           Controls
         </h2>
@@ -98,9 +98,9 @@ export function ControlPanel({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {/* Engine section */}
-        <section>
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
           <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             Engine
           </h3>
@@ -116,7 +116,7 @@ export function ControlPanel({
         </section>
 
         {/* Settings section */}
-        <section>
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
           <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             {isChatterbox ? "CFG weight (voice fidelity)" : "Voice fidelity (CFG)"}
           </h3>
@@ -142,7 +142,7 @@ export function ControlPanel({
         </section>
 
         {/* Recent generations section (CacheBody renders its own heading + actions) */}
-        <section>
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
           <CacheBody
             isDark={isDark}
             data={cacheData}

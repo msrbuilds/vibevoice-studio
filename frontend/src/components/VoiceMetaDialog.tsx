@@ -69,7 +69,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Pencil className="w-5 h-5 text-teal-400" />
+            <Pencil className="w-5 h-5 text-orange-400" />
             <h2 className={`text-lg font-semibold ${text}`}>Edit voice</h2>
           </div>
           <button
@@ -95,7 +95,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Amelia"
-              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-teal-500 ${focusRing}`}
+              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500 ${focusRing}`}
             />
           </label>
 
@@ -105,7 +105,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as typeof gender)}
-                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} focus:outline-none focus:border-teal-500 ${focusRing}`}
+                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} focus:outline-none focus:border-orange-500 ${focusRing}`}
               >
                 <option value="">—</option>
                 <option value="woman">Woman</option>
@@ -121,7 +121,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
                 onChange={(e) => setLanguage(e.target.value)}
                 placeholder="en"
                 maxLength={8}
-                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-teal-500 ${focusRing}`}
+                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500 ${focusRing}`}
               />
             </label>
           </div>
@@ -144,7 +144,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={busy}
-            className={`px-4 py-2 text-sm bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
+            className={`px-4 py-2 text-sm bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             {busy ? "Saving…" : "Save"}
           </button>

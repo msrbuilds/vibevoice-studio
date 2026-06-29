@@ -58,8 +58,8 @@ export function SampleMenu({ isDark, mode, onLoadPodcast, onLoadTts }: Props) {
                     type="button"
                     onClick={() => { onLoadPodcast(s); setOpen(false); }}
                     className={`block w-full text-left p-3 border-l-2 transition-colors ${
-                      isDark ? "border-transparent hover:border-teal-500 hover:bg-zinc-800"
-                             : "border-transparent hover:border-teal-500 hover:bg-gray-50"
+                      isDark ? "border-transparent hover:border-orange-500 hover:bg-zinc-800"
+                             : "border-transparent hover:border-orange-500 hover:bg-gray-50"
                     } ${focusRing}`}
                   >
                     <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{s.name}</div>
@@ -75,8 +75,8 @@ export function SampleMenu({ isDark, mode, onLoadPodcast, onLoadTts }: Props) {
                     type="button"
                     onClick={() => { onLoadTts(s); setOpen(false); }}
                     className={`block w-full text-left p-3 border-l-2 transition-colors ${
-                      isDark ? "border-transparent hover:border-teal-500 hover:bg-zinc-800"
-                             : "border-transparent hover:border-teal-500 hover:bg-gray-50"
+                      isDark ? "border-transparent hover:border-orange-500 hover:bg-zinc-800"
+                             : "border-transparent hover:border-orange-500 hover:bg-gray-50"
                     } ${focusRing}`}
                   >
                     <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{s.name}</div>

@@ -87,7 +87,7 @@ export function Waveform({ url, progress, isDark, onSeek, height = 140 }: Props)
             key={i}
             className={`flex-1 rounded-full transition-colors ${
               played
-                ? "bg-teal-500"
+                ? "bg-orange-500"
                 : isDark
                   ? "bg-zinc-600"
                   : "bg-gray-300"

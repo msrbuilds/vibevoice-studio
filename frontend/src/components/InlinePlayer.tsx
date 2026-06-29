@@ -59,7 +59,7 @@ export function InlinePlayer({
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <Volume2 className="w-5 h-5 text-teal-400 shrink-0" />
+          <Volume2 className="w-5 h-5 text-orange-400 shrink-0" />
           <div className="min-w-0">
             <p className={`font-medium hidden @[900px]:block ${isDark ? "text-white" : "text-gray-900"}`}>
               Full podcast
@@ -107,7 +107,7 @@ export function InlinePlayer({
               onClick={onPlayAll}
               disabled={validCount === 0 || isExporting}
               title={`Play through all ${segmentCount} segments in order`}
-              className={`flex items-center gap-2 px-6 py-3 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
+              className={`flex items-center gap-2 px-6 py-3 bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
             >
               {playLabel}
             </button>

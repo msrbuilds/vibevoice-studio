@@ -40,7 +40,7 @@ export function MiddleToolbar({
 
   return (
     <div
-      className={`flex items-center justify-between gap-2 @[1200px]:gap-3 p-3 @[1200px]:p-4 border-b ${
+      className={`flex items-center justify-between gap-2 @[1200px]:gap-3 p-2.5 @[1200px]:p-2.5 border-b ${
         isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
       }`}
     >
@@ -54,7 +54,7 @@ export function MiddleToolbar({
             onClick={onAddSegment}
             disabled={busy}
             title="Add a new segment"
-            className={`flex items-center gap-1.5 px-3 py-2 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium text-sm transition-colors disabled:cursor-not-allowed ${focusRing}`}
+            className={`flex items-center gap-1.5 px-3 py-2 bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium text-sm transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden @[1100px]:inline">Add Segment</span>
@@ -82,7 +82,7 @@ export function MiddleToolbar({
             {validCount > 0 && (
               <span
                 className={`text-xs ml-1 ${
-                  cachedCount === validCount ? "text-teal-100" : "text-white"
+                  cachedCount === validCount ? "text-orange-100" : "text-white"
                 }`}
               >
                 {cachedCount}/{validCount}

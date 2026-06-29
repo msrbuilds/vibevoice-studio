@@ -61,8 +61,8 @@ export function VoiceLibrary({
   const bodyText = isDark ? "text-zinc-300" : "text-gray-700";
   const subtle = isDark ? "text-zinc-400" : "text-gray-600";
   const iconBtn = isDark
-    ? "text-zinc-400 hover:text-teal-400"
-    : "text-gray-600 hover:text-teal-600";
+    ? "text-zinc-400 hover:text-orange-400"
+    : "text-gray-600 hover:text-orange-600";
   const hover = isDark ? "hover:bg-zinc-900" : "hover:bg-gray-100";
   const danger = isDark
     ? "text-zinc-400 hover:text-red-400"
@@ -74,8 +74,8 @@ export function VoiceLibrary({
       <aside
         className={`w-12 shrink-0 z-10 border-r flex flex-col items-center pt-4 gap-3 transition-colors ${surface} ${border}`}
       >
-        <div className="w-9 h-9 rounded-lg bg-teal-600/20 flex items-center justify-center">
-          <Waves className="w-5 h-5 text-teal-400" />
+        <div className="w-9 h-9 rounded-lg bg-orange-600/20 flex items-center justify-center">
+          <Waves className="w-5 h-5 text-orange-400" />
         </div>
         <button
           type="button"
@@ -101,9 +101,9 @@ export function VoiceLibrary({
     <aside
       className={`w-64 shrink-0 z-10 border-r flex flex-col transition-colors ${surface} ${border}`}
     >
-      <div className={`p-5 border-b flex items-center gap-3 ${border}`}>
-        <div className="w-9 h-9 rounded-lg bg-teal-600/20 flex items-center justify-center shrink-0">
-          <Waves className="w-5 h-5 text-teal-400" />
+      <div className={`p-3 xxl:p-4 border-b flex items-center gap-3 ${border}`}>
+        <div className="w-9 h-9 rounded-lg bg-orange-600/20 flex items-center justify-center shrink-0">
+          <Waves className="w-5 h-5 text-orange-400" />
         </div>
         <div className="min-w-0 flex-1">
           <h1 className={`font-semibold text-sm truncate ${isDark ? "text-white" : "text-gray-900"}`}>
@@ -121,9 +121,9 @@ export function VoiceLibrary({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
         {/* Built-in voices */}
-        <section>
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
           <h2 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             Built-in voices
           </h2>
@@ -134,9 +134,9 @@ export function VoiceLibrary({
               <li
                 key={v.id}
                 onClick={onSelectVoice ? () => onSelectVoice(v.id) : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm ${bodyText} ${hover} ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 ${bodyText} ${hover} ${
                   onSelectVoice ? "cursor-pointer" : ""
-                } ${isSelected ? "ring-1 ring-teal-500 bg-teal-600/10" : ""}`}
+                } ${isSelected ? "ring-1 ring-orange-300 bg-orange-200/30 dark:bg-black/30 dark:ring-orange-800" : ""}`}
               >
                 <Volume2 className={`w-4 h-4 ${subtle}`} />
                 <span className="flex-1 truncate">{v.name}</span>
@@ -163,7 +163,7 @@ export function VoiceLibrary({
         {/* User uploads — hidden when the active engine doesn't support
             voice cloning (Kokoro uses its own built-in voice catalog). */}
         {supportsVoiceCloning && (
-        <section>
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <h2 className={`text-xs font-semibold uppercase tracking-wide ${heading}`}>
               My voices
@@ -184,11 +184,11 @@ export function VoiceLibrary({
               <li
                 key={v.id}
                 onClick={onSelectVoice ? () => onSelectVoice(v.id) : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm ${bodyText} ${hover} ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 ${bodyText} ${hover} ${
                   onSelectVoice ? "cursor-pointer" : ""
-                } ${isSelected ? "ring-1 ring-teal-500 bg-teal-600/10" : ""}`}
+                } ${isSelected ? "ring-1 ring-orange-500 bg-orange-300/10 dark:bg-black/30 dark:ring-orange-800" : ""}`}
               >
-                <Mic2 className="w-4 h-4 text-teal-500" />
+                <Mic2 className="w-4 h-4 text-orange-500" />
                 <span className="flex-1 truncate">{v.name}</span>
                 {v.gender && <span className={`text-xs ${subtle}`}>{v.gender}</span>}
                 <button

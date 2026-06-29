@@ -78,7 +78,7 @@ export function TtsEditor(props: Props) {
       onClick={() => onOmniModeChange(m)}
       className={`flex-1 px-3 py-1.5 text-sm font-medium rounded transition-colors ${
         omniMode === m
-          ? "bg-teal-600 text-white"
+          ? "bg-orange-600 text-white"
           : isDark
             ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -95,7 +95,7 @@ export function TtsEditor(props: Props) {
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         placeholder="Type or paste text to synthesize…"
-        className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-teal-500 ${inputBg} ${focusRing}`}
+        className={`w-full min-h-[260px] rounded-xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-orange-500 ${inputBg} ${focusRing}`}
       />
 
       {/* OmniVoice inline non-verbal sounds — insert a tag at the cursor */}
@@ -112,8 +112,8 @@ export function TtsEditor(props: Props) {
                 onClick={() => insertTag(tag)}
                 className={`px-1.5 py-0.5 text-[11px] font-mono rounded border transition-colors ${
                   isDark
-                    ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
-                    : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                    ? "border-zinc-700 text-zinc-400 hover:border-orange-500 hover:text-orange-300"
+                    : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-600"
                 } ${focusRing}`}
               >
                 {tag}
@@ -134,7 +134,7 @@ export function TtsEditor(props: Props) {
           {omniMode === "clone" && (
             <p className={`text-xs ${sub}`}>
               Clones the voice selected in the library:{" "}
-              <span className="text-teal-400">{activeVoice ? activeVoice.name : "none selected"}</span>
+              <span className="text-orange-400">{activeVoice ? activeVoice.name : "none selected"}</span>
             </p>
           )}
           {omniMode === "design" && (
@@ -144,7 +144,7 @@ export function TtsEditor(props: Props) {
                 value={voiceDesign}
                 onChange={(e) => onVoiceDesignChange(e.target.value)}
                 placeholder="e.g. female, low pitch, british accent"
-                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-teal-500 ${selectBg} ${focusRing}`}
+                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-orange-500 ${selectBg} ${focusRing}`}
               />
               <div className="flex flex-wrap gap-1">
                 {DESIGN_CHIPS.map((chip) => (
@@ -154,8 +154,8 @@ export function TtsEditor(props: Props) {
                     onClick={() => onVoiceDesignChange(appendDesignChip(voiceDesign, chip))}
                     className={`px-1.5 py-0.5 text-[11px] rounded border transition-colors ${
                       isDark
-                        ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
-                        : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                        ? "border-zinc-700 text-zinc-400 hover:border-orange-500 hover:text-orange-300"
+                        : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-600"
                     } ${focusRing}`}
                   >
                     {chip}
@@ -180,7 +180,7 @@ export function TtsEditor(props: Props) {
           )}
           {showVoiceNote && (
             <span className={`text-xs ${sub}`}>
-              Voice: <span className="text-teal-400">{activeVoice ? activeVoice.name : "none selected"}</span>
+              Voice: <span className="text-orange-400">{activeVoice ? activeVoice.name : "none selected"}</span>
             </span>
           )}
           <button type="button" onClick={onGenerate} disabled={busy || !text.trim()}
@@ -190,7 +190,7 @@ export function TtsEditor(props: Props) {
           <button type="button" onClick={onPlay} disabled={busy && !isPlaying}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isPlaying
-                ? "bg-teal-700 hover:bg-teal-600 text-white"
+                ? "bg-orange-700 hover:bg-orange-600 text-white"
                 : isDark ? "bg-zinc-800 hover:bg-zinc-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"} ${focusRing}`}>
             {isPlaying ? <><Square className="w-4 h-4" /> Stop</> : <><Play className="w-4 h-4" /> Play</>}
           </button>

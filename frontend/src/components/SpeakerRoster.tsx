@@ -26,8 +26,8 @@ export function SpeakerRoster({
 }: Props) {
   const heading = isDark ? "text-zinc-400" : "text-gray-600";
   const iconBtn = isDark
-    ? "text-zinc-400 hover:text-teal-400"
-    : "text-gray-600 hover:text-teal-600";
+    ? "text-zinc-400 hover:text-orange-400"
+    : "text-gray-600 hover:text-orange-600";
 
   return (
     <section>
@@ -103,7 +103,7 @@ function SpeakerRow({
         type="text"
         value={speaker.name}
         onChange={(e) => onUpdate({ name: e.target.value })}
-        className={`flex-1 bg-transparent text-sm font-medium focus:outline-none focus:ring-1 focus:ring-teal-500/50 rounded px-1 ${inputText}`}
+        className={`flex-1 bg-transparent text-sm font-medium focus:outline-none focus:ring-1 focus:ring-orange-500/50 rounded px-1 ${inputText}`}
       />
       {canDelete && (
         <button
@@ -122,7 +122,7 @@ function SpeakerRow({
     <select
       value={speaker.voice}
       onChange={(e) => onSetVoice(e.target.value)}
-      className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
+      className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
     >
       <option value="">Select voice…</option>
       {voices.map((v) => (
@@ -152,7 +152,7 @@ function SpeakerRow({
       onClick={() => setMode(m)}
       className={`flex-1 px-2 py-1 text-[11px] font-medium rounded transition-colors ${
         mode === m
-          ? "bg-teal-600 text-white"
+          ? "bg-orange-600 text-white"
           : isDark
             ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -178,7 +178,7 @@ function SpeakerRow({
             value={speaker.voiceDesign ?? ""}
             onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
             placeholder="e.g. female, low pitch, british accent"
-            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-teal-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
+            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText} ${focusRing}`}
           />
           <div className="flex flex-wrap gap-1">
             {DESIGN_CHIPS.map((chip) => (
@@ -188,8 +188,8 @@ function SpeakerRow({
                 onClick={() => onUpdate({ voiceDesign: appendDesignChip(speaker.voiceDesign ?? "", chip) })}
                 className={`px-1.5 py-0.5 text-[10px] rounded border transition-colors ${
                   isDark
-                    ? "border-zinc-700 text-zinc-400 hover:border-teal-500 hover:text-teal-300"
-                    : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                    ? "border-zinc-700 text-zinc-400 hover:border-orange-500 hover:text-orange-300"
+                    : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-600"
                 } ${focusRing}`}
               >
                 {chip}

@@ -61,12 +61,12 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
             disabled={busy}
             className={menuItemClass}
           >
-            <FileDown className="w-4 h-4 text-teal-400" />
+            <FileDown className="w-4 h-4 text-orange-400" />
             <span>Export JSON</span>
           </button>
 
           <label className={menuItemClass}>
-            <FileUp className="w-4 h-4 text-teal-400" />
+            <FileUp className="w-4 h-4 text-orange-400" />
             <span>Import JSON</span>
             <input
               type="file"

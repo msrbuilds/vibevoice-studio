@@ -200,8 +200,8 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
               onClick={togglePlay}
               className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
                 isDark
-                  ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
-                  : "bg-teal-50 hover:bg-teal-100 text-teal-700"
+                  ? "bg-orange-700/40 hover:bg-orange-700/60 text-orange-200"
+                  : "bg-orange-50 hover:bg-orange-100 text-orange-700"
               } ${focusRing}`}
               title={playing ? "Pause" : "Play"}
             >
@@ -220,7 +220,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
               step={0.001}
               value={progress}
               onChange={(e) => handleSeek(parseFloat(e.target.value))}
-              className={`flex-1 accent-teal-500 ${focusRing}`}
+              className={`flex-1 accent-orange-500 ${focusRing}`}
             />
 
             {/* Time display */}
@@ -243,7 +243,7 @@ export function GenerationDetailModal({ isDark, entry, onClose }: Props) {
               step={0.01}
               value={volume}
               onChange={handleVolumeChange}
-              className={`w-20 accent-teal-500 ${focusRing}`}
+              className={`w-20 accent-orange-500 ${focusRing}`}
             />
           </div>
         </div>

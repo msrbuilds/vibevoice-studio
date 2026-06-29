@@ -29,7 +29,7 @@ export function ExaggerationBody({
         >
           Value
         </span>
-        <span className="text-sm font-mono text-teal-400">{summary}</span>
+        <span className="text-sm font-mono text-orange-400">{summary}</span>
       </div>
       <input
         type="range"
@@ -38,7 +38,7 @@ export function ExaggerationBody({
         step={0.05}
         value={value}
         onChange={(e) => set(Number(e.target.value))}
-        className="w-full accent-teal-500"
+        className="w-full accent-orange-500"
       />
       <div
         className={`flex justify-between text-[10px] ${
@@ -58,7 +58,7 @@ export function ExaggerationBody({
             onClick={() => set(preset)}
             className={`px-2.5 py-1 rounded text-xs font-medium transition-colors border ${
               Math.abs(value - preset) < 0.025
-                ? "bg-teal-600 text-white border-teal-500"
+                ? "bg-orange-600 text-white border-orange-500"
                 : isDark
                   ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
@@ -72,7 +72,7 @@ export function ExaggerationBody({
       <p className={`text-xs ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
         Chatterbox-only. Higher values make the speaker sound more
         dramatic; lower values are calmer. Pairs with the
-        <span className="text-teal-400"> CFG weight</span> slider above.
+        <span className="text-orange-400"> CFG weight</span> slider above.
       </p>
     </div>
   );

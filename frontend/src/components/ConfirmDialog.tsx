@@ -77,7 +77,7 @@ export function ConfirmDialog({
     : "text-gray-700 hover:text-gray-900";
   const confirmColor = danger
     ? "bg-red-600 hover:bg-red-500 text-white"
-    : "bg-teal-700 hover:bg-teal-600 text-white";
+    : "bg-orange-700 hover:bg-orange-600 text-white";
 
   return (
     <div

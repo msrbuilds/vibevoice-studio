@@ -89,7 +89,7 @@ export function InstallEngineDialog({
           }`}
         >
           <div className="flex items-center gap-2">
-            {installing && <Loader2 className="w-4 h-4 animate-spin text-teal-400" />}
+            {installing && <Loader2 className="w-4 h-4 animate-spin text-orange-400" />}
             <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
               {installing
                 ? `Installing ${displayName}…`
@@ -135,7 +135,7 @@ export function InstallEngineDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className={`px-4 py-2 rounded-lg text-sm font-medium bg-teal-700 hover:bg-teal-600 text-white ${focusRing}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-700 hover:bg-orange-600 text-white ${focusRing}`}
               >
                 Retry
               </button>

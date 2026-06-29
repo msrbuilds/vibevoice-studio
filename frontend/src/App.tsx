@@ -654,7 +654,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="flex items-center gap-3 text-zinc-300">
-          <Loader2 className="w-5 h-5 animate-spin text-teal-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-orange-400" />
           Loading Voice Studio backend…
         </div>
       </div>
@@ -667,7 +667,7 @@ export default function App() {
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold text-white mb-2">Backend not reachable</h1>
           <p className="text-sm text-zinc-400 mb-4">
-            Could not reach <code className="text-teal-300">/api/config</code>: {configError}
+            Could not reach <code className="text-orange-300">/api/config</code>: {configError}
           </p>
           <p className="text-xs text-zinc-400">
             Start the backend in another terminal:
@@ -757,12 +757,12 @@ export default function App() {
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="max-w-5xl mx-auto">
               {isExporting && (
-                <div className="mb-6 p-4 bg-teal-900/30 rounded-xl border border-teal-600/30 flex items-center justify-between">
+                <div className="mb-6 p-4 bg-orange-900/30 rounded-xl border border-orange-600/30 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
+                    <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
                     <div>
                       <p className="text-white font-medium">Exporting audio</p>
-                      <p className="text-teal-300 text-sm">{exportProgress}</p>
+                      <p className="text-orange-300 text-sm">{exportProgress}</p>
                     </div>
                   </div>
                   <button

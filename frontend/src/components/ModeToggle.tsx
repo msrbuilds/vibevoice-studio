@@ -11,8 +11,8 @@ export function ModeToggle({ isDark, mode, onChange }: Props) {
   const wrap = isDark ? "bg-zinc-800" : "bg-gray-100";
   const seg = (m: ProjectMode, label: string) => (
     <button type="button" onClick={() => onChange(m)}
-      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-        mode === m ? "bg-teal-600 text-white"
+      className={`px-2 py-1 text-xs lg:text-sm font-medium rounded-md transition-colors ${
+        mode === m ? "bg-orange-600 text-white"
         : isDark ? "text-zinc-400 hover:text-zinc-200" : "text-gray-600 hover:text-gray-700"
       } ${focusRing}`}>
       {label}

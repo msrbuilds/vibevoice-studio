@@ -137,9 +137,9 @@ export function DownloadModelDialog({
         >
           <div className="flex items-center gap-2">
             {downloading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-teal-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
             ) : (
-              <Download className="w-4 h-4 text-teal-400" />
+              <Download className="w-4 h-4 text-orange-400" />
             )}
             <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
               {downloading
@@ -180,7 +180,7 @@ export function DownloadModelDialog({
                   }`}
                 >
                   <div
-                    className={`h-full bg-teal-500 transition-[width] duration-500 ${
+                    className={`h-full bg-orange-500 transition-[width] duration-500 ${
                       status.total_bytes ? "" : "animate-pulse"
                     }`}
                     style={{ width: `${status.total_bytes ? pct : 100}%` }}
@@ -220,7 +220,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className={`px-4 py-2 rounded-lg text-sm font-medium bg-teal-700 hover:bg-teal-600 text-white ${focusRing}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-700 hover:bg-orange-600 text-white ${focusRing}`}
               >
                 {`Download (${sizeLabel})`}
               </button>
@@ -229,7 +229,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className={`px-4 py-2 rounded-lg text-sm font-medium bg-teal-700 hover:bg-teal-600 text-white ${focusRing}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-700 hover:bg-orange-600 text-white ${focusRing}`}
               >
                 Retry
               </button>
