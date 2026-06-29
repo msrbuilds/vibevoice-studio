@@ -40,7 +40,7 @@ export function MiddleToolbar({
 
   return (
     <div
-      className={`flex flex-wrap items-center justify-between gap-2 @[1200px]:gap-3 p-3 @[1200px]:p-4 border-b ${
+      className={`flex items-center justify-between gap-2 @[1200px]:gap-3 p-3 @[1200px]:p-4 border-b ${
         isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
       }`}
     >
@@ -62,7 +62,7 @@ export function MiddleToolbar({
         )}
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2">
         {isPodcast && (
           <button
             type="button"

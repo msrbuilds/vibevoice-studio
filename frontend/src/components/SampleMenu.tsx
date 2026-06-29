@@ -37,7 +37,7 @@ export function SampleMenu({ isDark, mode, onLoadPodcast, onLoadTts }: Props) {
         title="Load a sample script"
       >
         <Sparkles className="w-4 h-4" />
-        Samples
+        <span className="hidden @[1100px]:inline">Samples</span>
         <ChevronDown className="w-3.5 h-3.5" />
       </button>
 

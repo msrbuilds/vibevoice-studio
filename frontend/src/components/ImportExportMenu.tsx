@@ -43,7 +43,7 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
         title="Import or export the project as JSON"
       >
         <Download className="w-4 h-4" />
-        Import/Export
+        <span className="hidden @[1100px]:inline">Import/Export</span>
       </button>
 
       {open && (
