@@ -105,7 +105,7 @@ export function UploadVoiceDialog({ open, theme, onClose, onUpload }: Props) {
               setFile(e.target.files?.[0] ?? null);
               setError(null);
             }}
-            className={`block w-full text-sm text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-700 file:text-white hover:file:bg-orange-600 file:cursor-pointer ${focusRing}`}
+            className={`block w-full text-sm text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-600 file:text-white hover:file:bg-orange-500 file:cursor-pointer ${focusRing}`}
           />
         </label>
 
@@ -172,7 +172,7 @@ export function UploadVoiceDialog({ open, theme, onClose, onUpload }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={busy || !file}
-            className={`flex items-center gap-2 px-4 py-2 text-sm bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             <Upload className="w-4 h-4" />
             {busy ? "Uploading…" : "Upload"}

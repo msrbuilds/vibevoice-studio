@@ -100,7 +100,7 @@ export function ControlPanel({
 
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {/* Engine section */}
-        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100/80 border border-gray-200 rounded-lg">
           <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             Engine
           </h3>
@@ -116,7 +116,7 @@ export function ControlPanel({
         </section>
 
         {/* Settings section */}
-        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100/80 border border-gray-200 rounded-lg">
           <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             {isChatterbox ? "CFG weight (voice fidelity)" : "Voice fidelity (CFG)"}
           </h3>
@@ -142,7 +142,7 @@ export function ControlPanel({
         </section>
 
         {/* Recent generations section (CacheBody renders its own heading + actions) */}
-        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100/80 border border-gray-200 rounded-lg">
           <CacheBody
             isDark={isDark}
             data={cacheData}

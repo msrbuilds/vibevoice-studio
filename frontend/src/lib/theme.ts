@@ -32,6 +32,6 @@ export const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 " +
   "focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-950";
 
-/** Primary solid button base (orange). AA-compliant white-on-orange-700. */
+/** Primary solid button base (orange). Vibrant orange-600 matches the brand accent. */
 export const primaryButton =
-  "bg-orange-700 hover:bg-orange-600 text-white disabled:bg-zinc-700 disabled:text-zinc-400";
+  "bg-orange-600 hover:bg-orange-500 text-white disabled:bg-zinc-700 disabled:text-zinc-400";

@@ -220,7 +220,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-700 hover:bg-orange-600 text-white ${focusRing}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-600 hover:bg-orange-500 text-white ${focusRing}`}
               >
                 {`Download (${sizeLabel})`}
               </button>
@@ -229,7 +229,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-700 hover:bg-orange-600 text-white ${focusRing}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-600 hover:bg-orange-500 text-white ${focusRing}`}
               >
                 Retry
               </button>

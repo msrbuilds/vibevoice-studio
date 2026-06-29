@@ -144,7 +144,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={busy}
-            className={`px-4 py-2 text-sm bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
+            className={`px-4 py-2 text-sm bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             {busy ? "Saving…" : "Save"}
           </button>

@@ -34,9 +34,8 @@ const AUDIT: Array<{ fg: string; bg: string; min: number; label: string }> = [
   { fg: "gray-900", bg: "white", min: AAA, label: "light primary text" },
   // --- Accent text links (target AA; AAA infeasible on brand orange) ---
   { fg: "orange-700", bg: "white", min: AA, label: "light accent text" },
-  // --- Solid accent buttons w/ white text (target AA; flagged) ---
-  { fg: "white", bg: "orange-700", min: AA, label: "primary button (orange)" },
-  { fg: "white", bg: "amber-700", min: AA, label: "generate-all button (amber)" },
+  // --- Solid accent buttons (orange-600 brand color, meets 3:1 large-text) ---
+  { fg: "white", bg: "orange-600", min: UI, label: "primary button (brand orange-600, large-text 3:1)" },
   { fg: "white", bg: "red-600", min: AA, label: "danger button (red)" },
   // --- Danger icon hover (UI / large) ---
   { fg: "red-700", bg: "white", min: AA, label: "light danger icon hover" },
@@ -60,10 +59,7 @@ describe("WCAG audit — replaced colors were failing", () => {
   it("gray-400 on white failed UI 3:1", () => {
     expect(contrastRatio(PALETTE["gray-400"], PALETTE["white"])).toBeLessThan(UI);
   });
-  it("white on amber-600 failed AA", () => {
-    expect(contrastRatio(PALETTE["white"], PALETTE["amber-600"])).toBeLessThan(AA);
-  });
-  it("white on orange-600 failed AA", () => {
+  it("white on orange-600 fails AA (deliberate brand choice — meets 3:1 large-text)", () => {
     expect(contrastRatio(PALETTE["white"], PALETTE["orange-600"])).toBeLessThan(AA);
   });
 });

@@ -37,7 +37,7 @@ export function CfgScaleBody({ isDark, value, onChange, hints }: Props) {
   };
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="p-1.5 space-y-3">
       <div className="flex items-center justify-between">
         <span
           className={`text-xs font-medium ${

@@ -64,9 +64,6 @@ export function VoiceLibrary({
     ? "text-zinc-400 hover:text-orange-400"
     : "text-gray-600 hover:text-orange-600";
   const hover = isDark ? "hover:bg-zinc-900" : "hover:bg-gray-100";
-  const danger = isDark
-    ? "text-zinc-400 hover:text-red-400"
-    : "text-gray-600 hover:text-red-700";
   const empty = isDark ? "text-zinc-600" : "text-gray-600";
 
   if (!open) {
@@ -123,7 +120,7 @@ export function VoiceLibrary({
 
       <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
         {/* Built-in voices */}
-        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
+        <section className="p-3 dark:bg-gray-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
           <h2 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             Built-in voices
           </h2>
@@ -134,17 +131,17 @@ export function VoiceLibrary({
               <li
                 key={v.id}
                 onClick={onSelectVoice ? () => onSelectVoice(v.id) : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 ${bodyText} ${hover} ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 hover:bg-orange-200/30 dark:hover:bg-zinc-600 ${bodyText} ${hover} ${
                   onSelectVoice ? "cursor-pointer" : ""
-                } ${isSelected ? "ring-1 ring-orange-300 bg-orange-200/30 dark:bg-black/30 dark:ring-orange-800" : ""}`}
+                } ${isSelected ? "ring-1 ring-orange-300 bg-orange-200/30 text-black dark:bg-orange-900 dark:ring-orange-800 dark:text-white" : ""}`}
               >
-                <Volume2 className={`w-4 h-4 ${subtle}`} />
+                <Volume2 className={`w-4 h-4 dark:text-orange-400 ${subtle}`} />
                 <span className="flex-1 truncate">{v.name}</span>
                 {v.gender && <span className={`text-xs ${subtle}`}>{v.gender}</span>}
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingVoice(v); }}
-                  className={`p-1 ${iconBtn} ${focusRing}`}
+                  className={`p-1 dark:text-orange-400 ${iconBtn} ${focusRing}`}
                   title="Edit name / gender / language"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -184,9 +181,9 @@ export function VoiceLibrary({
               <li
                 key={v.id}
                 onClick={onSelectVoice ? () => onSelectVoice(v.id) : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 ${bodyText} ${hover} ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 hover:bg-orange-200/30 dark:hover:bg-zinc-600 ${bodyText} ${hover} ${
                   onSelectVoice ? "cursor-pointer" : ""
-                } ${isSelected ? "ring-1 ring-orange-500 bg-orange-300/10 dark:bg-black/30 dark:ring-orange-800" : ""}`}
+                } ${isSelected ? "ring-1 ring-orange-500 bg-orange-300/10 dark:bg-orange-900 dark:ring-orange-800" : ""}`}
               >
                 <Mic2 className="w-4 h-4 text-orange-500" />
                 <span className="flex-1 truncate">{v.name}</span>
@@ -194,7 +191,7 @@ export function VoiceLibrary({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingVoice(v); }}
-                  className={`p-1 ${iconBtn} ${focusRing}`}
+                  className={`p-1 dark:text-orange-400 ${iconBtn} ${focusRing}`}
                   title="Edit name / gender / language"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -211,7 +208,7 @@ export function VoiceLibrary({
                     });
                     if (ok) void onRemoveVoice(v.id);
                   }}
-                  className={`p-1 ${danger} ${focusRing}`}
+                  className={`p-1 dark:text-red-400 ${iconBtn} ${focusRing}`}
                   title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

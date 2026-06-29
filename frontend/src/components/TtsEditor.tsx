@@ -184,13 +184,13 @@ export function TtsEditor(props: Props) {
             </span>
           )}
           <button type="button" onClick={onGenerate} disabled={busy || !text.trim()}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-amber-700 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white transition-colors ${focusRing}`}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 disabled:text-zinc-400 text-white transition-colors ${focusRing}`}>
             {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Generate
           </button>
           <button type="button" onClick={onPlay} disabled={busy && !isPlaying}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isPlaying
-                ? "bg-orange-700 hover:bg-orange-600 text-white"
+                ? "bg-orange-600 hover:bg-orange-500 text-white"
                 : isDark ? "bg-zinc-800 hover:bg-zinc-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"} ${focusRing}`}>
             {isPlaying ? <><Square className="w-4 h-4" /> Stop</> : <><Play className="w-4 h-4" /> Play</>}
           </button>

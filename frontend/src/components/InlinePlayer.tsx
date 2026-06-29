@@ -107,7 +107,7 @@ export function InlinePlayer({
               onClick={onPlayAll}
               disabled={validCount === 0 || isExporting}
               title={`Play through all ${segmentCount} segments in order`}
-              className={`flex items-center gap-2 px-6 py-3 bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
+              className={`flex items-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
             >
               {playLabel}
             </button>

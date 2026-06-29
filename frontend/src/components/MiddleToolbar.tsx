@@ -54,7 +54,7 @@ export function MiddleToolbar({
             onClick={onAddSegment}
             disabled={busy}
             title="Add a new segment"
-            className={`flex items-center gap-1.5 px-3 py-2 bg-orange-700 hover:bg-orange-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium text-sm transition-colors disabled:cursor-not-allowed ${focusRing}`}
+            className={`flex items-center gap-1.5 px-3 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium text-sm transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden @[1100px]:inline">Add Segment</span>
@@ -74,7 +74,7 @@ export function MiddleToolbar({
                 ? isDark
                   ? "bg-zinc-800 text-zinc-400"
                   : "bg-gray-100 text-gray-600"
-                : "bg-amber-700 hover:bg-amber-600 text-white"
+                : "bg-orange-600 hover:bg-orange-500 text-white"
             } ${focusRing}`}
           >
             <RefreshCw className="w-3.5 h-3.5" />
