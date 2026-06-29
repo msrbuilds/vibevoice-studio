@@ -87,6 +87,18 @@ export interface DownloadStatus {
   returncode: number | null;
 }
 
+export interface DeleteWeightsStatus {
+  state: "idle" | "deleting" | "deleted" | "error";
+  log: string[];
+  error: string | null;
+}
+
+export interface UninstallStatus {
+  state: "idle" | "uninstalling" | "uninstalled" | "error";
+  log: string[];
+  error: string | null;
+}
+
 export interface HealthResponse {
   status: "ok" | "loading" | "error";
   model_loaded: boolean;

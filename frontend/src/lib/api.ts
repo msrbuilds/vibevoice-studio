@@ -2,12 +2,14 @@
 
 import type {
   ConfigResponse,
+  DeleteWeightsStatus,
   DownloadStatus,
   EngineInfo,
   HealthResponse,
   InstallStatus,
   SynthBase64Response,
   SynthSpeaker,
+  UninstallStatus,
   UploadVoiceResponse,
   Voice,
 } from "@/types/models";
@@ -172,6 +174,34 @@ export async function startModelDownload(name: string): Promise<DownloadStatus> 
 export async function getModelDownloadStatus(name: string): Promise<DownloadStatus> {
   return jsonOrThrow<DownloadStatus>(
     await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/download`),
+  );
+}
+
+export async function startDeleteWeights(name: string): Promise<DeleteWeightsStatus> {
+  return jsonOrThrow<DeleteWeightsStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/delete-weights`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function getDeleteWeightsStatus(name: string): Promise<DeleteWeightsStatus> {
+  return jsonOrThrow<DeleteWeightsStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/delete-weights`),
+  );
+}
+
+export async function startUninstallEngine(name: string): Promise<UninstallStatus> {
+  return jsonOrThrow<UninstallStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/uninstall`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function getUninstallStatus(name: string): Promise<UninstallStatus> {
+  return jsonOrThrow<UninstallStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/uninstall`),
   );
 }
 
