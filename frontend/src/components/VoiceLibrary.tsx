@@ -5,6 +5,7 @@ import { UploadVoiceDialog } from "./UploadVoiceDialog";
 import { VoiceMetaDialog } from "./VoiceMetaDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { focusRing } from "@/lib/theme";
+import { useConfirm } from "./ConfirmProvider";
 
 interface Props {
   voices: Voice[];
@@ -31,6 +32,7 @@ export function VoiceLibrary({
   selectedVoiceId,
   onSelectVoice,
 }: Props) {
+  const confirm = useConfirm();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editingVoice, setEditingVoice] = useState<Voice | null>(null);
 
@@ -150,7 +152,16 @@ export function VoiceLibrary({
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); void onRemoveVoice(v.id); }}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const ok = await confirm({
+                      title: `Delete "${v.name}"?`,
+                      message: "This permanently removes the uploaded voice.",
+                      confirmLabel: "Delete",
+                      danger: true,
+                    });
+                    if (ok) void onRemoveVoice(v.id);
+                  }}
                   className={`p-1 ${danger} ${focusRing}`}
                   title="Delete"
                 >

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { focusRing } from "@/lib/theme";
 
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { InstallEngineDialog } from "@/components/InstallEngineDialog";
 import { DownloadModelDialog } from "@/components/DownloadModelDialog";
 import { SegmentCard } from "@/components/SegmentCard";
@@ -674,6 +675,7 @@ export default function App() {
   }
 
   return (
+    <ConfirmProvider isDark={isDark}>
     <div className={`flex h-screen overflow-hidden ${isDark ? "bg-zinc-950" : "bg-gray-50"}`}>
       <VoiceLibrary
         voices={displayedVoices}
@@ -905,5 +907,6 @@ export default function App() {
         />
       )}
     </div>
+    </ConfirmProvider>
   );
 }

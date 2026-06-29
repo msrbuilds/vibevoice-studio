@@ -11,6 +11,7 @@ import {
   type CacheListResponse,
 } from "@/lib/api";
 import { GenerationDetailModal } from "./GenerationDetailModal";
+import { useConfirm } from "./ConfirmProvider";
 
 interface Props {
   isDark: boolean;
@@ -69,7 +70,6 @@ export function useCacheData(onCountChange?: (count: number) => void) {
   }, []);
 
   const onClear = async () => {
-    if (!confirm("Clear all cached audio? Next synthesis will run the model again.")) return;
     setBusy(true);
     try {
       await clearCache();
@@ -102,6 +102,7 @@ interface BodyProps {
 
 /** Reusable cache list body — rendered as a Recent generations playlist. */
 export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) {
+  const confirm = useConfirm();
   const [playingHash, setPlayingHash] = useState<string | null>(null);
   const [detail, setDetail] = useState<CacheEntryInfo | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -148,12 +149,26 @@ export function CacheBody({ isDark, data, busy, onClear, onDelete }: BodyProps) 
 
   const handleDelete = async (e: React.MouseEvent, hash: string) => {
     e.stopPropagation();
+    const ok = await confirm({
+      title: "Delete this generation?",
+      message: "This removes the cached clip. It can be regenerated later.",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     stopSharedAudio(hash);
     await onDelete(hash);
   };
 
-  const handleClear = () => {
-    stopSharedAudio(); // stop regardless of which hash is playing
+  const handleClear = async () => {
+    const ok = await confirm({
+      title: "Clear all generations?",
+      message: "This deletes every cached clip. Next synthesis will run the model again.",
+      confirmLabel: "Clear all",
+      danger: true,
+    });
+    if (!ok) return;
+    stopSharedAudio();
     onClear();
   };
 
