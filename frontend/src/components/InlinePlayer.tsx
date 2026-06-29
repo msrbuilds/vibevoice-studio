@@ -35,19 +35,19 @@ export function InlinePlayer({
   const downloadLabel = (
     <>
       <FileAudio className="w-5 h-5" />
-      <span className="@max-[1100px]:hidden">Download Audio</span>
+      <span className="hidden @[1100px]:inline">Download Audio</span>
     </>
   );
   const playLabel = (
     <>
       <Play className="w-5 h-5" />
-      <span className="@max-[1100px]:hidden">Play Podcast</span>
+      <span className="hidden @[1100px]:inline">Play Podcast</span>
     </>
   );
   const stopLabel = (
     <>
       <Square className="w-5 h-5" />
-      <span className="@max-[1100px]:hidden">Stop Podcast</span>
+      <span className="hidden @[1100px]:inline">Stop Podcast</span>
     </>
   );
 
@@ -61,7 +61,7 @@ export function InlinePlayer({
         <div className="flex items-center gap-3 min-w-0">
           <Volume2 className="w-5 h-5 text-teal-400 shrink-0" />
           <div className="min-w-0">
-            <p className={`font-medium @max-[900px]:hidden ${isDark ? "text-white" : "text-gray-900"}`}>
+            <p className={`font-medium hidden @[900px]:block ${isDark ? "text-white" : "text-gray-900"}`}>
               Full podcast
             </p>
             <p

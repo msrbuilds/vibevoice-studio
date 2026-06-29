@@ -57,7 +57,7 @@ export function MiddleToolbar({
             className={`flex items-center gap-2 px-4 py-2.5 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             <Plus className="w-5 h-5" />
-            <span className="@max-[1100px]:hidden">Add Segment</span>
+            <span className="hidden @[1100px]:inline">Add Segment</span>
           </button>
         )}
       </div>
@@ -78,7 +78,7 @@ export function MiddleToolbar({
             } ${focusRing}`}
           >
             <RefreshCw className="w-4 h-4" />
-            <span className="@max-[1100px]:hidden">Generate All</span>
+            <span className="hidden @[1100px]:inline">Generate All</span>
             {validCount > 0 && (
               <span
                 className={`text-xs ml-1 ${
