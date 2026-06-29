@@ -65,7 +65,7 @@ export function EngineSelector({
         className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
           isDark
             ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
-            : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
+            : "bg-white hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
         } ${focusRing}`}
         title="Switch TTS engine"
       >
@@ -137,17 +137,17 @@ export function EngineSelector({
                 <li
                   key={e.name}
                   className={`rounded-lg border p-4 ${
-                    isDark ? "border-zinc-800 bg-zinc-950/40" : "border-gray-200 bg-gray-50"
+                    isDark ? "border-zinc-800 bg-zinc-950/40" : "border-gray-300 bg-gray-50"
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         isActive
-                          ? "bg-teal-600/20 text-teal-400"
+                          ? isDark ? "bg-teal-600/20 text-teal-400" : "bg-teal-100 text-teal-700"
                           : isDark
                             ? "bg-zinc-800 text-zinc-400"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-gray-200 text-gray-700"
                       }`}
                     >
                       {switching ? (
@@ -166,7 +166,7 @@ export function EngineSelector({
                           {e.display_name}
                         </span>
                         {isActive && (
-                          <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-600/20 text-teal-300">
+                          <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-teal-600/20 text-teal-300" : "bg-teal-100 text-teal-700"}`}>
                             Active
                           </span>
                         )}
@@ -243,10 +243,10 @@ export function EngineSelector({
                           disabled={isActive}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isActive
-                              ? "bg-teal-600/20 text-teal-300 cursor-default"
+                              ? isDark ? "bg-teal-600/20 text-teal-300 cursor-default" : "bg-teal-100 text-teal-800 cursor-default"
                               : isDark
                                 ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
                           } ${focusRing}`}
                         >
                           {isActive
