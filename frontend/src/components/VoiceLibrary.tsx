@@ -120,7 +120,7 @@ export function VoiceLibrary({
 
       <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
         {/* Built-in voices */}
-        <section className="p-3 dark:bg-gray-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100/80 border border-gray-200 rounded-lg">
           <h2 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
             Built-in voices
           </h2>
@@ -160,7 +160,7 @@ export function VoiceLibrary({
         {/* User uploads — hidden when the active engine doesn't support
             voice cloning (Kokoro uses its own built-in voice catalog). */}
         {supportsVoiceCloning && (
-        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100 border-gray-200 rounded-lg">
+        <section className="p-3 dark:bg-zinc-900 dark:border-zinc-800 bg-gray-100/80 border border-gray-200 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <h2 className={`text-xs font-semibold uppercase tracking-wide ${heading}`}>
               My voices
