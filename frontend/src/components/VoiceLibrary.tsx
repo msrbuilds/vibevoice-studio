@@ -99,7 +99,7 @@ export function VoiceLibrary({
 
   return (
     <aside
-      className={`w-80 shrink-0 z-10 border-r flex flex-col transition-colors ${surface} ${border}`}
+      className={`w-64 shrink-0 z-10 border-r flex flex-col transition-colors ${surface} ${border}`}
     >
       <div className={`p-5 border-b flex items-center gap-3 ${border}`}>
         <div className="w-9 h-9 rounded-lg bg-teal-600/20 flex items-center justify-center shrink-0">

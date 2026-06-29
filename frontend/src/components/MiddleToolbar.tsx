@@ -54,9 +54,9 @@ export function MiddleToolbar({
             onClick={onAddSegment}
             disabled={busy}
             title="Add a new segment"
-            className={`flex items-center gap-2 px-4 py-2.5 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
+            className={`flex items-center gap-1.5 px-3 py-2 bg-teal-700 hover:bg-teal-600 disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-lg font-medium text-sm transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             <span className="hidden @[1100px]:inline">Add Segment</span>
           </button>
         )}
@@ -69,7 +69,7 @@ export function MiddleToolbar({
             onClick={onGenerateAll}
             disabled={generateDisabled}
             title={`Generate all uncached segments (${cachedCount}/${validCount} done)`}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors disabled:cursor-not-allowed ${
               generateDisabled
                 ? isDark
                   ? "bg-zinc-800 text-zinc-400"
@@ -77,7 +77,7 @@ export function MiddleToolbar({
                 : "bg-amber-700 hover:bg-amber-600 text-white"
             } ${focusRing}`}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5" />
             <span className="hidden @[1100px]:inline">Generate All</span>
             {validCount > 0 && (
               <span

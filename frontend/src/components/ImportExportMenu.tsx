@@ -24,7 +24,7 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const buttonClass = `flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
+  const buttonClass = `flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors border ${
     isDark
       ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
       : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
