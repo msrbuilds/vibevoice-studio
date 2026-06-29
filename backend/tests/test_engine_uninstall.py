@@ -204,3 +204,65 @@ def test_uninstaller_unloads_loaded_engine(tmp_path):
     u.start()
     _wait_uninstaller(u)
     assert fake.unloaded is True
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
+def _make_app(deleter=None, uninstallers=None):
+    from fastapi import FastAPI
+    from backend.api.engines import router
+    app = FastAPI()
+    app.include_router(router)
+    if deleter is not None:
+        app.state.model_deleter = deleter
+    if uninstallers is not None:
+        app.state.engine_uninstallers = uninstallers
+    return app
+
+
+def test_delete_weights_endpoints():
+    from fastapi.testclient import TestClient
+    from backend.services.model_delete import ModelDeleter
+    d = ModelDeleter(em=None, repo_dir_resolver=lambda r: None, remover=lambda p: None)
+    client = TestClient(_make_app(deleter=d))
+
+    assert client.get("/api/engines/vibevoice/delete-weights").json()["state"] == "idle"
+    r = client.post("/api/engines/vibevoice/delete-weights")
+    assert r.status_code == 200
+    _wait_deleter(d)
+    assert client.get("/api/engines/vibevoice/delete-weights").json()["state"] == "deleted"
+
+
+def test_delete_weights_rejects_unknown_engine():
+    from fastapi.testclient import TestClient
+    from backend.services.model_delete import ModelDeleter
+    d = ModelDeleter(em=None, repo_dir_resolver=lambda r: None, remover=lambda p: None)
+    client = TestClient(_make_app(deleter=d))
+    assert client.get("/api/engines/bogus/delete-weights").status_code == 400
+    assert client.post("/api/engines/bogus/delete-weights").status_code == 400
+
+
+def test_uninstall_endpoints(tmp_path):
+    from fastapi.testclient import TestClient
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+    venv = tmp_path / "venv-chatterbox"
+    venv.mkdir()
+    u = EngineEnvUninstaller("chatterbox", em=None, venv_dir=venv, remover=lambda p: None)
+    client = TestClient(_make_app(uninstallers={"chatterbox": u}))
+
+    assert client.get("/api/engines/chatterbox/uninstall").json()["state"] == "idle"
+    assert client.post("/api/engines/chatterbox/uninstall").status_code == 200
+    _wait_uninstaller(u)
+    assert client.get("/api/engines/chatterbox/uninstall").json()["state"] == "uninstalled"
+
+
+def test_uninstall_rejects_non_isolated_engine(tmp_path):
+    from fastapi.testclient import TestClient
+    from backend.services.engine_uninstall import EngineEnvUninstaller
+    u = EngineEnvUninstaller("chatterbox", em=None, venv_dir=tmp_path / "v", remover=lambda p: None)
+    client = TestClient(_make_app(uninstallers={"chatterbox": u}))
+    # vibevoice has no isolated env → 400
+    assert client.get("/api/engines/vibevoice/uninstall").status_code == 400
+    assert client.post("/api/engines/vibevoice/uninstall").status_code == 400

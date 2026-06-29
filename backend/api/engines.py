@@ -10,7 +10,14 @@ from pydantic import BaseModel, Field
 
 from ..core.engine_manager import EngineLoadError, EngineManager, EngineNotFound
 from ..services.model_download import DOWNLOADABLE as _DOWNLOADABLE
-from .deps import get_engine_installers, get_engine_manager, get_model_downloader
+from ..services.model_delete import DELETABLE as _DELETABLE
+from .deps import (
+    get_engine_installers,
+    get_engine_manager,
+    get_engine_uninstallers,
+    get_model_deleter,
+    get_model_downloader,
+)
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +67,18 @@ class DownloadStatusModel(BaseModel):
     log: list[str]
     error: str | None
     returncode: int | None
+
+
+class DeleteWeightsStatusModel(BaseModel):
+    state: str  # idle | deleting | deleted | error
+    log: list[str]
+    error: str | None
+
+
+class UninstallStatusModel(BaseModel):
+    state: str  # idle | uninstalling | uninstalled | error
+    log: list[str]
+    error: str | None
 
 
 class ActivateRequest(BaseModel):
@@ -171,3 +190,40 @@ def start_download(name: str, downloader=Depends(get_model_downloader)) -> Downl
         return DownloadStatusModel(**downloader.start(name))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/{name}/delete-weights", response_model=DeleteWeightsStatusModel)
+def delete_weights_status(name: str, deleter=Depends(get_model_deleter)) -> DeleteWeightsStatusModel:
+    """Current weight-deletion state."""
+    if name not in _DELETABLE:
+        raise HTTPException(status_code=400, detail=f"{name} weights are not deletable")
+    return DeleteWeightsStatusModel(**deleter.status())
+
+
+@router.post("/{name}/delete-weights", response_model=DeleteWeightsStatusModel)
+def start_delete_weights(name: str, deleter=Depends(get_model_deleter)) -> DeleteWeightsStatusModel:
+    """Start (or coalesce onto a running) weight deletion."""
+    if name not in _DELETABLE:
+        raise HTTPException(status_code=400, detail=f"{name} weights are not deletable")
+    try:
+        return DeleteWeightsStatusModel(**deleter.start(name))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/{name}/uninstall", response_model=UninstallStatusModel)
+def uninstall_status(name: str, uninstallers=Depends(get_engine_uninstallers)) -> UninstallStatusModel:
+    """Current env-removal state for an isolated engine (Chatterbox / OmniVoice)."""
+    u = uninstallers.get(name)
+    if u is None:
+        raise HTTPException(status_code=400, detail=f"{name} has no isolated environment to uninstall")
+    return UninstallStatusModel(**u.status())
+
+
+@router.post("/{name}/uninstall", response_model=UninstallStatusModel)
+def start_uninstall(name: str, uninstallers=Depends(get_engine_uninstallers)) -> UninstallStatusModel:
+    """Start (or coalesce onto a running) removal of an isolated engine env."""
+    u = uninstallers.get(name)
+    if u is None:
+        raise HTTPException(status_code=400, detail=f"{name} has no isolated environment to uninstall")
+    return UninstallStatusModel(**u.start())
