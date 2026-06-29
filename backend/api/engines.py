@@ -70,6 +70,7 @@ class DownloadStatusModel(BaseModel):
 
 
 class DeleteWeightsStatusModel(BaseModel):
+    engine: str | None = None
     state: str  # idle | deleting | deleted | error
     log: list[str]
     error: str | None

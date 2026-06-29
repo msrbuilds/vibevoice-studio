@@ -95,6 +95,33 @@ def test_model_deleter_rejects_unknown_engine():
         d.start("not-an-engine")
 
 
+def test_model_deleter_rejects_concurrent_different_engine():
+    from backend.services.model_delete import ModelDeleter
+    import pytest, threading
+
+    gate = threading.Event()
+
+    def slow_remove(p):
+        gate.wait(2.0)  # hold the first delete open
+
+    d = ModelDeleter(
+        em=None,
+        repo_dir_resolver=lambda r: Path("/x"),
+        remover=slow_remove,
+    )
+    d.start("vibevoice")
+    # While vibevoice delete is in flight, a different engine must be rejected.
+    try:
+        with pytest.raises(ValueError):
+            d.start("kokoro")
+        # Same engine coalesces (no raise).
+        d.start("vibevoice")
+    finally:
+        gate.set()
+    _wait_deleter(d)
+    assert d.status()["engine"] == "vibevoice"
+
+
 def test_model_deleter_unloads_loaded_engine():
     from backend.services.model_delete import ModelDeleter
 
@@ -232,7 +259,9 @@ def test_delete_weights_endpoints():
     r = client.post("/api/engines/vibevoice/delete-weights")
     assert r.status_code == 200
     _wait_deleter(d)
-    assert client.get("/api/engines/vibevoice/delete-weights").json()["state"] == "deleted"
+    body = client.get("/api/engines/vibevoice/delete-weights").json()
+    assert body["state"] == "deleted"
+    assert body["engine"] == "vibevoice"
 
 
 def test_delete_weights_rejects_unknown_engine():

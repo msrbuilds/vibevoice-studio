@@ -88,6 +88,7 @@ export interface DownloadStatus {
 }
 
 export interface DeleteWeightsStatus {
+  engine: string | null;
   state: "idle" | "deleting" | "deleted" | "error";
   log: string[];
   error: string | null;

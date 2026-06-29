@@ -29,6 +29,7 @@ export function DeleteWeightsDialog({
 }: Props) {
   const [started, setStarted] = useState(false);
   const [status, setStatus] = useState<DeleteWeightsStatus>({
+    engine: engineName,
     state: "idle",
     log: [],
     error: null,
@@ -40,6 +41,12 @@ export function DeleteWeightsDialog({
   const poll = async () => {
     try {
       const s = await getDeleteWeightsStatus(engineName);
+      // The deleter is a global singleton; ignore a snapshot that belongs to a
+      // different engine (shouldn't happen via the single-modal UI, but guard).
+      if (s.engine && s.engine !== engineName) {
+        timerRef.current = window.setTimeout(() => void poll(), 800);
+        return;
+      }
       setStatus(s);
       if (s.state === "deleting") {
         timerRef.current = window.setTimeout(() => void poll(), 800);
@@ -58,11 +65,12 @@ export function DeleteWeightsDialog({
 
   const begin = async () => {
     setStarted(true);
-    setStatus({ state: "deleting", log: [], error: null });
+    setStatus({ engine: engineName, state: "deleting", log: [], error: null });
     try {
       await startDeleteWeights(engineName);
     } catch (err) {
       setStatus({
+        engine: engineName,
         state: "error",
         log: [err instanceof Error ? err.message : String(err)],
         error: err instanceof Error ? err.message : String(err),

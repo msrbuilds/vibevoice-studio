@@ -60,6 +60,7 @@ class ModelDeleter:
         self._resolve = repo_dir_resolver or _default_repo_dir
         self._remove = remover or shutil.rmtree
         self._lock = threading.Lock()
+        self._engine: str | None = None
         self._state = "idle"
         self._log: list[str] = []
         self._error: str | None = None
@@ -67,20 +68,23 @@ class ModelDeleter:
 
     def status(self) -> dict:
         with self._lock:
-            return {"state": self._state, "log": list(self._log), "error": self._error}
+            return {"engine": self._engine, "state": self._state, "log": list(self._log), "error": self._error}
 
     def start(self, engine_name: str) -> dict:
         if engine_name not in DELETABLE:
             raise ValueError(f"{engine_name} weights are not deletable")
         with self._lock:
             if self._state == "deleting":
-                return {"state": self._state, "log": list(self._log), "error": self._error}
+                if self._engine == engine_name:
+                    return {"engine": self._engine, "state": self._state, "log": list(self._log), "error": self._error}
+                raise ValueError(f"a delete for {self._engine} is already in progress")
+            self._engine = engine_name
             self._state = "deleting"
             self._log = []
             self._error = None
             self._thread = threading.Thread(target=self._run, args=(engine_name,), daemon=True)
             self._thread.start()
-            return {"state": self._state, "log": [], "error": None}
+            return {"engine": self._engine, "state": self._state, "log": [], "error": None}
 
     def _append(self, line: str) -> None:
         with self._lock:
