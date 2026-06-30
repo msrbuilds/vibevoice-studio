@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mic2, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plus, Sun, Trash2, Volume2, Waves } from "lucide-react";
+import { AudioWaveform, Binary, Cpu, Mic2, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plus, Sun, Trash2, Volume2, Waves } from "lucide-react";
 import type { ConfigResponse, Voice, VoiceMetadata } from "@/types/models";
 import { UploadVoiceDialog } from "./UploadVoiceDialog";
 import { VoiceMetaDialog } from "./VoiceMetaDialog";
@@ -255,10 +255,23 @@ export function VoiceLibrary({
             <h2 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${heading}`}>
               Backend
             </h2>
-            <div className={`text-xs space-y-0.5 ${subtle} flex items-center gap-4`}>
-              <div>device: <span className={bodyText}>{config.device}</span></div>
-              <div>dtype: <span className={bodyText}>{config.dtype}</span></div>
-              <div>sr: <span className={bodyText}>{config.sampling_rate} Hz</span></div>
+            <div className={`text-xs ${subtle} flex items-center gap-4`}>
+              <span className="flex items-center gap-1.5" title="Compute device">
+                <Cpu className="w-3.5 h-3.5 shrink-0" />
+                <span className={bodyText}>{config.device}</span>
+              </span>
+              <span className="flex items-center gap-1.5" title="Compute precision (dtype)">
+                <Binary className="w-3.5 h-3.5 shrink-0" />
+                <span className={bodyText}>{config.dtype}</span>
+              </span>
+              <span className="flex items-center gap-1.5" title="Output sample rate">
+                <AudioWaveform className="w-3.5 h-3.5 shrink-0" />
+                <span className={bodyText}>
+                  {config.sampling_rate > 0
+                    ? `${(config.sampling_rate / 1000).toFixed(config.sampling_rate % 1000 === 0 ? 0 : 1)} kHz`
+                    : "—"}
+                </span>
+              </span>
             </div>
           </section>
         )}
