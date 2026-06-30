@@ -83,6 +83,7 @@ def config(
                 active=info.get("active", False),
                 supports_voice_modes=info.get("supports_voice_modes", False),
                 supports_style_clone=info.get("supports_style_clone", False),
+                supports_style_prompt=info.get("supports_style_prompt", False),
             )
             for info in em.info()
         ],

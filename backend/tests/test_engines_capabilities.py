@@ -19,3 +19,13 @@ def test_engines_list_exposes_voice_mode_flags():
     assert by_name["omnivoice"]["supports_style_clone"] is False
     assert by_name["vibevoice"]["supports_voice_modes"] is False
     assert by_name["vibevoice"]["supports_style_clone"] is False
+
+
+def test_engines_expose_style_prompt_flag():
+    from fastapi.testclient import TestClient
+    from backend.app import create_app
+    client = TestClient(create_app())
+    by_name = {e["name"]: e for e in client.get("/api/engines").json()["engines"]}
+    assert by_name["qwen"]["supports_style_prompt"] is True
+    assert by_name["vibevoice"]["supports_style_prompt"] is False
+    assert by_name["voxcpm"]["supports_style_prompt"] is False
