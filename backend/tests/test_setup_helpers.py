@@ -7,6 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools import envdetect  # noqa: E402
+from tools.envdetect import detect_voxcpm_cuda_tag, cuda_version_to_voxcpm_tag  # noqa: E402
 
 _SAMPLE_SMI = """
 +-----------------------------------------------------------------------------+
@@ -221,3 +222,16 @@ def test_install_omnivoice_subcommand_success(monkeypatch):
 def test_install_omnivoice_subcommand_failure(monkeypatch):
     monkeypatch.setattr(studio, "_ensure_omnivoice_env", lambda: False)
     assert studio.main(["install-omnivoice"]) == 1
+
+
+def test_cuda_version_to_voxcpm_tag():
+    assert cuda_version_to_voxcpm_tag("13.0") == "cu128"
+    assert cuda_version_to_voxcpm_tag("12.8") == "cu128"
+    assert cuda_version_to_voxcpm_tag("12.6") == "cu126"
+    assert cuda_version_to_voxcpm_tag("12.4") is None  # below cu126 → CPU fallback
+    assert cuda_version_to_voxcpm_tag(None) is None
+
+
+def test_detect_voxcpm_cuda_tag_uses_runner():
+    fake = lambda: "NVIDIA-SMI ... CUDA Version: 12.8 ..."
+    assert detect_voxcpm_cuda_tag(runner=fake) == "cu128"
