@@ -40,6 +40,8 @@ from .core.engine_manager import EngineManager
 from .core.exceptions import BackendError
 from .services.chatterbox_install import ChatterboxInstaller, EngineEnvInstaller
 from .services.model_download import ModelDownloader
+from .services.model_delete import ModelDeleter
+from .services.engine_uninstall import EngineEnvUninstaller
 from .services.join_cache import JoinCache
 from .services.synth_cache import SynthCache
 from .services.synthesize import SynthService
@@ -168,6 +170,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         chatterbox_watermark=settings.chatterbox_watermark,
         omnivoice_model_id=settings.omnivoice_model_id,
         omnivoice_num_step=settings.omnivoice_num_step,
+        voxcpm_model_id=settings.voxcpm_model_id,
+        voxcpm_inference_timesteps=settings.voxcpm_inference_timesteps,
     )
 
     # Wire each engine's built-in voice catalog into the registry so
@@ -206,8 +210,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine_installers = {
         "chatterbox": ChatterboxInstaller(),
         "omnivoice": EngineEnvInstaller("install-omnivoice"),
+        "voxcpm": EngineEnvInstaller("install-voxcpm"),
     }
     app.state.model_downloader = ModelDownloader()
+    app.state.model_deleter = ModelDeleter(em=engine_manager)
+    app.state.engine_uninstallers = {
+        "chatterbox": EngineEnvUninstaller("chatterbox", em=engine_manager),
+        "omnivoice": EngineEnvUninstaller("omnivoice", em=engine_manager),
+        "voxcpm": EngineEnvUninstaller("voxcpm", em=engine_manager),
+    }
 
     # ---- routers
     app.include_router(health_router)

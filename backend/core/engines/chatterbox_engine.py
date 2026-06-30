@@ -35,6 +35,15 @@ SUPPORTED_LANGUAGE_IDS: frozenset[str] = frozenset({
     "sw", "tr", "zh",
 })
 
+_LANGUAGE_LABELS: dict[str, str] = {
+    "ar": "Arabic", "da": "Danish", "de": "German", "el": "Greek",
+    "en": "English", "es": "Spanish", "fi": "Finnish", "fr": "French",
+    "he": "Hebrew", "hi": "Hindi", "it": "Italian", "ja": "Japanese",
+    "ko": "Korean", "ms": "Malay", "nl": "Dutch", "no": "Norwegian",
+    "pl": "Polish", "pt": "Portuguese", "ru": "Russian", "sv": "Swedish",
+    "sw": "Swahili", "tr": "Turkish", "zh": "Chinese",
+}
+
 
 def _normalize_language_id(value: str | None, default: str) -> str:
     """Coerce a voice-language code into a Chatterbox-compatible id."""
@@ -158,6 +167,14 @@ class ChatterboxEngine(Engine):
         # venv-chatterbox/{Scripts|bin}/python[.exe]).
         return self._worker_python.parent.parent / ".chatterbox-ready"
 
+    def downloaded(self) -> bool:
+        # Chatterbox weights live in the shared HF cache (backend/models/), which
+        # both the main process and the isolated worker read. Probe it so the UI
+        # can gate the Delete-weights button. Mirrors OmniVoiceEngine.downloaded().
+        from ..model_cache import model_downloaded
+
+        return model_downloaded(self._model_id)
+
     def engine_info(self) -> dict[str, Any]:
         device = self._device_request
         if device == "auto":
@@ -188,6 +205,12 @@ class ChatterboxEngine(Engine):
 
     def available_voices(self) -> list:
         return []
+
+    def languages(self) -> list[dict[str, str]]:
+        return [
+            {"code": c, "label": _LANGUAGE_LABELS.get(c, c)}
+            for c in sorted(SUPPORTED_LANGUAGE_IDS)
+        ]
 
     # -- synthesis
     def synthesize(self, req: EngineSynthRequest) -> EngineResult:

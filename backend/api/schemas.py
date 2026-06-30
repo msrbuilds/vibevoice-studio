@@ -46,6 +46,7 @@ class VoiceInfoModel(BaseModel):
     # Which TTS engine owns this voice. Optional for backward compat with
     # older clients that don't know about engines.
     engine: str | None = None
+    reference_transcript: str | None = None
 
 
 class VoiceMetaUpdate(BaseModel):
@@ -53,6 +54,7 @@ class VoiceMetaUpdate(BaseModel):
     name: str | None = None
     gender: str | None = None
     language: str | None = None
+    reference_transcript: str | None = None
 
 
 class VoiceListResponse(BaseModel):
@@ -74,6 +76,11 @@ class ErrorResponse(BaseModel):
 
 # ---- engines ----
 
+class EngineLanguageModel(BaseModel):
+    code: str
+    label: str
+
+
 class EngineInfoModel(BaseModel):
     name: str
     display_name: str
@@ -84,7 +91,10 @@ class EngineInfoModel(BaseModel):
     sample_rate: int | None = None
     max_speakers: int
     default_cfg_scale: float | None = None
+    languages: list[EngineLanguageModel] = []
     active: bool = False
+    supports_voice_modes: bool = False
+    supports_style_clone: bool = False
 
 
 # Forward-ref: ConfigResponse references EngineInfoModel.

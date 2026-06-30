@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, X } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import { getModelDownloadStatus, startModelDownload } from "@/lib/api";
 import type { DownloadStatus } from "@/types/models";
 
@@ -16,6 +17,7 @@ const MODEL_SIZES: Record<string, string> = {
   vibevoice: "~5.4 GB",
   kokoro: "~350 MB",
   omnivoice: "~3.3 GB",
+  voxcpm: "~5 GB",
 };
 
 const fmtBytes = (b: number): string =>
@@ -136,9 +138,9 @@ export function DownloadModelDialog({
         >
           <div className="flex items-center gap-2">
             {downloading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-teal-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
             ) : (
-              <Download className="w-4 h-4 text-teal-400" />
+              <Download className="w-4 h-4 text-orange-400" />
             )}
             <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
               {downloading
@@ -157,8 +159,8 @@ export function DownloadModelDialog({
                 ? "opacity-40 cursor-not-allowed"
                 : isDark
                   ? "hover:bg-zinc-800 text-zinc-400"
-                  : "hover:bg-gray-100 text-gray-500"
-            }`}
+                  : "hover:bg-gray-100 text-gray-600"
+            } ${focusRing}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -179,7 +181,7 @@ export function DownloadModelDialog({
                   }`}
                 >
                   <div
-                    className={`h-full bg-teal-500 transition-[width] duration-500 ${
+                    className={`h-full bg-orange-500 transition-[width] duration-500 ${
                       status.total_bytes ? "" : "animate-pulse"
                     }`}
                     style={{ width: `${status.total_bytes ? pct : 100}%` }}
@@ -187,7 +189,7 @@ export function DownloadModelDialog({
                 </div>
                 <div
                   className={`flex justify-between text-[11px] ${
-                    isDark ? "text-zinc-400" : "text-gray-500"
+                    isDark ? "text-zinc-400" : "text-gray-600"
                   }`}
                 >
                   <span>
@@ -219,7 +221,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 hover:bg-teal-500 text-white"
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-600 hover:bg-orange-500 text-white ${focusRing}`}
               >
                 {`Download (${sizeLabel})`}
               </button>
@@ -228,7 +230,7 @@ export function DownloadModelDialog({
               <button
                 type="button"
                 onClick={() => void begin()}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 hover:bg-teal-500 text-white"
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-orange-600 hover:bg-orange-500 text-white ${focusRing}`}
               >
                 Retry
               </button>
@@ -243,7 +245,7 @@ export function DownloadModelDialog({
                   : isDark
                     ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
+              } ${focusRing}`}
             >
               {started ? "Close" : "Cancel"}
             </button>

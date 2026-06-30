@@ -14,3 +14,45 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* --- Themed scrollbars ---
+   Slim, rounded thumbs that match the zinc/orange palette in both themes.
+   The app toggles a `.dark` class on <html>, so the dark overrides key off it. */
+
+/* WebKit / Chromium / Edge */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #d4d4d8; /* zinc-300 (light) */
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #f97316; /* orange-500 */
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #3f3f46; /* zinc-700 (dark) */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #f97316; /* orange-500 */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent; /* zinc-300 (light) */
+}
+.dark * {
+  scrollbar-color: #3f3f46 transparent; /* zinc-700 (dark) */
+}

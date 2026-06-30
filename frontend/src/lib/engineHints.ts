@@ -101,11 +101,29 @@ const OMNIVOICE_HINTS: EngineCfgHints = {
     "OmniVoice does not use CFG — this slider is a no-op while OmniVoice is active. Voice fidelity comes from the reference clip.",
 };
 
+// VoxCPM `cfg_value` — classifier-free guidance, ~1.0–3.0, default 2.0.
+const VOXCPM_HINTS: EngineCfgHints = {
+  name: "voxcpm",
+  min: 1.0,
+  max: 3.0,
+  step: 0.1,
+  presets: [1.5, 2.0, 2.5, 3.0],
+  minLabel: "natural",
+  midLabel: "balanced",
+  maxLabel: "strict",
+  default: 2.0,
+  precision: 1,
+  hint:
+    "VoxCPM CFG (cfg_value). Higher adheres more strictly to the reference voice or design prompt; lower is more natural. Pairs with the Quality control.",
+  highlight: "Quality",
+};
+
 const HINTS_BY_ENGINE: Record<string, EngineCfgHints> = {
   vibevoice: VIBEVOICE_HINTS,
   kokoro: KOKORO_HINTS,
   chatterbox: CHATTERBOX_HINTS,
   omnivoice: OMNIVOICE_HINTS,
+  voxcpm: VOXCPM_HINTS,
 };
 
 /** Return the hints for an engine id, falling back to VibeVoice defaults. */

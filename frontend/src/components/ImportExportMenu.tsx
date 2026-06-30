@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, FileDown, FileUp, Upload } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   isDark: boolean;
@@ -23,15 +24,15 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const buttonClass = `flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
+  const buttonClass = `flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors border ${
     isDark
       ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
       : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
-  } ${busy ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`;
+  } ${busy ? "opacity-50 cursor-not-allowed pointer-events-none" : ""} ${focusRing}`;
 
   const menuItemClass = `flex items-center gap-3 w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
     isDark ? "text-zinc-200 hover:bg-zinc-800" : "text-gray-700 hover:bg-gray-100"
-  }`;
+  } ${focusRing}`;
 
   return (
     <div className="relative" ref={ref}>
@@ -42,7 +43,7 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
         title="Import or export the project as JSON"
       >
         <Download className="w-4 h-4" />
-        Import/Export
+        <span className="hidden @[1100px]:inline">Import/Export</span>
       </button>
 
       {open && (
@@ -60,12 +61,12 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
             disabled={busy}
             className={menuItemClass}
           >
-            <FileDown className="w-4 h-4 text-teal-400" />
+            <FileDown className="w-4 h-4 text-orange-400" />
             <span>Export JSON</span>
           </button>
 
           <label className={menuItemClass}>
-            <FileUp className="w-4 h-4 text-teal-400" />
+            <FileUp className="w-4 h-4 text-orange-400" />
             <span>Import JSON</span>
             <input
               type="file"
@@ -84,8 +85,8 @@ export function ImportExportMenu({ isDark, busy, onExportJson, onImportJson }: P
           <div
             className={`mt-1 pt-1 border-t px-3 py-2 text-[11px] ${
               isDark
-                ? "border-zinc-800 text-zinc-500"
-                : "border-gray-200 text-gray-500"
+                ? "border-zinc-800 text-zinc-400"
+                : "border-gray-200 text-gray-600"
             }`}
           >
             <Upload className="w-3 h-3 inline mr-1" />

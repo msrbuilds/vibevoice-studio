@@ -28,6 +28,14 @@ def get_model_downloader(request: Request):
     return request.app.state.model_downloader  # type: ignore[no-any-return]
 
 
+def get_model_deleter(request: Request):
+    return request.app.state.model_deleter  # type: ignore[no-any-return]
+
+
+def get_engine_uninstallers(request: Request) -> dict:
+    return request.app.state.engine_uninstallers  # type: ignore[no-any-return]
+
+
 def get_voice_registry(request: Request) -> VoiceRegistry:
     return request.app.state.voice_registry  # type: ignore[no-any-return]
 

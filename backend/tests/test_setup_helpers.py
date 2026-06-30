@@ -7,6 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools import envdetect  # noqa: E402
+from tools.envdetect import detect_voxcpm_cuda_tag, cuda_version_to_voxcpm_tag  # noqa: E402
 
 _SAMPLE_SMI = """
 +-----------------------------------------------------------------------------+
@@ -67,7 +68,7 @@ def test_parse_model_selection_rejects_unknown():
 
 
 def test_catalog_has_expected_engines():
-    assert set(dm.MODEL_CATALOG) == {"vibevoice", "kokoro", "chatterbox", "omnivoice"}
+    assert set(dm.MODEL_CATALOG) == {"vibevoice", "kokoro", "chatterbox", "omnivoice", "voxcpm"}
     assert dm.MODEL_CATALOG["kokoro"]["repo_id"] == "hexgrad/Kokoro-82M"
     assert dm.MODEL_CATALOG["omnivoice"]["repo_id"] == "k2-fsa/OmniVoice"
 
@@ -221,3 +222,27 @@ def test_install_omnivoice_subcommand_success(monkeypatch):
 def test_install_omnivoice_subcommand_failure(monkeypatch):
     monkeypatch.setattr(studio, "_ensure_omnivoice_env", lambda: False)
     assert studio.main(["install-omnivoice"]) == 1
+
+
+def test_cuda_version_to_voxcpm_tag():
+    assert cuda_version_to_voxcpm_tag("13.0") == "cu128"
+    assert cuda_version_to_voxcpm_tag("12.8") == "cu128"
+    assert cuda_version_to_voxcpm_tag("12.6") == "cu126"
+    assert cuda_version_to_voxcpm_tag("12.4") is None  # below cu126 → CPU fallback
+    assert cuda_version_to_voxcpm_tag(None) is None
+
+
+def test_detect_voxcpm_cuda_tag_uses_runner():
+    fake = lambda: "NVIDIA-SMI ... CUDA Version: 12.8 ..."
+    assert detect_voxcpm_cuda_tag(runner=fake) == "cu128"
+
+
+def test_python_supported_for_voxcpm():
+    import studio
+    assert studio._python_supported_for_voxcpm((3, 11)) is True
+    assert studio._python_supported_for_voxcpm((3, 12)) is True
+    assert studio._python_supported_for_voxcpm((3, 13)) is False
+    assert studio._python_supported_for_voxcpm((3, 9)) is False
+    assert studio._python_supported_for_voxcpm((3, 10)) is True   # lower-inclusive boundary
+    assert studio._python_supported_for_voxcpm((4, 0)) is False   # wrong major version
+    assert studio._python_supported_for_voxcpm((4, 11)) is False

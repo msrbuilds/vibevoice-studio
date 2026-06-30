@@ -48,6 +48,9 @@ class DownloadSegment(BaseModel):
     voice: str = Field("", max_length=256)  # may be empty for OmniVoice design/auto
     voice_mode: Literal["clone", "design", "auto"] | None = None
     instruct: str | None = None
+    # VoxCPM diffusion quality (inference timesteps). voxcpm-only; other engines
+    # ignore it. Threaded through so an exported segment matches its preview slot.
+    inference_steps: int | None = None
     cfg_scale: float | None = None
     # Per-segment cache hash. If provided, the join hash includes this so that
     # regenerating a segment invalidates the join cache. Optional for backward
@@ -76,6 +79,7 @@ def _join_canonical(segments: list["DownloadSegment"], silence_gap_ms: int, defa
                 "cfg_scale": round(float(s.cfg_scale if s.cfg_scale is not None else default_cfg), 4),
                 "vm": s.voice_mode,
                 "in": s.instruct,
+                "steps": s.inference_steps,
             }
             for s in segments
         ]
@@ -208,6 +212,7 @@ def download(
                         voice_mode=seg.voice_mode,
                         instruct=seg.instruct,
                     )],
+                    inference_steps=seg.inference_steps,
                     cfg_scale=seg.cfg_scale,
                     cfg_weight=seg.cfg_weight,
                     exaggeration=seg.exaggeration,

@@ -17,6 +17,7 @@ does everything engine-agnostic:
 from __future__ import annotations
 
 import concurrent.futures
+import hashlib
 import logging
 import re
 import tempfile
@@ -193,8 +194,10 @@ class SynthService:
         # request. Design/auto carry no reference voice, so skip the lookup.
         reference_audio: str | None = None
         voice_language: str | None = None
+        reference_transcript: str | None = None
+        supports_modes = target_engine.supports_voice_modes()
         for sp in req.speakers:
-            if target_name == "omnivoice":
+            if supports_modes:
                 sp_mode = sp.voice_mode or ("clone" if sp.voice_id else "auto")
             else:
                 sp_mode = "clone"
@@ -205,6 +208,7 @@ class SynthService:
             if target_engine.supports_voice_cloning():
                 reference_audio = str(self._voices.get(sp.voice_id))
             voice_language = voice_language or self._voices.get_language(sp.voice_id)
+            reference_transcript = reference_transcript or self._voices.get_reference_transcript(sp.voice_id)
 
         cfg = req.cfg_scale if req.cfg_scale is not None else self.default_cfg_scale
         steps_override = req.inference_steps
@@ -215,7 +219,7 @@ class SynthService:
             except Exception:  # noqa: BLE001
                 pass
 
-        return target_engine, target_name, reference_audio, voice_language, cfg, steps_override, text
+        return target_engine, target_name, reference_audio, voice_language, cfg, steps_override, text, reference_transcript
 
     # -- public properties
     @property
@@ -234,7 +238,7 @@ class SynthService:
 
     # -- public API
     def synthesize(self, req: SynthRequest) -> SynthResult:
-        target_engine, target_name, reference_audio, voice_language, cfg, steps_override, text = \
+        target_engine, target_name, reference_audio, voice_language, cfg, steps_override, text, reference_transcript = \
             self._resolve_request_context(req)
         effective_language_id = req.language_id or voice_language
         effective_cfg_weight = req.cfg_weight
@@ -248,7 +252,8 @@ class SynthService:
         if self._cache is not None and self._cache.enabled:
             sp0 = req.speakers[0]
             cache_voice_key = _voice_cache_key(
-                sp0.voice_id, sp0.voice_mode, sp0.instruct, reference_audio
+                sp0.voice_id, sp0.voice_mode, sp0.instruct, reference_audio,
+                reference_transcript, steps_override,
             )
             # Fold the optional knobs into the voice field with a stable
             # delimiter so different knob combos don't share a cache slot.
@@ -301,12 +306,15 @@ class SynthService:
                 disable_prefill=req.disable_prefill,
                 voice_mode=sp0.voice_mode,
                 instruct=sp0.instruct,
+                reference_text=reference_transcript,
             )
             return self._synth_one(
                 engine=target_engine,
                 engine_name=target_name,
                 engine_req=engine_req,
                 cache_hash_for_write=content_hash,
+                cache_text=req.text,
+                cache_voice=req.speakers[0].voice_id,
             )
 
         # Multi-speaker: synthesize each chunk separately, then concatenate
@@ -340,6 +348,7 @@ class SynthService:
                 language_id=effective_language_id,
                 voice_mode=req.speakers[0].voice_mode,
                 instruct=req.speakers[0].instruct,
+                reference_text=reference_transcript,
             )
             sub = self._synth_one(
                 engine=target_engine,
@@ -380,7 +389,7 @@ class SynthService:
         Raises `EngineStreamingNotSupported` (caught by the route as a
         1008 close) if the resolved engine doesn't support streaming.
         """
-        target_engine, _name, _ref_audio, voice_language, cfg, _steps, text = \
+        target_engine, _name, _ref_audio, voice_language, cfg, _steps, text, _ref_text = \
             self._resolve_request_context(req)
 
         if not target_engine.supports_streaming():
@@ -420,6 +429,8 @@ class SynthService:
         engine_name: str,
         engine_req: EngineSynthRequest,
         cache_hash_for_write: str | None,
+        cache_text: str | None = None,
+        cache_voice: str | None = None,
     ) -> SynthResult:
         with self._thread_lock:
             try:
@@ -438,6 +449,8 @@ class SynthService:
                     sample_rate=result.sample_rate,
                     duration_sec=result.duration_sec,
                     inference_ms=result.inference_ms,
+                    text=cache_text,
+                    voice=cache_voice,
                 )
             except Exception as exc:  # noqa: BLE001
                 log.debug("Failed to write cache entry %s: %s", cache_hash_for_write, exc)
@@ -464,13 +477,21 @@ def _build_script(text: str) -> str:
     return _normalize_speaker_tags(text)
 
 
-def _voice_cache_key(voice_id: str, voice_mode: str | None, instruct: str | None,
-                     reference_audio: str | None) -> str:
-    """Cache-key 'voice' component, folding OmniVoice mode/instruct.
+def _voice_cache_key(
+    voice_id: str,
+    voice_mode: str | None,
+    instruct: str | None,
+    reference_audio: str | None,
+    reference_text: str | None = None,
+    timesteps: int | None = None,
+) -> str:
+    """Cache-key 'voice' component, folding voice-mode/instruct/transcript/quality.
 
-    For other engines (voice_mode None) this returns exactly what the old
-    inline logic did, so their cache entries don't churn. For OmniVoice it
-    keeps clone/design/auto and distinct design prompts in separate slots.
+    For engines without voice modes (voice_mode None) and no transcript/quality
+    this returns exactly what the old inline logic did, so their cache entries
+    don't churn. For VoxCPM/OmniVoice it keeps clone/design/auto, distinct
+    design prompts, ultimate-clone transcripts, and Fast/Balanced/High quality
+    in separate slots.
     """
     if reference_audio:
         base = Path(reference_audio).name
@@ -482,6 +503,11 @@ def _voice_cache_key(voice_id: str, voice_mode: str | None, instruct: str | None
         base += f"|vm={voice_mode}"
         if instruct:
             base += f"|in={instruct}"
+    if reference_text:
+        digest = hashlib.sha256(reference_text.encode("utf-8")).hexdigest()[:8]
+        base += f"|rt={digest}"
+    if timesteps is not None:
+        base += f"|ts={timesteps}"
     return base
 
 

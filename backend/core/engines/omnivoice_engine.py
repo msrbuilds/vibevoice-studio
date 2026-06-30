@@ -160,6 +160,9 @@ class OmniVoiceEngine(Engine):
     def supports_streaming(self) -> bool:
         return False
 
+    def supports_voice_modes(self) -> bool:
+        return True
+
     def default_cfg_scale(self) -> float | None:
         return None  # OmniVoice has no CFG knob
 

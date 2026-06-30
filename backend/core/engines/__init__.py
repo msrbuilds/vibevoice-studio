@@ -79,6 +79,10 @@ class EngineSynthRequest:
     voice_mode: str | None = None
     # Free-text speaker-attribute prompt used when voice_mode == "design".
     instruct: str | None = None
+    # --- VoxCPM only (other engines ignore) ---
+    # Transcript of the reference clip, enabling VoxCPM "ultimate cloning"
+    # (prompt_wav + prompt_text). Resolved per-voice by SynthService.
+    reference_text: str | None = None
 
 
 class Engine(abc.ABC):
@@ -139,6 +143,28 @@ class Engine(abc.ABC):
         """
         return True
 
+    def supports_voice_modes(self) -> bool:
+        """True if the engine offers per-speaker Clone/Design/Auto modes
+        (an empty voice means "design" or "auto", not an error). OmniVoice
+        and VoxCPM override this; every other engine is always voice-based."""
+        return False
+
+    def supports_style_clone(self) -> bool:
+        """True if the engine accepts an inline style prompt WHILE cloning a
+        reference voice (VoxCPM "controllable cloning"). OmniVoice's design
+        prompt only applies without a reference, so it leaves this False."""
+        return False
+
+    def languages(self) -> list[dict[str, str]]:
+        """UI language options as [{"code","label"}].
+
+        Default empty = the engine shows no language selector (reference-
+        driven like VibeVoice, or auto-detected like OmniVoice). Cloning
+        engines that accept a language param (Chatterbox) and built-in-voice
+        engines whose voices are language-grouped (Kokoro) override this.
+        """
+        return []
+
     def stream_synthesize(
         self, req: EngineSynthRequest
     ) -> Iterator[EngineResult]:
@@ -196,6 +222,9 @@ class Engine(abc.ABC):
             "sample_rate": self.sample_rate() if self.is_loaded() else None,
             "max_speakers": self.max_speakers(),
             "default_cfg_scale": self.default_cfg_scale(),
+            "languages": self.languages(),
+            "supports_voice_modes": self.supports_voice_modes(),
+            "supports_style_clone": self.supports_style_clone(),
         }
 
     def engine_info(self) -> dict[str, Any]:

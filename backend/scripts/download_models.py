@@ -35,6 +35,11 @@ MODEL_CATALOG: dict[str, dict[str, str]] = {
         "size": "~3.3 GB",
         "label": "OmniVoice",
     },
+    "voxcpm": {
+        "repo_id": "openbmb/VoxCPM2",
+        "size": "~5 GB",
+        "label": "VoxCPM2",
+    },
 }
 
 

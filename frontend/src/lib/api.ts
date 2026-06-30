@@ -2,12 +2,14 @@
 
 import type {
   ConfigResponse,
+  DeleteWeightsStatus,
   DownloadStatus,
   EngineInfo,
   HealthResponse,
   InstallStatus,
   SynthBase64Response,
   SynthSpeaker,
+  UninstallStatus,
   UploadVoiceResponse,
   Voice,
 } from "@/types/models";
@@ -62,6 +64,9 @@ export interface CacheEntryInfo {
   inference_ms: number;
   size_bytes: number;
   created_at: number;
+  text: string | null;
+  voice: string | null;
+  name: string;
 }
 
 export interface CacheListResponse {
@@ -88,6 +93,18 @@ export async function deleteCacheEntry(hash: string): Promise<{ deleted: string 
   );
 }
 
+/** Returns the relative URL for streaming a cached clip's WAV. */
+export function cacheAudioUrl(hash: string): string {
+  return `/api/cache/${hash}/audio`;
+}
+
+/** Ask the local backend to open the cache directory in the OS file manager. */
+export async function openCacheFolder(): Promise<{ opened: string }> {
+  return jsonOrThrow<{ opened: string }>(
+    await fetch(`${API_BASE}/cache/folder`, { method: "POST" }),
+  );
+}
+
 export async function getHealth(): Promise<HealthResponse> {
   return jsonOrThrow<HealthResponse>(await fetch(`${API_BASE}/health`));
 }
@@ -103,6 +120,7 @@ export interface VoiceMetadata {
   name?: string;
   gender?: string;
   language?: string;
+  reference_transcript?: string;
 }
 
 export interface EngineListResponse {
@@ -157,6 +175,34 @@ export async function startModelDownload(name: string): Promise<DownloadStatus> 
 export async function getModelDownloadStatus(name: string): Promise<DownloadStatus> {
   return jsonOrThrow<DownloadStatus>(
     await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/download`),
+  );
+}
+
+export async function startDeleteWeights(name: string): Promise<DeleteWeightsStatus> {
+  return jsonOrThrow<DeleteWeightsStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/delete-weights`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function getDeleteWeightsStatus(name: string): Promise<DeleteWeightsStatus> {
+  return jsonOrThrow<DeleteWeightsStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/delete-weights`),
+  );
+}
+
+export async function startUninstallEngine(name: string): Promise<UninstallStatus> {
+  return jsonOrThrow<UninstallStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/uninstall`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function getUninstallStatus(name: string): Promise<UninstallStatus> {
+  return jsonOrThrow<UninstallStatus>(
+    await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/uninstall`),
   );
 }
 
@@ -228,6 +274,7 @@ export async function synthesizeWav(
     cfgWeight?: number | null;
     exaggeration?: number | null;
     languageId?: string | null;
+    inferenceSteps?: number | null;
   } = {},
 ): Promise<{ audioData: ArrayBuffer; sampleRate: number; durationSec: number; inferenceMs: number; cacheHit: boolean; cacheHash: string | null }> {
   const res = await fetch(`${API_BASE}/synthesize`, {
@@ -240,6 +287,7 @@ export async function synthesizeWav(
       ...(options.cfgWeight != null ? { cfg_weight: options.cfgWeight } : {}),
       ...(options.exaggeration != null ? { exaggeration: options.exaggeration } : {}),
       ...(options.languageId ? { language_id: options.languageId } : {}),
+      ...(options.inferenceSteps != null ? { inference_steps: options.inferenceSteps } : {}),
       ...(options.forceRegenerate ? { force_regenerate: true } : {}),
     }),
   });
@@ -294,6 +342,7 @@ export interface DownloadSegmentPayload {
   language_id?: string;
   voice_mode?: "clone" | "design" | "auto";
   instruct?: string;
+  inference_steps?: number;
 }
 
 export async function downloadPodcast(

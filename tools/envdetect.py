@@ -104,3 +104,21 @@ def detect_omnivoice_cuda_tag(runner=None) -> str | None:
     if text is None:
         return None
     return cuda_version_to_omnivoice_tag(parse_nvidia_smi_cuda_version(text))
+
+
+def cuda_version_to_voxcpm_tag(version: str | None) -> str | None:
+    """Map a CUDA runtime version to a torch wheel tag for VoxCPM.
+
+    VoxCPM needs torch>=2.5; we install a torch 2.8 CUDA build whose wheels are
+    cu126/cu128 (same as OmniVoice). Drivers below CUDA 12.6 fall back to CPU.
+    """
+    return cuda_version_to_omnivoice_tag(version)
+
+
+def detect_voxcpm_cuda_tag(runner=None) -> str | None:
+    """Detect the torch CUDA wheel tag for VoxCPM. `runner` is injectable."""
+    run = runner or _run_nvidia_smi
+    text = run()
+    if text is None:
+        return None
+    return cuda_version_to_voxcpm_tag(parse_nvidia_smi_cuda_version(text))

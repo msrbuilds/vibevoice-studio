@@ -81,6 +81,8 @@ def config(
                 max_speakers=info["max_speakers"],
                 default_cfg_scale=info["default_cfg_scale"],
                 active=info.get("active", False),
+                supports_voice_modes=info.get("supports_voice_modes", False),
+                supports_style_clone=info.get("supports_style_clone", False),
             )
             for info in em.info()
         ],

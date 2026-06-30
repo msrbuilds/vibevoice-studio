@@ -75,6 +75,9 @@ class _StubEngine:
     def supports_streaming(self):
         return False
 
+    def supports_voice_modes(self):
+        return True
+
     def default_cfg_scale(self):
         return None
 
@@ -109,6 +112,9 @@ class _StubVoices:
         return f"/voices/{voice_id}.wav"
 
     def get_language(self, voice_id):
+        return None
+
+    def get_reference_transcript(self, voice_id):
         return None
 
 
@@ -170,7 +176,11 @@ def test_clone_empty_voice_raises_for_non_omnivoice():
     import pytest
     from backend.core.exceptions import TextInvalid
 
-    eng = _StubEngine()
+    class _NonModeEngine(_StubEngine):
+        def supports_voice_modes(self):
+            return False
+
+    eng = _NonModeEngine()
 
     class _VibeManager(_StubManager):
         @property
@@ -187,6 +197,13 @@ def test_clone_empty_voice_raises_for_non_omnivoice():
     )
     with pytest.raises(TextInvalid):
         svc.synthesize(SynthRequest(text="hi", speakers=[Speaker(name="A", voice_id="")]))
+
+
+def test_omnivoice_engine_supports_voice_modes():
+    from backend.core.engines.omnivoice_engine import OmniVoiceEngine
+    eng = OmniVoiceEngine()
+    assert eng.supports_voice_modes() is True
+    assert eng.supports_style_clone() is False  # design prompt only w/o reference
 
 
 def test_download_segment_allows_empty_voice_with_mode():

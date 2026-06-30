@@ -85,6 +85,12 @@ _KOKORO_VOICES: tuple[_KokoroVoiceSpec, ...] = (
 )
 
 
+_KOKORO_LANG_LABELS: dict[str, str] = {
+    "en-us": "English (US)", "en-gb": "English (UK)",
+    "ja": "Japanese", "zh": "Chinese",
+}
+
+
 # KPipeline lang_code → list of voice ids that voice can handle
 def _voices_for_lang_code(lang_code: str) -> list[str]:
     return [v.id for v in _KOKORO_VOICES if v.lang_code == lang_code]
@@ -212,6 +218,13 @@ class KokoroEngine(Engine):
                 )
             )
         return out
+
+    def languages(self) -> list[dict[str, str]]:
+        seen: list[str] = []
+        for v in _KOKORO_VOICES:
+            if v.language not in seen:
+                seen.append(v.language)
+        return [{"code": c, "label": _KOKORO_LANG_LABELS.get(c, c)} for c in seen]
 
     # -- synthesis
     def synthesize(self, req: EngineSynthRequest) -> EngineResult:

@@ -1,0 +1,3 @@
+voxcpm
+# torch + torchaudio are installed separately by studio.py with a CUDA-matched
+# wheel (see _ensure_voxcpm_env). Do NOT pin torch here.

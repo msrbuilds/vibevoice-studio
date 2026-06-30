@@ -1,25 +1,42 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 
-import { ActionBar } from "@/components/ActionBar";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { InstallEngineDialog } from "@/components/InstallEngineDialog";
 import { DownloadModelDialog } from "@/components/DownloadModelDialog";
-import { PlayerFooter } from "@/components/PlayerFooter";
+import { DeleteWeightsDialog } from "@/components/DeleteWeightsDialog";
+import { UninstallEngineDialog } from "@/components/UninstallEngineDialog";
 import { SegmentCard } from "@/components/SegmentCard";
-import { Sidebar } from "@/components/Sidebar";
+import { VoiceLibrary } from "@/components/VoiceLibrary";
+import { SpeakerRoster } from "@/components/SpeakerRoster";
+import { MiddleToolbar } from "@/components/MiddleToolbar";
+import { ModeChooser } from "@/components/ModeChooser";
+import { TtsEditor } from "@/components/TtsEditor";
+import { InlinePlayer } from "@/components/InlinePlayer";
+import { ControlPanel } from "@/components/ControlPanel";
 import { useConfig } from "@/hooks/useConfig";
 import { useVoices } from "@/hooks/useVoices";
 import { useEngine } from "@/hooks/useEngine";
+import { useProjectMode } from "@/hooks/useProjectMode";
 import { ApiError, downloadPodcast, synthesizeWav, updateVoiceMeta } from "@/lib/api";
 import {
   AudioPlayer,
   wavToPcm16,
 } from "@/lib/audio";
-import { loadSample, type Sample } from "@/lib/samples";
+import { loadSample, loadTtsSample, type Sample, type TtsSample } from "@/lib/samples";
 import { useProject } from "@/lib/store";
-import type { CachedAudio, Project, Speaker, SynthSpeaker } from "@/types/models";
+import type { CachedAudio, Project, Speaker, SynthSpeaker, VoiceMetadata } from "@/types/models";
 import { getDefaultCfgForEngine } from "@/lib/engineHints";
-import { effectiveMode } from "@/lib/omnivoice";
+import { effectiveMode, type OmniMode } from "@/lib/voiceModes";
+import { TooNarrowBanner } from "@/components/TooNarrowBanner";
+import { useViewportWidth } from "@/hooks/useViewportWidth";
+import { showNarrowBanner } from "@/lib/layout";
+
+const TTS_SEG_ID = "__tts__";
+
+// VoxCPM diffusion quality → inference_timesteps. Higher = better quality, slower.
+const QUALITY_TIMESTEPS = { fast: 5, balanced: 10, high: 25 } as const;
 
 type Theme = "light" | "dark";
 
@@ -27,32 +44,40 @@ function isSegmentCached(
   segment: { id: string; text: string; speakerId: string | null },
   cache: Record<string, CachedAudio>,
   speakers: Speaker[],
-  activeEngine: string | null,
+  supportsVoiceModes: boolean,
+  effectiveQuality: "fast" | "balanced" | "high" | undefined,
 ): { cached: boolean; voice: string | null; signature: string } {
   const entry = cache[segment.id];
   if (!entry) return { cached: false, voice: null, signature: "" };
   const speaker = speakers.find((s) => s.id === segment.speakerId);
   if (!speaker) return { cached: false, voice: null, signature: "" };
 
-  if (activeEngine === "omnivoice") {
+  if (supportsVoiceModes) {
     const mode = effectiveMode(speaker);
     if (mode === "clone") {
       const voice = speaker.voice;
       if (!voice) return { cached: false, voice: null, signature: "" };
-      const signature = `${segment.text}::${voice}::clone`;
+      const style = (speaker.voiceDesign ?? "").trim();
+      const signature = `${segment.text}::${voice}::clone::${style}::${effectiveQuality ?? ""}`;
       return {
-        cached: entry.text === segment.text && entry.voice === voice && entry.mode === "clone",
+        cached:
+          entry.text === segment.text &&
+          entry.voice === voice &&
+          entry.mode === "clone" &&
+          (entry.instruct ?? "") === style &&
+          entry.quality === effectiveQuality,
         voice,
         signature,
       };
     }
-    const design = mode === "design" ? (speaker.voiceDesign ?? "") : "";
-    const signature = `${segment.text}::${mode}::${design}`;
+    const design = mode === "design" ? (speaker.voiceDesign ?? "").trim() : "";
+    const signature = `${segment.text}::${mode}::${design}::${effectiveQuality ?? ""}`;
     return {
       cached:
         entry.text === segment.text &&
         entry.mode === mode &&
-        (entry.instruct ?? "") === design,
+        (entry.instruct ?? "") === design &&
+        entry.quality === effectiveQuality,
       voice: null,
       signature,
     };
@@ -60,8 +85,12 @@ function isSegmentCached(
 
   const voice = speaker.voice;
   if (!voice) return { cached: false, voice: null, signature: "" };
-  const signature = `${segment.text}::${voice}::${segment.speakerId ?? ""}`;
-  return { cached: entry.text === segment.text && entry.voice === voice, voice, signature };
+  const signature = `${segment.text}::${voice}::${segment.speakerId ?? ""}::${effectiveQuality ?? ""}`;
+  return {
+    cached: entry.text === segment.text && entry.voice === voice && entry.quality === effectiveQuality,
+    voice,
+    signature,
+  };
 }
 
 export default function App() {
@@ -80,14 +109,31 @@ export default function App() {
     ensureLoaded: ensureEngineLoaded,
     refresh: refreshEngines,
   } = useEngine();
-  const supportsVoiceCloning =
-    engines.find((e) => e.name === activeEngine)?.supports_voice_cloning ?? true;
+  const activeEngineInfo = engines.find((e) => e.name === activeEngine) ?? null;
+  const supportsVoiceModes = activeEngineInfo?.supports_voice_modes ?? false;
+  const supportsVoiceCloning = activeEngineInfo?.supports_voice_cloning ?? true;
+  const engineLanguages = activeEngineInfo?.languages ?? [];
+  // Chatterbox: language is a synth param (cloning engine with languages)
+  const isCloningLangEngine = supportsVoiceCloning && engineLanguages.length > 0;
+  // Kokoro: language filters the voice list (built-in voice engine with languages)
+  const isFilterLangEngine = !supportsVoiceCloning && engineLanguages.length > 0;
+
+  const pm = useProjectMode();
 
   const [theme, setTheme] = useState<Theme>("dark");
   const [cfgScale, setCfgScale] = useState<number>(1.3);
   // Chatterbox Multilingual V3 only — voice expressiveness / dramatization.
   // Ignored by VibeVoice and Kokoro. Range 0.0–1.0+ (clamped to 0–2 server-side).
   const [exaggeration, setExaggeration] = useState<number>(0.5);
+  // VoxCPM only — diffusion quality (inference_timesteps). Ignored by other engines.
+  const [quality, setQuality] = useState<"fast" | "balanced" | "high">(() => {
+    const v = localStorage.getItem("vs.voxcpm.quality");
+    return v === "fast" || v === "balanced" || v === "high" ? v : "balanced";
+  });
+  const onQualityChange = (q: "fast" | "balanced" | "high") => {
+    setQuality(q);
+    localStorage.setItem("vs.voxcpm.quality", q);
+  };
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
@@ -98,13 +144,8 @@ export default function App() {
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [installEngine, setInstallEngine] = useState<string | null>(null);
   const [downloadEngine, setDownloadEngine] = useState<string | null>(null);
-  // Measured heights of the fixed top/bottom bars, so the segment list can
-  // pad itself by exactly the rendered heights (avoids overlap if a bar
-  // wraps to a second row at narrow viewport widths). Bumped initial
-  // guesses to the largest plausible single-row value, and we add a
-  // safety buffer below so a 1-2 px rounding error never causes overlap.
-  const [actionBarH, setActionBarH] = useState<number>(88);
-  const [playerFooterH, setPlayerFooterH] = useState<number>(96);
+  const [deleteWeightsEngine, setDeleteWeightsEngine] = useState<string | null>(null);
+  const [uninstallEngine, setUninstallEngine] = useState<string | null>(null);
 
   const playerRef = useRef<AudioPlayer>(new AudioPlayer());
   const stopAllRef = useRef(false);
@@ -179,7 +220,14 @@ export default function App() {
   //   those voices (engine="chatterbox") will also appear here.
   const displayedVoices = voices.filter((v) => {
     if (!activeEngine) return true;
-    if (activeEngine === "kokoro") return v.engine === "kokoro";
+    if (activeEngine === "kokoro") {
+      if (v.engine !== "kokoro") return false;
+      // When Kokoro is active and a TTS language filter is set, filter by voice language
+      if (isFilterLangEngine && pm.tts.language) {
+        return v.language === pm.tts.language;
+      }
+      return true;
+    }
     // Both VibeVoice and Chatterbox support cloning → show any voice
     // tagged with a voice-cloning engine. Today that's only "vibevoice"
     // (filesystem voices); if Chatterbox adds built-ins later, those
@@ -198,14 +246,19 @@ export default function App() {
         showError("No speaker assigned to this segment.", "No speaker");
         return;
       }
-      const isOmni = activeEngine === "omnivoice";
+      const isOmni = supportsVoiceModes;
       const mode = isOmni ? effectiveMode(speaker) : "clone";
-      // A reference voice is required except for OmniVoice design/auto.
+      // A reference voice is required except for design/auto modes.
       if (mode === "clone" && !speaker.voice) {
         showError("No voice assigned to the speaker. Pick one in the sidebar.", "No voice");
         return;
       }
-      const instruct = mode === "design" ? (speaker.voiceDesign ?? "") : undefined;
+      const instruct =
+        mode === "design" || mode === "clone"
+          ? speaker.voiceDesign?.trim()
+            ? speaker.voiceDesign.trim()
+            : undefined
+          : undefined;
       const speakers: SynthSpeaker[] = [
         {
           name: speaker.name,
@@ -222,6 +275,7 @@ export default function App() {
           forceRegenerate: options.forceRegenerate,
           cfgWeight: isChatterbox ? cfgScale : null,
           exaggeration: isChatterbox ? exaggeration : null,
+          ...(activeEngine === "voxcpm" ? { inferenceSteps: QUALITY_TIMESTEPS[quality] } : {}),
         });
         project.cacheAudio(segmentId, {
           audioData,
@@ -230,6 +284,7 @@ export default function App() {
           ...(cacheHash ? { cacheHash } : {}),
           ...(isOmni ? { mode } : {}),
           ...(instruct ? { instruct } : {}),
+          quality: activeEngine === "voxcpm" ? quality : undefined,
         });
       } catch (err: unknown) {
         showError(err, "Synthesis failed");
@@ -237,7 +292,7 @@ export default function App() {
         setGeneratingId(null);
       }
     },
-    [project, showError, cfgScale, exaggeration, activeEngine],
+    [project, showError, cfgScale, exaggeration, activeEngine, quality],
   );
 
   // ---- playback ----
@@ -260,7 +315,7 @@ export default function App() {
       try {
         const seg = project.segments.find((s) => s.id === segmentId);
         if (!seg) return;
-        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, activeEngine);
+        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, activeEngine === "voxcpm" ? quality : undefined);
         if (!cached) {
           await generateFor(segmentId);
         }
@@ -271,7 +326,7 @@ export default function App() {
         setPlayingId((id) => (id === segmentId ? null : id));
       }
     },
-    [project, generateFor, playCached, showError, activeEngine],
+    [project, generateFor, playCached, showError, activeEngine, supportsVoiceModes, quality],
   );
 
   const handleStop = useCallback(() => {
@@ -295,7 +350,7 @@ export default function App() {
   );
 
   const handleUpdateVoiceMeta = useCallback(
-    async (voiceId: string, meta: { name?: string; gender?: string; language?: string }) => {
+    async (voiceId: string, meta: VoiceMetadata) => {
       try {
         await updateVoiceMeta(voiceId, meta);
         window.location.reload();
@@ -317,7 +372,7 @@ export default function App() {
         setCurrentIndex(i);
         setPlayingId(seg.id);
         try {
-          const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, activeEngine);
+          const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, activeEngine === "voxcpm" ? quality : undefined);
           if (!cached) {
             setGeneratingId(seg.id);
             try {
@@ -336,7 +391,7 @@ export default function App() {
       setCurrentIndex(-1);
       setPlayingId(null);
     }
-  }, [project, generateFor, playCached, showError, activeEngine]);
+  }, [project, generateFor, playCached, showError, activeEngine, supportsVoiceModes, quality]);
 
   const handleStopAll = useCallback(() => {
     stopAllRef.current = true;
@@ -368,7 +423,7 @@ export default function App() {
         showError("Some segments have no speaker assigned.", "Missing speaker");
         return;
       }
-      const spMode = activeEngine === "omnivoice" ? effectiveMode(sp) : "clone";
+      const spMode = supportsVoiceModes ? effectiveMode(sp) : "clone";
       if (spMode === "clone" && !sp.voice) {
         showError(
           "Some segments have no voice. Assign voices in the sidebar first.",
@@ -392,7 +447,7 @@ export default function App() {
       for (let i = 0; i < valid.length; i++) {
         const seg = valid[i]!;
         // Skip already-cached segments
-        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, activeEngine);
+        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, activeEngine === "voxcpm" ? quality : undefined);
         if (cached) continue;
 
         setExportProgress(`Segment ${i + 1}/${valid.length}`);
@@ -409,7 +464,78 @@ export default function App() {
       setIsExporting(false);
       setExportProgress("");
     }
-  }, [project, generateFor, showError, activeEngine]);
+  }, [project, generateFor, showError, activeEngine, supportsVoiceModes, quality]);
+
+  // ---- TTS mode generation ----
+
+  const generateTts = useCallback(async () => {
+    if (!pm.tts.text.trim()) return;
+    const isOmni = supportsVoiceModes;
+    const voice = displayedVoices.find((v) => v.id === pm.tts.voiceId) ?? null;
+    const mode: OmniMode = isOmni
+      ? effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode })
+      : "clone";
+    // A reference voice is required except for design/auto modes.
+    if (mode === "clone" && !voice) {
+      showError("Select a voice in the library first.", "No voice");
+      return;
+    }
+    const instruct =
+      mode === "design" || mode === "clone"
+        ? pm.tts.voiceDesign?.trim()
+          ? pm.tts.voiceDesign.trim()
+          : undefined
+        : undefined;
+    setGeneratingId(TTS_SEG_ID);
+    try {
+      const isChatterbox = activeEngine === "chatterbox";
+      const speakers: SynthSpeaker[] = [{
+        name: "Voice",
+        voice: voice?.id ?? "",
+        ...(isOmni ? { voice_mode: mode } : {}),
+        ...(instruct ? { instruct } : {}),
+      }];
+      const { audioData, cacheHash } = await synthesizeWav(pm.tts.text, speakers, cfgScale, {
+        cfgWeight: isChatterbox ? cfgScale : null,
+        exaggeration: isChatterbox ? exaggeration : null,
+        languageId: isCloningLangEngine ? (pm.tts.language ?? undefined) : undefined,
+        ...(activeEngine === "voxcpm" ? { inferenceSteps: QUALITY_TIMESTEPS[quality] } : {}),
+      });
+      project.cacheAudio(TTS_SEG_ID, {
+        audioData,
+        text: pm.tts.text,
+        voice: voice?.id ?? "",
+        ...(cacheHash ? { cacheHash } : {}),
+        ...(isOmni ? { mode } : {}),
+        ...(instruct ? { instruct } : {}),
+        quality: activeEngine === "voxcpm" ? quality : undefined,
+      });
+    } catch (err) { showError(err, "Synthesis failed"); }
+    finally { setGeneratingId(null); }
+  }, [pm.tts, displayedVoices, activeEngine, cfgScale, exaggeration, isCloningLangEngine, project, showError, quality]);
+
+  const playTts = useCallback(async () => {
+    // Toggle: if the TTS clip is already playing, this acts as Stop.
+    if (playingId === TTS_SEG_ID) {
+      handleStop();
+      return;
+    }
+    // Stop any other in-flight playback so clips never overlap.
+    playerRef.current.stop();
+    if (!project.audioCache[TTS_SEG_ID]) {
+      await generateTts();
+    }
+    setPlayingId(TTS_SEG_ID);
+    try {
+      await playCached(TTS_SEG_ID);
+    } catch (err) {
+      showError(err, "Playback failed");
+    } finally {
+      // Clear only if this clip is still the active one (a newer action may
+      // have taken over).
+      setPlayingId((id) => (id === TTS_SEG_ID ? null : id));
+    }
+  }, [playingId, project.audioCache, generateTts, playCached, handleStop, showError]);
 
   // ---- import / export json ----
 
@@ -457,6 +583,16 @@ export default function App() {
     [project],
   );
 
+  const handleLoadTtsSample = useCallback(
+    (s: TtsSample) => {
+      const { text, voiceId } = loadTtsSample(s);
+      pm.setTtsText(text);
+      // Use the suggested voice only if it exists in the current engine's voice list.
+      if (voiceId && displayedVoices.some((v) => v.id === voiceId)) pm.setTtsVoice(voiceId);
+    },
+    [pm, displayedVoices],
+  );
+
   // ---- export audio ----
 
   const handleExportAudio = useCallback(async () => {
@@ -475,9 +611,10 @@ export default function App() {
       language_id?: string;
       voice_mode?: "clone" | "design" | "auto";
       instruct?: string;
+      inference_steps?: number;
     }[] = [];
     const isChatterbox = activeEngine === "chatterbox";
-    const isOmni = activeEngine === "omnivoice";
+    const isOmni = supportsVoiceModes;
     for (const seg of valid) {
       const speaker = project.speakers.find((s) => s.id === seg.speakerId);
       if (!speaker) {
@@ -495,7 +632,12 @@ export default function App() {
         );
         return;
       }
-      const instruct = mode === "design" ? (speaker.voiceDesign ?? "") : undefined;
+      const instruct =
+        mode === "design" || mode === "clone"
+          ? speaker.voiceDesign?.trim()
+            ? speaker.voiceDesign.trim()
+            : undefined
+          : undefined;
       // Pass the per-segment cache hash so the backend can detect when a
       // segment was regenerated and avoid serving a stale joined WAV.
       const cached = project.audioCache[seg.id];
@@ -509,6 +651,7 @@ export default function App() {
         ...(isChatterbox ? { exaggeration } : {}),
         ...(isOmni ? { voice_mode: mode } : {}),
         ...(instruct ? { instruct } : {}),
+        ...(activeEngine === "voxcpm" ? { inference_steps: QUALITY_TIMESTEPS[quality] } : {}),
       });
     }
 
@@ -537,7 +680,9 @@ export default function App() {
       setIsExporting(false);
       setExportProgress("");
     }
-  }, [project, showError, cfgScale, exaggeration, activeEngine]);
+  }, [project, showError, cfgScale, exaggeration, activeEngine, supportsVoiceModes, quality]);
+
+  const viewportWidth = useViewportWidth();
 
   // ---- derived state ----
 
@@ -546,10 +691,10 @@ export default function App() {
   const cachedCount = useMemo(
     () =>
       project.segments.filter((s) => {
-        const { cached } = isSegmentCached(s, project.audioCache, project.speakers, activeEngine);
+        const { cached } = isSegmentCached(s, project.audioCache, project.speakers, supportsVoiceModes, activeEngine === "voxcpm" ? quality : undefined);
         return cached;
       }).length,
-    [project.segments, project.audioCache, project.speakers, activeEngine],
+    [project.segments, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, quality],
   );
   const busy = isPlayingAll || isExporting || generatingId !== null;
 
@@ -559,8 +704,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="flex items-center gap-3 text-zinc-300">
-          <Loader2 className="w-5 h-5 animate-spin text-teal-400" />
-          Loading VibeVoice backend…
+          <Loader2 className="w-5 h-5 animate-spin text-orange-400" />
+          Loading Voice Studio backend…
         </div>
       </div>
     );
@@ -572,9 +717,9 @@ export default function App() {
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold text-white mb-2">Backend not reachable</h1>
           <p className="text-sm text-zinc-400 mb-4">
-            Could not reach <code className="text-teal-300">/api/config</code>: {configError}
+            Could not reach <code className="text-orange-300">/api/config</code>: {configError}
           </p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-400">
             Start the backend in another terminal:
             <br />
             <code className="text-zinc-300">cd backend &amp;&amp; python cli.py --device cpu</code>
@@ -585,88 +730,43 @@ export default function App() {
   }
 
   return (
-    <div className={`flex min-h-screen ${isDark ? "bg-zinc-950" : "bg-gray-50"}`}>
-      <Sidebar
-        speakers={project.speakers}
+    <ConfirmProvider isDark={isDark}>
+    <div className={`flex h-screen overflow-hidden ${isDark ? "bg-zinc-950" : "bg-gray-50"}`}>
+      <VoiceLibrary
         voices={displayedVoices}
         config={config}
         theme={theme}
         onThemeToggle={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-        onAddSpeaker={project.addSpeaker}
-        onUpdateSpeaker={project.updateSpeaker}
-        onRemoveSpeaker={project.removeSpeaker}
-        onSetSpeakerVoice={project.setSpeakerVoice}
         onUploadVoice={uploadVoice}
         onRemoveVoice={removeVoice}
         onUpdateVoiceMeta={handleUpdateVoiceMeta}
         supportsVoiceCloning={supportsVoiceCloning}
-        activeEngine={activeEngine}
+        selectedVoiceId={pm.mode === "tts" ? pm.tts.voiceId : undefined}
+        onSelectVoice={pm.mode === "tts" ? pm.setTtsVoice : undefined}
       />
 
-      <main className="flex-1 ml-80 relative">
-        <ActionBar
-          segmentCount={project.segments.length}
+      {/* MIDDLE column: sticky toolbar, scroll body, sticky player */}
+      <main className="flex-1 flex flex-col min-w-0 @container">
+        {showNarrowBanner(viewportWidth) && <TooNarrowBanner isDark={isDark} />}
+        <MiddleToolbar
           validCount={validCount}
           cachedCount={cachedCount}
           busy={busy}
           isDark={isDark}
-          cfgScale={cfgScale}
-          onCfgScaleChange={setCfgScale}
-          exaggeration={exaggeration}
-          onExaggerationChange={setExaggeration}
-          engines={engines}
-          activeEngine={activeEngine}
-          onSelectEngine={async (name) => {
-            try {
-              await setActiveEngine(name);
-            } catch (err) {
-              showError(err, "Engine switch failed");
-            }
-          }}
-          onLoadEngine={async (name) => {
-            try {
-              await ensureEngineLoaded(name);
-            } catch (err) {
-              showError(err, "Engine load failed");
-            }
-          }}
-          onInstallEngine={(name) => setInstallEngine(name)}
-          onDownloadEngine={(name) => setDownloadEngine(name)}
+          mode={pm.mode}
+          onModeChange={pm.setMode}
           onAddSegment={project.addSegment}
           onGenerateAll={handleGenerateAll}
           onExportJson={handleExportJson}
           onImportJson={handleImportJson}
-          onLoadSample={handleLoadSample}
-          onHeightChange={setActionBarH}
+          onLoadPodcastSample={handleLoadSample}
+          onLoadTtsSample={handleLoadTtsSample}
         />
 
-        <div
-          style={{
-            paddingTop: actionBarH + 16,
-            paddingBottom: playerFooterH + 16,
-          }}
-          className="px-6"
-        >
-          <div className="max-w-5xl mx-auto">
-            {isExporting && (
-              <div className="mb-6 p-4 bg-teal-900/30 rounded-xl border border-teal-600/30 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
-                  <div>
-                    <p className="text-white font-medium">Exporting audio</p>
-                    <p className="text-teal-300 text-sm">{exportProgress}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStopExport(true)}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-
+        {pm.mode === null ? (
+          <ModeChooser isDark={isDark} onPick={pm.setMode} />
+        ) : pm.mode === "tts" ? (
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             {toast && (
               <div
                 className={`mb-6 p-3 rounded-lg border text-sm ${
@@ -682,86 +782,225 @@ export default function App() {
                 {toast.text}
               </div>
             )}
+            <TtsEditor
+              isDark={isDark}
+              text={pm.tts.text}
+              onTextChange={pm.setTtsText}
+              activeVoice={displayedVoices.find((v) => v.id === pm.tts.voiceId) ?? null}
+              languages={engineLanguages}
+              showLanguage={engineLanguages.length > 0}
+              language={pm.tts.language}
+              onLanguageChange={pm.setTtsLanguage}
+              supportsVoiceModes={supportsVoiceModes}
+              supportsStyleClone={activeEngineInfo?.supports_style_clone ?? false}
+              activeEngine={activeEngine}
+              omniMode={effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode })}
+              onOmniModeChange={pm.setTtsOmniMode}
+              voiceDesign={pm.tts.voiceDesign ?? ""}
+              onVoiceDesignChange={pm.setTtsVoiceDesign}
+              busy={busy}
+              isGenerating={generatingId === TTS_SEG_ID}
+              isPlaying={playingId === TTS_SEG_ID}
+              onGenerate={() => void generateTts()}
+              onPlay={() => void playTts()}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="max-w-5xl mx-auto">
+              {isExporting && (
+                <div className="mb-6 p-4 bg-orange-900/30 rounded-xl border border-orange-600/30 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+                    <div>
+                      <p className="text-white font-medium">Exporting audio</p>
+                      <p className="text-orange-300 text-sm">{exportProgress}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStopExport(true)}
+                    className={`px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium ${focusRing}`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
 
-            <div className="space-y-4">
-              {project.segments.map((segment, index) => {
-                const { cached } = isSegmentCached(segment, project.audioCache, project.speakers, activeEngine);
-                return (
-                  <SegmentCard
-                    key={segment.id}
-                    segment={segment}
-                    index={index}
-                    speakers={project.speakers}
-                    busy={busy}
-                    isPlaying={playingId === segment.id}
-                    isGenerating={generatingId === segment.id}
-                    isCached={cached}
-                    canDelete={project.segments.length > 1}
-                    theme={theme}
-                    speakerColor={project.speakerColor}
-                    onUpdate={project.updateSegment}
-                    onRemove={project.removeSegment}
-                    onGenerate={() => generateFor(segment.id)}
-                    onRegenerate={() => generateFor(segment.id, { forceRegenerate: true })}
-                    onPlay={() => handlePlay(segment.id)}
-                    onStop={handleStop}
-                    onDownload={() => handleDownloadSegment(segment.id)}
-                  />
-                );
-              })}
+              {toast && (
+                <div
+                  className={`mb-6 p-3 rounded-lg border text-sm ${
+                    toast.kind === "error"
+                      ? isDark
+                        ? "bg-red-900/30 border-red-600/40 text-red-200"
+                        : "bg-red-50 border-red-200 text-red-700"
+                      : isDark
+                        ? "bg-zinc-800 border-zinc-700 text-zinc-200"
+                        : "bg-amber-50 border-amber-200 text-amber-800"
+                  }`}
+                >
+                  {toast.text}
+                </div>
+              )}
+
+              <div className="mb-4">
+                <SpeakerRoster
+                  speakers={project.speakers}
+                  voices={displayedVoices}
+                  isDark={isDark}
+                  activeEngine={activeEngine}
+                  supportsVoiceModes={activeEngineInfo?.supports_voice_modes ?? false}
+                  supportsStyleClone={activeEngineInfo?.supports_style_clone ?? false}
+                  onAddSpeaker={project.addSpeaker}
+                  onUpdateSpeaker={project.updateSpeaker}
+                  onRemoveSpeaker={project.removeSpeaker}
+                  onSetSpeakerVoice={project.setSpeakerVoice}
+                />
+              </div>
+
+              <div className="space-y-4">
+                {project.segments.map((segment, index) => {
+                  const { cached } = isSegmentCached(segment, project.audioCache, project.speakers, supportsVoiceModes, activeEngine === "voxcpm" ? quality : undefined);
+                  return (
+                    <SegmentCard
+                      key={segment.id}
+                      segment={segment}
+                      index={index}
+                      speakers={project.speakers}
+                      busy={busy}
+                      isPlaying={playingId === segment.id}
+                      isGenerating={generatingId === segment.id}
+                      isCached={cached}
+                      canDelete={project.segments.length > 1}
+                      theme={theme}
+                      speakerColor={project.speakerColor}
+                      onUpdate={project.updateSegment}
+                      onRemove={project.removeSegment}
+                      onGenerate={() => generateFor(segment.id)}
+                      onRegenerate={() => generateFor(segment.id, { forceRegenerate: true })}
+                      onPlay={() => handlePlay(segment.id)}
+                      onStop={handleStop}
+                      onDownload={() => handleDownloadSegment(segment.id)}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-
-        <PlayerFooter
-          segmentCount={project.segments.length}
-          validCount={validCount}
-          cachedCount={cachedCount}
-          isPlayingAll={isPlayingAll}
-          currentIndex={currentIndex}
-          isExporting={isExporting}
-          isDark={isDark}
-          onPlayAll={handlePlayAll}
-          onStopAll={handleStopAll}
-          onExportAudio={handleExportAudio}
-          onHeightChange={setPlayerFooterH}
-        />
-        {installEngine && (
-          <InstallEngineDialog
-            isDark={isDark}
-            engineName={installEngine}
-            displayName={
-              engines.find((e) => e.name === installEngine)?.display_name ?? installEngine
-            }
-            onClose={() => setInstallEngine(null)}
-            onInstalled={() => {
-              void refreshEngines();
-            }}
-          />
         )}
-        {downloadEngine && (
-          <DownloadModelDialog
+
+        {pm.mode === "podcast" && (
+          <InlinePlayer
+            segmentCount={project.segments.length}
+            validCount={validCount}
+            cachedCount={cachedCount}
+            isPlayingAll={isPlayingAll}
+            currentIndex={currentIndex}
+            isExporting={isExporting}
             isDark={isDark}
-            engineName={downloadEngine}
-            displayName={
-              engines.find((e) => e.name === downloadEngine)?.display_name ??
-              downloadEngine
-            }
-            onClose={() => setDownloadEngine(null)}
-            onDone={async () => {
-              const name = downloadEngine;
-              await refreshEngines();
-              try {
-                await setActiveEngine(name);
-                await ensureEngineLoaded(name);
-              } catch (err) {
-                showError(err, "Engine load failed");
-              }
-              setDownloadEngine(null);
-            }}
+            onPlayAll={handlePlayAll}
+            onStopAll={handleStopAll}
+            onExportAudio={handleExportAudio}
           />
         )}
       </main>
+
+      <ControlPanel
+        isDark={isDark}
+        engines={engines}
+        activeEngine={activeEngine}
+        onSelectEngine={async (name) => {
+          try {
+            await setActiveEngine(name);
+          } catch (err) {
+            showError(err, "Engine switch failed");
+          }
+        }}
+        onLoadEngine={async (name) => {
+          try {
+            await ensureEngineLoaded(name);
+          } catch (err) {
+            showError(err, "Engine load failed");
+          }
+        }}
+        onInstallEngine={(name) => setInstallEngine(name)}
+        onDownloadEngine={(name) => setDownloadEngine(name)}
+        onDeleteWeights={(name) => setDeleteWeightsEngine(name)}
+        onUninstallEngine={(name) => setUninstallEngine(name)}
+        cfgScale={cfgScale}
+        onCfgScaleChange={setCfgScale}
+        exaggeration={exaggeration}
+        onExaggerationChange={setExaggeration}
+        quality={quality}
+        onQualityChange={onQualityChange}
+      />
+
+      {installEngine && (
+        <InstallEngineDialog
+          isDark={isDark}
+          engineName={installEngine}
+          displayName={
+            engines.find((e) => e.name === installEngine)?.display_name ?? installEngine
+          }
+          onClose={() => setInstallEngine(null)}
+          onInstalled={() => {
+            void refreshEngines();
+          }}
+        />
+      )}
+      {downloadEngine && (
+        <DownloadModelDialog
+          isDark={isDark}
+          engineName={downloadEngine}
+          displayName={
+            engines.find((e) => e.name === downloadEngine)?.display_name ??
+            downloadEngine
+          }
+          onClose={() => setDownloadEngine(null)}
+          onDone={async () => {
+            const name = downloadEngine;
+            await refreshEngines();
+            try {
+              await setActiveEngine(name);
+              await ensureEngineLoaded(name);
+            } catch (err) {
+              showError(err, "Engine load failed");
+            }
+            setDownloadEngine(null);
+          }}
+        />
+      )}
+      {deleteWeightsEngine && (
+        <DeleteWeightsDialog
+          isDark={isDark}
+          engineName={deleteWeightsEngine}
+          displayName={
+            engines.find((e) => e.name === deleteWeightsEngine)?.display_name ??
+            deleteWeightsEngine
+          }
+          onClose={() => setDeleteWeightsEngine(null)}
+          onDone={async () => {
+            await refreshEngines();
+            setDeleteWeightsEngine(null);
+          }}
+        />
+      )}
+      {uninstallEngine && (
+        <UninstallEngineDialog
+          isDark={isDark}
+          engineName={uninstallEngine}
+          displayName={
+            engines.find((e) => e.name === uninstallEngine)?.display_name ??
+            uninstallEngine
+          }
+          onClose={() => setUninstallEngine(null)}
+          onUninstalled={async () => {
+            await refreshEngines();
+            setUninstallEngine(null);
+          }}
+        />
+      )}
     </div>
+    </ConfirmProvider>
   );
 }

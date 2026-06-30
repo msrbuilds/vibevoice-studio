@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pencil, X } from "lucide-react";
+import { focusRing } from "@/lib/theme";
 import type { Voice, VoiceMetadata } from "@/types/models";
 
 interface Props {
@@ -13,6 +14,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
   const [name, setName] = useState("");
   const [gender, setGender] = useState<"man" | "woman" | "nonbinary" | "">("");
   const [language, setLanguage] = useState("en");
+  const [transcript, setTranscript] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +25,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
       setName(voice.name);
       setGender((voice.gender as "man" | "woman" | "nonbinary" | null) ?? "");
       setLanguage(voice.language ?? "en");
+      setTranscript(voice.reference_transcript ?? "");
       setError(null);
     }
   }, [voice]);
@@ -37,6 +40,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
         name: name.trim() || undefined,
         gender: gender || undefined,
         language: language.trim() || undefined,
+        reference_transcript: transcript.trim(),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -49,7 +53,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
   const border = isDark ? "border-zinc-800" : "border-gray-200";
   const text = isDark ? "text-white" : "text-gray-900";
   const labelText = isDark ? "text-zinc-400" : "text-gray-600";
-  const subtext = isDark ? "text-zinc-500" : "text-gray-500";
+  const subtext = isDark ? "text-zinc-400" : "text-gray-600";
   const idColor = isDark ? "text-zinc-400" : "text-gray-700";
   const inputBg = isDark ? "bg-zinc-800" : "bg-white";
   const inputBorder = isDark ? "border-zinc-700" : "border-gray-300";
@@ -68,13 +72,13 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Pencil className="w-5 h-5 text-teal-400" />
+            <Pencil className="w-5 h-5 text-orange-400" />
             <h2 className={`text-lg font-semibold ${text}`}>Edit voice</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className={`p-1 ${isDark ? "text-zinc-400 hover:text-white" : "text-gray-400 hover:text-gray-900"}`}
+            className={`p-1 ${isDark ? "text-zinc-400 hover:text-white" : "text-gray-600 hover:text-gray-900"} ${focusRing}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -94,7 +98,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Amelia"
-              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-teal-500`}
+              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500`}
             />
           </label>
 
@@ -104,7 +108,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as typeof gender)}
-                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} focus:outline-none focus:border-teal-500`}
+                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} focus:outline-none focus:border-orange-500`}
               >
                 <option value="">—</option>
                 <option value="woman">Woman</option>
@@ -120,10 +124,23 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
                 onChange={(e) => setLanguage(e.target.value)}
                 placeholder="en"
                 maxLength={8}
-                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-teal-500`}
+                className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500`}
               />
             </label>
           </div>
+
+          <label className="block">
+            <span className={`text-xs font-medium mb-1 block ${labelText}`}>
+              Reference transcript <span className="opacity-60">(optional, for VoxCPM)</span>
+            </span>
+            <textarea
+              value={transcript}
+              onChange={(e) => setTranscript(e.target.value)}
+              rows={2}
+              placeholder="Exact words spoken in this voice's reference clip"
+              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500`}
+            />
+          </label>
         </div>
 
         {error && (
@@ -135,7 +152,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
             type="button"
             onClick={onClose}
             disabled={busy}
-            className={`px-4 py-2 text-sm ${cancelText}`}
+            className={`px-4 py-2 text-sm ${cancelText} ${focusRing}`}
           >
             Cancel
           </button>
@@ -143,7 +160,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={busy}
-            className="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+            className={`px-4 py-2 text-sm bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed ${focusRing}`}
           >
             {busy ? "Saving…" : "Save"}
           </button>

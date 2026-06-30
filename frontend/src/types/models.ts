@@ -2,6 +2,23 @@
 
 export type VoiceSource = "builtin" | "upload";
 
+export interface EngineLanguage {
+  code: string;
+  label: string;
+}
+
+export type ProjectMode = "tts" | "podcast";
+
+export interface TtsBuffer {
+  text: string;
+  voiceId: string | null;
+  language: string | null;
+  // OmniVoice only: per-buffer voice mode + design prompt. Other engines
+  // ignore these. Mode is derived when unset (see lib/voiceModes.ts).
+  omnivoiceMode?: "clone" | "design" | "auto";
+  voiceDesign?: string;
+}
+
 export interface Voice {
   id: string;
   name: string;
@@ -12,12 +29,14 @@ export interface Voice {
   duration_sec: number | null;
   sample_rate: number | null;
   engine: string | null;
+  reference_transcript: string | null;
 }
 
 export interface VoiceMetadata {
   name?: string;
   gender?: string;
   language?: string;
+  reference_transcript?: string;
 }
 
 export interface ConfigResponse {
@@ -47,6 +66,9 @@ export interface EngineInfo {
   max_speakers: number;
   default_cfg_scale: number | null;
   active: boolean;
+  languages: EngineLanguage[];
+  supports_voice_modes: boolean;
+  supports_style_clone: boolean;
 }
 
 export interface InstallStatus {
@@ -67,6 +89,19 @@ export interface DownloadStatus {
   log: string[];
   error: string | null;
   returncode: number | null;
+}
+
+export interface DeleteWeightsStatus {
+  engine: string | null;
+  state: "idle" | "deleting" | "deleted" | "error";
+  log: string[];
+  error: string | null;
+}
+
+export interface UninstallStatus {
+  state: "idle" | "uninstalling" | "uninstalled" | "error";
+  log: string[];
+  error: string | null;
 }
 
 export interface HealthResponse {
@@ -106,7 +141,7 @@ export interface Speaker {
   voice: string; // Voice.id
   color: string;
   // OmniVoice only: per-speaker voice mode + design prompt (optional; other
-  // engines ignore). Mode is derived when unset — see lib/omnivoice.ts.
+  // engines ignore). Mode is derived when unset — see lib/voiceModes.ts.
   omnivoiceMode?: "clone" | "design" | "auto";
   voiceDesign?: string;
 }
@@ -125,6 +160,10 @@ export interface CachedAudio {
   // OmniVoice: what mode/prompt produced this, so the cached badge stays honest.
   mode?: "clone" | "design" | "auto";
   instruct?: string;
+  // VoxCPM Quality (inference timesteps preset) that produced this clip, so the
+  // cache badge re-synths when the user changes Quality. Undefined for engines
+  // that don't use it.
+  quality?: "fast" | "balanced" | "high";
 }
 
 export interface Project {

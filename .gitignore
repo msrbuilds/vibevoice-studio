@@ -180,3 +180,11 @@ datasets/
 *.7z
 *.rar
 *.gz
+
+# --- Playwright UI-verification artifacts ---
+# Ad-hoc screenshots captured during manual UI checks live at the repo root
+# (banner-*.png, clean-*.png, step*-*.png, …) plus the Playwright MCP output
+# dir. They're throwaway test artifacts — never tracked. Scoped to the root so
+# real PNG assets under frontend/ etc. are unaffected.
+/.playwright-mcp/
+/*.png

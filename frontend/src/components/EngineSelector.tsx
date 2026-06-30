@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Cpu, Loader2, Volume2 } from "lucide-react";
+import { ChevronDown, Cpu, Loader2, Volume2, X } from "lucide-react";
 import type { EngineInfo } from "@/types/models";
+import { focusRing } from "@/lib/theme";
 
 interface Props {
   isDark: boolean;
@@ -10,6 +11,8 @@ interface Props {
   onLoad: (name: string) => Promise<void>;
   onInstall: (name: string) => void;
   onDownload: (name: string) => void;
+  onDeleteWeights: (name: string) => void;
+  onUninstall: (name: string) => void;
 }
 
 export function EngineSelector({
@@ -20,6 +23,8 @@ export function EngineSelector({
   onLoad,
   onInstall,
   onDownload,
+  onDeleteWeights,
+  onUninstall,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
@@ -57,67 +62,96 @@ export function EngineSelector({
   };
 
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
+        onClick={() => setOpen(true)}
+        className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors border ${
           isDark
             ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700"
-            : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
-        }`}
+            : "bg-white hover:bg-gray-200 text-gray-700 hover:text-gray-900 border-gray-300"
+        } ${focusRing}`}
         title="Switch TTS engine"
       >
-        <Cpu className="w-4 h-4" />
-        {summary}
+        <span className="flex items-center gap-2 min-w-0">
+          <Cpu className="w-4 h-4 shrink-0" />
+          <span className="truncate">{summary}</span>
+        </span>
+        <ChevronDown className="w-4 h-4 shrink-0 opacity-70" />
       </button>
 
       {open && (
         <div
-          className={`absolute right-0 top-full mt-2 w-96 rounded-lg shadow-xl border z-30 overflow-hidden ${
-            isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
-          }`}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
         >
+          {/* Backdrop */}
           <div
-            className={`px-4 py-3 border-b ${
-              isDark ? "border-zinc-800" : "border-gray-200"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Modal */}
+          <div
+            className={`relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-xl shadow-2xl border ${
+              isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
             }`}
           >
             <div
-              className={`text-sm font-semibold ${
-                isDark ? "text-white" : "text-gray-900"
+              className={`px-5 py-4 border-b flex items-start justify-between gap-3 shrink-0 ${
+                isDark ? "border-zinc-800" : "border-gray-200"
               }`}
             >
-              TTS engine
+              <div>
+                <div
+                  className={`text-sm font-semibold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  TTS engine
+                </div>
+                <div
+                  className={`text-xs mt-0.5 ${
+                    isDark ? "text-zinc-400" : "text-gray-600"
+                  }`}
+                >
+                  Switch between backends. Only one runs at a time.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className={`p-1 rounded transition-colors ${
+                  isDark
+                    ? "text-zinc-400 hover:text-zinc-300"
+                    : "text-gray-600 hover:text-gray-600"
+                } ${focusRing}`}
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div
-              className={`text-xs mt-0.5 ${
-                isDark ? "text-zinc-500" : "text-gray-500"
-              }`}
-            >
-              Switch between backends. Only one runs at a time.
-            </div>
-          </div>
 
-          <ul className="max-h-80 overflow-y-auto">
+            <ul className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
             {engines.map((e) => {
               const isActive = e.name === activeName;
               const switching = switchingTo === e.name;
               return (
                 <li
                   key={e.name}
-                  className={`px-4 py-3 border-b last:border-b-0 ${
-                    isDark ? "border-zinc-800" : "border-gray-100"
+                  className={`rounded-lg border p-4 ${
+                    isDark ? "border-zinc-800 bg-zinc-950/40" : "border-gray-300 bg-gray-50"
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         isActive
-                          ? "bg-teal-600/20 text-teal-400"
+                          ? isDark ? "bg-orange-600/20 text-orange-400" : "bg-orange-100 text-orange-700"
                           : isDark
                             ? "bg-zinc-800 text-zinc-400"
-                            : "bg-gray-100 text-gray-500"
+                            : "bg-gray-200 text-gray-700"
                       }`}
                     >
                       {switching ? (
@@ -136,7 +170,7 @@ export function EngineSelector({
                           {e.display_name}
                         </span>
                         {isActive && (
-                          <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-600/20 text-teal-300">
+                          <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-orange-600/20 text-orange-300" : "bg-orange-100 text-orange-700"}`}>
                             Active
                           </span>
                         )}
@@ -160,8 +194,8 @@ export function EngineSelector({
                         {e.description}
                       </p>
                       <div
-                        className={`text-[10px] mt-1 ${
-                          isDark ? "text-zinc-500" : "text-gray-500"
+                        className={`text-xs mt-1.5 ${
+                          isDark ? "text-zinc-400" : "text-gray-600"
                         }`}
                       >
                         {e.supports_voice_cloning
@@ -185,9 +219,9 @@ export function EngineSelector({
                           }}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isDark
-                              ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
-                              : "bg-teal-50 hover:bg-teal-100 text-teal-700"
-                          }`}
+                              ? "bg-orange-700/40 hover:bg-orange-700/60 text-orange-200"
+                              : "bg-orange-50 hover:bg-orange-100 text-orange-700"
+                          } ${focusRing}`}
                         >
                           {`Install ${e.display_name}`}
                         </button>
@@ -200,9 +234,9 @@ export function EngineSelector({
                           }}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isDark
-                              ? "bg-teal-700/40 hover:bg-teal-700/60 text-teal-200"
-                              : "bg-teal-50 hover:bg-teal-100 text-teal-700"
-                          }`}
+                              ? "bg-orange-700/40 hover:bg-orange-700/60 text-orange-200"
+                              : "bg-orange-50 hover:bg-orange-100 text-orange-700"
+                          } ${focusRing}`}
                         >
                           {`Download ${e.display_name}`}
                         </button>
@@ -213,11 +247,11 @@ export function EngineSelector({
                           disabled={isActive}
                           className={`mt-2 w-full text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                             isActive
-                              ? "bg-teal-600/20 text-teal-300 cursor-default"
+                              ? isDark ? "bg-orange-600/20 text-orange-300 cursor-default" : "bg-orange-100 text-orange-800 cursor-default"
                               : isDark
                                 ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                          }`}
+                                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                          } ${focusRing}`}
                         >
                           {isActive
                             ? "Currently active"
@@ -226,25 +260,64 @@ export function EngineSelector({
                               : `Switch to ${e.display_name}`}
                         </button>
                       )}
+                      {/* Secondary destructive actions — hidden for the active
+                          engine (switching away first is required). */}
+                      {!isActive && (e.downloaded || (e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm"))) && (
+                        <div className="mt-1.5 flex items-center gap-3">
+                          {e.downloaded && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onDeleteWeights(e.name);
+                                setOpen(false);
+                              }}
+                              className={`text-[11px] font-medium transition-colors ${
+                                isDark
+                                  ? "text-zinc-400 hover:text-red-400"
+                                  : "text-gray-600 hover:text-red-700"
+                              } ${focusRing}`}
+                            >
+                              Delete weights
+                            </button>
+                          )}
+                          {e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm") && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onUninstall(e.name);
+                                setOpen(false);
+                              }}
+                              className={`text-[11px] font-medium transition-colors ${
+                                isDark
+                                  ? "text-zinc-400 hover:text-red-400"
+                                  : "text-gray-600 hover:text-red-700"
+                              } ${focusRing}`}
+                            >
+                              Uninstall environment
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </li>
               );
             })}
-          </ul>
+            </ul>
 
-          <div
-            className={`px-4 py-2 text-[11px] border-t ${
-              isDark
-                ? "border-zinc-800 text-zinc-500"
-                : "border-gray-200 text-gray-500"
-            }`}
-          >
-            Switching unloads the current model. First synthesis may take
-            a few seconds while weights load.
+            <div
+              className={`px-5 py-3 text-[11px] border-t shrink-0 ${
+                isDark
+                  ? "border-zinc-800 text-zinc-400"
+                  : "border-gray-200 text-gray-600"
+              }`}
+            >
+              Switching unloads the current model. First synthesis may take
+              a few seconds while weights load.
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

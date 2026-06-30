@@ -51,6 +51,9 @@ class VoiceInfo:
     # Which TTS engine owns this voice ("vibevoice", "kokoro", ...). For
     # filesystem-based voices, this is set at registration time.
     engine: str | None = None
+    # Optional transcript of the reference clip, used by VoxCPM "ultimate
+    # cloning". None when unset. Persisted in voices.json.
+    reference_transcript: str | None = None
 
 
 @dataclass
@@ -108,6 +111,7 @@ class VoiceRegistry:
                             language=override.get("language") or self._guess_lang(stem),
                             source="builtin",
                             size_bytes=path.stat().st_size,
+                            reference_transcript=override.get("reference_transcript"),
                         ),
                         path=path.resolve(),
                         is_builtin=True,
@@ -119,7 +123,7 @@ class VoiceRegistry:
         """Load voices.json from the built-in directory, if present.
 
         Format: { "filename_stem": {"name": "...", "gender": "man|woman|...",
-        "language": "en|es|..."} }
+        "language": "en|es|...", "reference_transcript": "..."} }
         """
         path = self.voices_dir / _VOICE_META_FILENAME
         if not path.is_file():
@@ -147,6 +151,8 @@ class VoiceRegistry:
                     )
             if "language" in meta and isinstance(meta["language"], str):
                 clean["language"] = meta["language"].strip().lower()[:8]
+            if "reference_transcript" in meta and isinstance(meta["reference_transcript"], str):
+                clean["reference_transcript"] = meta["reference_transcript"].strip()
             result[str(voice_id)] = clean
         return result
 
@@ -182,6 +188,7 @@ class VoiceRegistry:
                             size_bytes=size,
                             duration_sec=duration,
                             sample_rate=sr,
+                            reference_transcript=override.get("reference_transcript"),
                         ),
                         path=wav.resolve(),
                         is_builtin=False,
@@ -237,8 +244,9 @@ class VoiceRegistry:
         name: str | None = None,
         gender: str | None = None,
         language: str | None = None,
+        reference_transcript: str | None = None,
     ) -> VoiceInfo:
-        """Update name / gender / language for any voice (built-in or upload).
+        """Update name / gender / language / reference_transcript for any voice (built-in or upload).
 
         Built-in voices: the owning file is `voices/voices.json`. The WAV
         itself is not moved.
@@ -267,6 +275,9 @@ class VoiceRegistry:
                 current["gender"] = None
         if language is not None:
             current["language"] = language.strip().lower()[:8] if language else None
+        if reference_transcript is not None:
+            rt = reference_transcript.strip()
+            current["reference_transcript"] = rt or None
 
         self._meta[voice_id] = current
         self._meta_sources[voice_id] = source_path
@@ -342,6 +353,17 @@ class VoiceRegistry:
         for v in self.list():
             if v.id == voice_id:
                 return v.language
+        return None
+
+    def get_reference_transcript(self, voice_id: str) -> str | None:
+        """Return the stored reference transcript for a voice, or None.
+
+        Used by VoxCPM "ultimate cloning" to pass a prompt transcript that
+        guides high-fidelity continuation from the reference clip.
+        """
+        for v in self.list():
+            if v.id == voice_id:
+                return v.reference_transcript
         return None
 
     def save_upload(
