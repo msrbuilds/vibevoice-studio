@@ -658,7 +658,7 @@ export default function App() {
       cfg_weight?: number;
       exaggeration?: number;
       language_id?: string;
-      voice_mode?: "clone" | "design" | "auto";
+      voice_mode?: "clone" | "design" | "auto" | "custom";
       instruct?: string;
       inference_steps?: number;
       temperature?: number;

@@ -33,7 +33,7 @@ export interface UseProjectModeApi {
   setTtsText: (text: string) => void;
   setTtsVoice: (voiceId: string | null) => void;
   setTtsLanguage: (language: string | null) => void;
-  setTtsOmniMode: (mode: "clone" | "design" | "auto") => void;
+  setTtsOmniMode: (mode: "clone" | "design" | "auto" | "custom") => void;
   setTtsVoiceDesign: (voiceDesign: string) => void;
 }
 
@@ -53,7 +53,7 @@ export function useProjectMode(): UseProjectModeApi {
   const setTtsVoice = useCallback((voiceId: string | null) => setTts((t) => ({ ...t, voiceId })), []);
   const setTtsLanguage = useCallback((language: string | null) => setTts((t) => ({ ...t, language })), []);
   const setTtsOmniMode = useCallback(
-    (omnivoiceMode: "clone" | "design" | "auto") => setTts((t) => ({ ...t, omnivoiceMode })),
+    (omnivoiceMode: "clone" | "design" | "auto" | "custom") => setTts((t) => ({ ...t, omnivoiceMode })),
     [],
   );
   const setTtsVoiceDesign = useCallback(
