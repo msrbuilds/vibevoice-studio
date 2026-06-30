@@ -18,3 +18,4 @@ def test_engines_list_exposes_voice_mode_flags():
     assert by_name["omnivoice"]["supports_voice_modes"] is True
     assert by_name["omnivoice"]["supports_style_clone"] is False
     assert by_name["vibevoice"]["supports_voice_modes"] is False
+    assert by_name["vibevoice"]["supports_style_clone"] is False
