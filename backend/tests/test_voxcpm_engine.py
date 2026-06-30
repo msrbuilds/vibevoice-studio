@@ -99,3 +99,14 @@ def test_cfg_value_passed_through():
         "/tmp/o.wav",
     )
     assert msg["cfg_value"] == 2.5
+
+
+def test_design_ignores_reference_text():
+    msg = _eng()._build_synth_msg(
+        EngineSynthRequest(
+            text="hi", voice_id="", voice_mode="design",
+            instruct="warm", reference_text="leak",
+        ),
+        "/tmp/o.wav",
+    )
+    assert "prompt_text" not in msg
