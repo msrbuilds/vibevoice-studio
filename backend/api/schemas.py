@@ -93,6 +93,8 @@ class EngineInfoModel(BaseModel):
     default_cfg_scale: float | None = None
     languages: list[EngineLanguageModel] = []
     active: bool = False
+    supports_voice_modes: bool = False
+    supports_style_clone: bool = False
 
 
 # Forward-ref: ConfigResponse references EngineInfoModel.

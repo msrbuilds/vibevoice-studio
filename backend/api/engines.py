@@ -42,6 +42,8 @@ class EngineInfoModel(BaseModel):
     default_cfg_scale: float | None
     active: bool
     languages: list[EngineLanguageModel] = []
+    supports_voice_modes: bool = False
+    supports_style_clone: bool = False
 
 
 class EnginesListResponse(BaseModel):
@@ -100,6 +102,8 @@ def _to_model(info: dict) -> EngineInfoModel:
         default_cfg_scale=info["default_cfg_scale"],
         active=info.get("active", False),
         languages=[EngineLanguageModel(**lang) for lang in info.get("languages", [])],
+        supports_voice_modes=info.get("supports_voice_modes", False),
+        supports_style_clone=info.get("supports_style_clone", False),
     )
 
 
