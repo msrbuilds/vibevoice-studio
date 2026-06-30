@@ -8,6 +8,8 @@ interface Props {
   voices: Voice[];
   isDark: boolean;
   activeEngine: string | null;
+  supportsVoiceModes: boolean;
+  supportsStyleClone: boolean;
   onAddSpeaker: () => void;
   onUpdateSpeaker: (id: string, patch: Partial<Speaker>) => void;
   onRemoveSpeaker: (id: string) => void;
@@ -19,6 +21,8 @@ export function SpeakerRoster({
   voices,
   isDark,
   activeEngine,
+  supportsVoiceModes,
+  supportsStyleClone,
   onAddSpeaker,
   onUpdateSpeaker,
   onRemoveSpeaker,
@@ -60,6 +64,8 @@ export function SpeakerRoster({
             onSetVoice={(v) => onSetSpeakerVoice(sp.id, v)}
             canDelete={speakers.length > 1}
             activeEngine={activeEngine}
+            supportsVoiceModes={supportsVoiceModes}
+            supportsStyleClone={supportsStyleClone}
           />
         ))}
       </div>
@@ -76,6 +82,8 @@ function SpeakerRow({
   onSetVoice,
   canDelete,
   activeEngine,
+  supportsVoiceModes,
+  supportsStyleClone,
 }: {
   speaker: Speaker;
   voices: Voice[];
@@ -85,6 +93,8 @@ function SpeakerRow({
   onSetVoice: (v: string) => void;
   canDelete: boolean;
   activeEngine: string | null;
+  supportsVoiceModes: boolean;
+  supportsStyleClone: boolean;
 }) {
   const panelBg = isDark ? "bg-zinc-900/50" : "bg-gray-50";
   const panelBorder = isDark ? "border-zinc-800" : "border-gray-200";
@@ -136,11 +146,11 @@ function SpeakerRow({
     </select>
   );
 
-  const isOmni = activeEngine === "omnivoice";
+  const showModes = supportsVoiceModes;
   const mode: OmniMode = effectiveMode(speaker);
   const setMode = (m: OmniMode) => onUpdate({ omnivoiceMode: m });
 
-  if (!isOmni) {
+  if (!showModes) {
     return (
       <div className={`p-3 rounded-lg border ${panelBg} ${panelBorder}`}>
         {nameHeader}
@@ -173,37 +183,54 @@ function SpeakerRow({
         {segBtn("design", "Design")}
         {segBtn("auto", "Auto")}
       </div>
-      {mode === "clone" && voiceSelect}
+      {mode === "clone" && (
+        <div className="space-y-1.5">
+          {voiceSelect}
+          {supportsStyleClone && (
+            <input
+              type="text"
+              value={speaker.voiceDesign ?? ""}
+              onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
+              placeholder="Style (optional) — e.g. cheerful, slightly faster"
+              className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText}`}
+            />
+          )}
+        </div>
+      )}
       {mode === "design" && (
         <div className="space-y-1.5">
           <input
             type="text"
             value={speaker.voiceDesign ?? ""}
             onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
-            placeholder="e.g. female, low pitch, british accent"
+            placeholder={activeEngine === "voxcpm" ? "e.g. a young woman, gentle and sweet" : "e.g. female, low pitch, british accent"}
             className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText}`}
           />
-          <div className="flex flex-wrap gap-1">
-            {DESIGN_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => onUpdate({ voiceDesign: appendDesignChip(speaker.voiceDesign ?? "", chip) })}
-                className={`px-1.5 py-0.5 text-[10px] rounded border transition-colors ${
-                  isDark
-                    ? "border-zinc-700 text-zinc-400 hover:border-orange-500 hover:text-orange-300"
-                    : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-600"
-                } ${focusRing}`}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
+          {activeEngine === "omnivoice" && (
+            <div className="flex flex-wrap gap-1">
+              {DESIGN_CHIPS.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => onUpdate({ voiceDesign: appendDesignChip(speaker.voiceDesign ?? "", chip) })}
+                  className={`px-1.5 py-0.5 text-[10px] rounded border transition-colors ${
+                    isDark
+                      ? "border-zinc-700 text-zinc-400 hover:border-orange-500 hover:text-orange-300"
+                      : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-600"
+                  } ${focusRing}`}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {mode === "auto" && (
         <p className={`text-[11px] italic ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
-          OmniVoice will invent a voice for this speaker.
+          {activeEngine === "voxcpm"
+            ? "VoxCPM will design a fresh voice for this speaker."
+            : "OmniVoice will invent a voice for this speaker."}
         </p>
       )}
     </div>

@@ -801,6 +801,8 @@ export default function App() {
                   voices={displayedVoices}
                   isDark={isDark}
                   activeEngine={activeEngine}
+                  supportsVoiceModes={activeEngineInfo?.supports_voice_modes ?? false}
+                  supportsStyleClone={activeEngineInfo?.supports_style_clone ?? false}
                   onAddSpeaker={project.addSpeaker}
                   onUpdateSpeaker={project.updateSpeaker}
                   onRemoveSpeaker={project.removeSpeaker}
