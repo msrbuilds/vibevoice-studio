@@ -113,7 +113,7 @@ function isSegmentCached(
 
 export default function App() {
   const project = useProject();
-  const { config, loading: configLoading, error: configError } = useConfig();
+  const { config, loading: configLoading, error: configError, refresh: refreshConfig } = useConfig();
   const {
     voices,
     loading: voicesLoading,
@@ -138,6 +138,14 @@ export default function App() {
   // the model — its voices are language-agnostic and must not be filtered.
   const isFilterLangEngine = activeEngine === "kokoro";
   const isSynthLangEngine = engineLanguages.length > 0 && !isFilterLangEngine;
+
+  // The sidebar's Backend panel (device/dtype/sample-rate) comes from
+  // /api/config, which reports the ACTIVE engine's runtime values. useConfig
+  // only fetches at mount, so refetch whenever the active engine changes to
+  // keep those values correct per engine.
+  useEffect(() => {
+    if (activeEngine) void refreshConfig();
+  }, [activeEngine, refreshConfig]);
 
   const pm = useProjectMode();
 
