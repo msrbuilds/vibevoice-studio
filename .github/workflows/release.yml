@@ -1,0 +1,50 @@
+name: Release
+
+# Push a tag like v0.3.0 to cut a release:
+#   1. bump VERSION (+ sync pyproject.toml / package.json)
+#   2. commit on main
+#   3. git tag v0.3.0 && git push origin v0.3.0
+# This workflow then verifies the tag matches the VERSION file and publishes a
+# GitHub Release. The in-app updater (services/update_check.py) reads the latest
+# release tag from this repo, so publishing here is what lights up the
+# "Update available" badge for users on older versions.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches VERSION file
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          file_ver="$(tr -d '[:space:]' < VERSION)"
+          if [ "$tag" != "$file_ver" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match VERSION file (${file_ver})."
+            echo "Bump VERSION to ${tag} (and sync pyproject.toml / package.json) before tagging."
+            exit 1
+          fi
+          echo "Tag ${GITHUB_REF_NAME} matches VERSION ${file_ver}."
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          notes_file="docs/releases/${tag}.md"
+          if [ -f "$notes_file" ]; then
+            echo "Using curated notes: ${notes_file}"
+            gh release create "$tag" --title "Voice Studio ${tag}" --notes-file "$notes_file"
+          else
+            echo "No curated notes; auto-generating from commit history."
+            gh release create "$tag" --title "Voice Studio ${tag}" --generate-notes
+          fi

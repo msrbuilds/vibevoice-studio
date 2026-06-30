@@ -1,6 +1,6 @@
 [project]
 name = "vibevoice-backend"
-version = "0.1.0"
+version = "0.2.0"
 description = "FastAPI backend for local VibeVoice-1.5B TTS"
 requires-python = ">=3.10"
 dependencies = [
