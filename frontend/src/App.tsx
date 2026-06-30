@@ -14,6 +14,7 @@ import { MiddleToolbar } from "@/components/MiddleToolbar";
 import { ModeChooser } from "@/components/ModeChooser";
 import { TtsEditor } from "@/components/TtsEditor";
 import { InlinePlayer } from "@/components/InlinePlayer";
+import { BrandFooter } from "@/components/BrandFooter";
 import { ControlPanel } from "@/components/ControlPanel";
 import { useConfig } from "@/hooks/useConfig";
 import { useVoices } from "@/hooks/useVoices";
@@ -981,6 +982,8 @@ export default function App() {
             onExportAudio={handleExportAudio}
           />
         )}
+
+        <BrandFooter isDark={isDark} />
       </main>
 
       <ControlPanel
