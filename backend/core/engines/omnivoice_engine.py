@@ -49,6 +49,8 @@ class OmniVoiceEngine(Engine):
 
     name = "omnivoice"
     display_name = "OmniVoice"
+    license = "Apache-2.0"
+    model_url = "https://huggingface.co/k2-fsa/OmniVoice"
     description = (
         "k2-fsa's 0.6B zero-shot multilingual TTS (600+ languages). Voice "
         "cloning from a short reference clip. Runs in its own isolated "
@@ -73,6 +75,9 @@ class OmniVoiceEngine(Engine):
         self._load_lock = threading.Lock()
         self._stderr_tail: collections.deque[str] = collections.deque(maxlen=200)
         self._stderr_thread: threading.Thread | None = None
+        # The device the worker actually resolved "auto" to (cuda/cpu), reported
+        # back on load. None until the first successful load.
+        self._resolved_device: str | None = None
 
     # -- lifecycle
     def load(self) -> None:
@@ -84,9 +89,8 @@ class OmniVoiceEngine(Engine):
                     "OmniVoice isn't installed in its isolated environment. "
                     "Run `python studio.py install-omnivoice` (or click Install in the UI)."
                 )
-            device = self._device_request
-            if device == "auto":
-                device = "cuda"
+            # Pass the raw request (incl. "auto") through — the worker holds the
+            # torch that runs the model and resolves auto→cuda/cpu honestly.
             env = dict(os.environ)
             models_dir = _BACKEND_ROOT / "models"
             env["HF_HOME"] = str(models_dir)
@@ -101,11 +105,14 @@ class OmniVoiceEngine(Engine):
                 env=env,
             )
             self._start_stderr_drain()
-            resp = self._exchange({"op": "load", "device": device, "model_id": self._model_id})
+            resp = self._exchange(
+                {"op": "load", "device": self._device_request, "model_id": self._model_id}
+            )
             if not resp.get("ok"):
                 err = resp.get("error", "unknown error")
                 self._kill()
                 raise RuntimeError(f"OmniVoice worker failed to load: {err}")
+            self._resolved_device = resp.get("device") or self._device_request
 
     def unload(self) -> None:
         if self._proc is None:
@@ -136,9 +143,9 @@ class OmniVoiceEngine(Engine):
         return model_downloaded(self._model_id)
 
     def engine_info(self) -> dict[str, Any]:
-        device = self._device_request
-        if device == "auto":
-            device = "cuda"
+        # Report the device the worker actually resolved to once loaded; before
+        # load, echo the request (may be "auto") rather than guessing "cuda".
+        device = self._resolved_device or self._device_request
         dtype = "float32"
         return {
             "model_id": self._model_id,

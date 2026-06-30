@@ -78,6 +78,8 @@ class VibeVoiceEngine(Engine):
 
     name = "vibevoice"
     display_name = "VibeVoice 1.5B"
+    license = "MIT"
+    model_url = "https://huggingface.co/microsoft/VibeVoice-1.5B"
     description = "Microsoft's 1.5B multilingual voice-cloning model. ~5.4 GB."
 
     def __init__(

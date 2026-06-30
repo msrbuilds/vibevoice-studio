@@ -60,9 +60,16 @@ def _write_wav_int16(path: str, samples, sample_rate: int) -> None:
 
 
 def _norm_device(device: str | None) -> str:
-    d = (device or "cuda").lower()
+    d = (device or "auto").lower()
     if d == "auto":
-        d = "cuda"
+        # The worker holds the torch that actually runs the model, so it is the
+        # authority on CUDA availability. Fall back to CPU on GPU-less hosts
+        # instead of forcing cuda and crashing.
+        try:
+            import torch
+            d = "cuda" if torch.cuda.is_available() else "cpu"
+        except Exception:  # noqa: BLE001
+            d = "cpu"
     if d == "cuda":
         return "cuda:0"
     return d  # cpu, mps, xpu, cuda:N
@@ -96,7 +103,7 @@ class _Worker:
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": f"load failed: {exc}"}
         _log(f"[omnivoice-worker] model loaded on {device}")
-        return {"ok": True}
+        return {"ok": True, "device": device}
 
     def _synth(self, req: dict) -> dict:
         if self._model is None:

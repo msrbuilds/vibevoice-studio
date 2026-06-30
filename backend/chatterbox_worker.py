@@ -76,9 +76,16 @@ class _Worker:
         return {"ok": False, "error": f"unknown op: {op!r}"}
 
     def _load(self, req: dict) -> dict:
-        device = req.get("device") or "cuda"
+        device = (req.get("device") or "auto").lower()
         if device == "auto":
-            device = "cuda"
+            # The worker holds the torch that actually runs the model, so it is
+            # the authority on CUDA availability. Fall back to CPU on GPU-less
+            # hosts instead of forcing cuda and crashing.
+            try:
+                import torch
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            except Exception:  # noqa: BLE001
+                device = "cpu"
         try:
             from chatterbox.mtl_tts import ChatterboxMultilingualTTS
         except Exception as exc:  # noqa: BLE001
@@ -96,7 +103,7 @@ class _Worker:
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": f"load failed: {exc}"}
         _log(f"[chatterbox-worker] model loaded on {device}")
-        return {"ok": True}
+        return {"ok": True, "device": device}
 
     def _synth(self, req: dict) -> dict:
         if self._model is None:

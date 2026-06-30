@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getConfig, ApiError } from "@/lib/api";
 import type { ConfigResponse } from "@/types/models";
 
@@ -6,6 +6,9 @@ export interface UseConfigResult {
   config: ConfigResponse | null;
   loading: boolean;
   error: string | null;
+  /** Refetch /api/config. Call after switching engines so the active
+   *  engine's device/dtype/sample-rate are reflected (they're stale otherwise). */
+  refresh: () => Promise<void>;
 }
 
 export function useConfig(): UseConfigResult {
@@ -13,24 +16,21 @@ export function useConfig(): UseConfigResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    getConfig()
-      .then((c) => {
-        if (!cancelled) {
-          setConfig(c);
-          setLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : String(err));
-        setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const refresh = useCallback(async () => {
+    try {
+      const c = await getConfig();
+      setConfig(c);
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { config, loading, error };
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { config, loading, error, refresh };
 }

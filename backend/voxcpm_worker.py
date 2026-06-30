@@ -64,9 +64,17 @@ def _write_wav_int16(path: str, samples, sample_rate: int) -> None:
 
 
 def _norm_device(device: str | None) -> str:
-    d = (device or "cuda").lower()
+    d = (device or "auto").lower()
     if d == "auto":
-        d = "cuda"
+        # The worker holds the torch that actually runs the model, so it is the
+        # authority on CUDA availability. Fall back to CPU on GPU-less hosts
+        # instead of forcing cuda. (VoxCPM auto-selects its own device, so this
+        # is mainly for honest reporting.)
+        try:
+            import torch
+            d = "cuda" if torch.cuda.is_available() else "cpu"
+        except Exception:  # noqa: BLE001
+            d = "cpu"
     return d  # cuda, cpu, mps
 
 
@@ -148,7 +156,7 @@ class _Worker:
         except Exception:  # noqa: BLE001
             pass
         _log(f"[voxcpm-worker] model loaded (requested device={device!r}; VoxCPM selects its own device), sr={self._sample_rate}")
-        return {"ok": True}
+        return {"ok": True, "device": device}
 
     def _synth(self, req: dict) -> dict:
         if self._model is None:

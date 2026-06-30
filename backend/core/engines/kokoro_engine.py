@@ -117,6 +117,8 @@ class KokoroEngine(Engine):
 
     name = "kokoro"
     display_name = "Kokoro-82M"
+    license = "Apache-2.0"
+    model_url = "https://huggingface.co/hexgrad/Kokoro-82M"
     description = "Hexgrad's 82M-param StyleTTS2. ~350 MB. EN/JA/ZH built-in voices."
 
     def __init__(self, default_lang_code: str = "a", default_speed: float = 1.0) -> None:
