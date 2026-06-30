@@ -34,3 +34,13 @@ def test_reference_transcript_round_trips(tmp_path):
 def test_reference_transcript_absent_is_none(tmp_path):
     reg = _make_registry(tmp_path)
     assert reg.get_reference_transcript("user-test-abc123") is None
+
+
+def test_reference_transcript_empty_clears_to_none(tmp_path):
+    reg = _make_registry(tmp_path)
+    reg.update_meta("user-test-abc123", reference_transcript="hello")
+    reg.update_meta("user-test-abc123", reference_transcript="   ")
+    assert reg.get_reference_transcript("user-test-abc123") is None
+    # And it stays cleared after a reload from disk.
+    reg2 = _make_registry(tmp_path)
+    assert reg2.get_reference_transcript("user-test-abc123") is None

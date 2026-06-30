@@ -123,7 +123,7 @@ class VoiceRegistry:
         """Load voices.json from the built-in directory, if present.
 
         Format: { "filename_stem": {"name": "...", "gender": "man|woman|...",
-        "language": "en|es|..."} }
+        "language": "en|es|...", "reference_transcript": "..."} }
         """
         path = self.voices_dir / _VOICE_META_FILENAME
         if not path.is_file():
@@ -246,7 +246,7 @@ class VoiceRegistry:
         language: str | None = None,
         reference_transcript: str | None = None,
     ) -> VoiceInfo:
-        """Update name / gender / language for any voice (built-in or upload).
+        """Update name / gender / language / reference_transcript for any voice (built-in or upload).
 
         Built-in voices: the owning file is `voices/voices.json`. The WAV
         itself is not moved.
