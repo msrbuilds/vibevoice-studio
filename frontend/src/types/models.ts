@@ -58,6 +58,8 @@ export interface EngineInfo {
   name: string;
   display_name: string;
   description: string;
+  license: string;
+  model_url: string;
   loaded: boolean;
   installed: boolean;
   downloaded: boolean;

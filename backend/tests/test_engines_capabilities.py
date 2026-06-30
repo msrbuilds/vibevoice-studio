@@ -29,3 +29,17 @@ def test_engines_expose_style_prompt_flag():
     assert by_name["qwen"]["supports_style_prompt"] is True
     assert by_name["vibevoice"]["supports_style_prompt"] is False
     assert by_name["voxcpm"]["supports_style_prompt"] is False
+
+
+def test_engines_expose_license_and_model_url():
+    client = TestClient(create_app())
+    by_name = {e["name"]: e for e in client.get("/api/engines").json()["engines"]}
+    # SPDX license id + canonical Hugging Face model page per engine.
+    assert by_name["vibevoice"]["license"] == "MIT"
+    assert by_name["chatterbox"]["license"] == "MIT"
+    assert by_name["kokoro"]["license"] == "Apache-2.0"
+    assert by_name["omnivoice"]["license"] == "Apache-2.0"
+    assert by_name["voxcpm"]["license"] == "Apache-2.0"
+    assert by_name["qwen"]["license"] == "Apache-2.0"
+    for e in by_name.values():
+        assert e["model_url"].startswith("https://huggingface.co/")

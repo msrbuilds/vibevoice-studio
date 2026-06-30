@@ -74,6 +74,8 @@ def config(
                 name=info["name"],
                 display_name=info["display_name"],
                 description=info["description"],
+                license=info.get("license", "unknown"),
+                model_url=info.get("model_url", ""),
                 loaded=info["loaded"],
                 supports_voice_cloning=info["supports_voice_cloning"],
                 supports_streaming=info.get("supports_streaming", False),

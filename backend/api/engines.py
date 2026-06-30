@@ -33,6 +33,8 @@ class EngineInfoModel(BaseModel):
     name: str
     display_name: str
     description: str
+    license: str = "unknown"
+    model_url: str = ""
     loaded: bool
     installed: bool
     downloaded: bool
@@ -94,6 +96,8 @@ def _to_model(info: dict) -> EngineInfoModel:
         name=info["name"],
         display_name=info["display_name"],
         description=info["description"],
+        license=info.get("license", "unknown"),
+        model_url=info.get("model_url", ""),
         loaded=info["loaded"],
         installed=info.get("installed", True),
         downloaded=info.get("downloaded", True),

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Cpu, Loader2, Volume2, X } from "lucide-react";
+import { ChevronDown, Cpu, ExternalLink, Loader2, PackageX, Trash2, Volume2, X } from "lucide-react";
 import type { EngineInfo } from "@/types/models";
 import { focusRing } from "@/lib/theme";
 
@@ -137,6 +137,13 @@ export function EngineSelector({
             {engines.map((e) => {
               const isActive = e.name === activeName;
               const switching = switchingTo === e.name;
+              const uninstallable =
+                e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm" || e.name === "qwen";
+              // Destructive actions are hidden for the active engine (you must
+              // switch away first). Delete-weights needs downloaded weights;
+              // uninstall needs an isolated-venv engine that's installed.
+              const showDelete = !isActive && !!e.downloaded;
+              const showUninstall = !isActive && !!e.installed && uninstallable;
               return (
                 <li
                   key={e.name}
@@ -144,23 +151,67 @@ export function EngineSelector({
                     isDark ? "border-zinc-800 bg-zinc-950/40" : "border-gray-300 bg-gray-50"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        isActive
-                          ? isDark ? "bg-orange-600/20 text-orange-400" : "bg-orange-100 text-orange-700"
-                          : isDark
-                            ? "bg-zinc-800 text-zinc-400"
-                            : "bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {switching ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Volume2 className="w-4 h-4" />
+                  <div className="flex flex-col items-start gap-3">
+                    {/* Top row: engine icon (left) + destructive icon actions
+                        (right), mirroring the speaker icon across the card. */}
+                    <div className="flex items-center justify-between w-full">
+                      <div
+                        className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isActive
+                            ? isDark ? "bg-orange-600/20 text-orange-400" : "bg-orange-100 text-orange-700"
+                            : isDark
+                              ? "bg-zinc-800 text-zinc-400"
+                              : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {switching ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Volume2 className="w-4 h-4" />
+                        )}
+                      </div>
+                      {(showDelete || showUninstall) && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          {showDelete && (
+                            <button
+                              type="button"
+                              title="Delete downloaded weights"
+                              aria-label="Delete downloaded weights"
+                              onClick={() => {
+                                onDeleteWeights(e.name);
+                                setOpen(false);
+                              }}
+                              className={`p-1.5 rounded-md transition-colors ${
+                                isDark
+                                  ? "text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                                  : "text-gray-500 hover:text-red-600 hover:bg-red-50"
+                              } ${focusRing}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {showUninstall && (
+                            <button
+                              type="button"
+                              title="Uninstall isolated environment"
+                              aria-label="Uninstall isolated environment"
+                              onClick={() => {
+                                onUninstall(e.name);
+                                setOpen(false);
+                              }}
+                              className={`p-1.5 rounded-md transition-colors ${
+                                isDark
+                                  ? "text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                                  : "text-gray-500 hover:text-red-600 hover:bg-red-50"
+                              } ${focusRing}`}
+                            >
+                              <PackageX className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2">
                         <span
                           className={`text-sm font-medium ${
@@ -209,6 +260,28 @@ export function EngineSelector({
                         {e.sample_rate
                           ? `${(e.sample_rate / 1000).toFixed(0)} kHz`
                           : "—"}
+                        {e.license && e.license !== "unknown" && (
+                          <>
+                            {" · "}
+                            {e.model_url ? (
+                              <a
+                                href={e.model_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(ev) => ev.stopPropagation()}
+                                title={`${e.license} license — open the model card on Hugging Face`}
+                                className={`inline-flex items-center gap-0.5 underline decoration-dotted underline-offset-2 transition-colors ${
+                                  isDark ? "hover:text-orange-400" : "hover:text-orange-600"
+                                } ${focusRing}`}
+                              >
+                                {e.license}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              e.license
+                            )}
+                          </>
+                        )}
                       </div>
                       {e.installed === false ? (
                         <button
@@ -259,44 +332,6 @@ export function EngineSelector({
                               ? "Loading…"
                               : `Switch to ${e.display_name}`}
                         </button>
-                      )}
-                      {/* Secondary destructive actions — hidden for the active
-                          engine (switching away first is required). */}
-                      {!isActive && (e.downloaded || (e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm" || e.name === "qwen"))) && (
-                        <div className="mt-1.5 flex items-center gap-3">
-                          {e.downloaded && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onDeleteWeights(e.name);
-                                setOpen(false);
-                              }}
-                              className={`text-[11px] font-medium transition-colors ${
-                                isDark
-                                  ? "text-zinc-400 hover:text-red-400"
-                                  : "text-gray-600 hover:text-red-700"
-                              } ${focusRing}`}
-                            >
-                              Delete weights
-                            </button>
-                          )}
-                          {e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm" || e.name === "qwen") && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onUninstall(e.name);
-                                setOpen(false);
-                              }}
-                              className={`text-[11px] font-medium transition-colors ${
-                                isDark
-                                  ? "text-zinc-400 hover:text-red-400"
-                                  : "text-gray-600 hover:text-red-700"
-                              } ${focusRing}`}
-                            >
-                              Uninstall environment
-                            </button>
-                          )}
-                        </div>
                       )}
                     </div>
                   </div>

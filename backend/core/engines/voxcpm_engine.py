@@ -50,6 +50,8 @@ class VoxCPMEngine(Engine):
 
     name = "voxcpm"
     display_name = "VoxCPM2"
+    license = "Apache-2.0"
+    model_url = "https://huggingface.co/openbmb/VoxCPM2"
     description = (
         "OpenBMB's 2B tokenizer-free multilingual TTS (30 languages, 48 kHz). "
         "Voice design, cloning, controllable + transcript-guided cloning. Runs "

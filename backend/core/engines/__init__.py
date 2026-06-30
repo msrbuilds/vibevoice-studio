@@ -107,6 +107,10 @@ class Engine(abc.ABC):
     display_name: str = "Base Engine"
     #: Short blurb shown next to the name in the engine selector.
     description: str = ""
+    #: SPDX license id of the underlying model (e.g. "MIT", "Apache-2.0").
+    license: str = "unknown"
+    #: Canonical Hugging Face model page (license + usage policy live there).
+    model_url: str = ""
 
     @abc.abstractmethod
     def load(self) -> None:
@@ -227,6 +231,8 @@ class Engine(abc.ABC):
             "name": self.name,
             "display_name": self.display_name,
             "description": self.description,
+            "license": self.license,
+            "model_url": self.model_url,
             "loaded": self.is_loaded(),
             "installed": self.installed(),
             "downloaded": self.downloaded(),
