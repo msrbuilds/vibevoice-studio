@@ -243,3 +243,6 @@ def test_python_supported_for_voxcpm():
     assert studio._python_supported_for_voxcpm((3, 12)) is True
     assert studio._python_supported_for_voxcpm((3, 13)) is False
     assert studio._python_supported_for_voxcpm((3, 9)) is False
+    assert studio._python_supported_for_voxcpm((3, 10)) is True   # lower-inclusive boundary
+    assert studio._python_supported_for_voxcpm((4, 0)) is False   # wrong major version
+    assert studio._python_supported_for_voxcpm((4, 11)) is False
