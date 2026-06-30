@@ -49,6 +49,8 @@ class OmniVoiceEngine(Engine):
 
     name = "omnivoice"
     display_name = "OmniVoice"
+    license = "Apache-2.0"
+    model_url = "https://huggingface.co/k2-fsa/OmniVoice"
     description = (
         "k2-fsa's 0.6B zero-shot multilingual TTS (600+ languages). Voice "
         "cloning from a short reference clip. Runs in its own isolated "

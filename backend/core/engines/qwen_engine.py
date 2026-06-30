@@ -73,6 +73,8 @@ class QwenEngine(Engine):
 
     name = "qwen"
     display_name = "Qwen3-TTS CustomVoice"
+    license = "Apache-2.0"
+    model_url = "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     description = (
         "Alibaba Qwen's 1.7B TTS with 9 premium voices, free-text style "
         "control, and 10 languages. Runs in its own isolated environment. "

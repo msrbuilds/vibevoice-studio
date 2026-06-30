@@ -75,6 +75,8 @@ class ChatterboxEngine(Engine):
 
     name = "chatterbox"
     display_name = "Chatterbox Multilingual V3"
+    license = "MIT"
+    model_url = "https://huggingface.co/ResembleAI/chatterbox"
     description = (
         "Resemble AI's 0.5B multilingual TTS. 23 languages, voice cloning, "
         "watermarked output. Runs in its own isolated environment. ~500 MB."

@@ -85,6 +85,8 @@ class EngineInfoModel(BaseModel):
     name: str
     display_name: str
     description: str = ""
+    license: str = "unknown"
+    model_url: str = ""
     loaded: bool
     supports_voice_cloning: bool
     supports_streaming: bool = False
