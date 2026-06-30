@@ -92,6 +92,19 @@ def voxcpm_ready_marker(repo_root: Path) -> Path:
     return repo_root / "backend" / "venv-voxcpm" / ".voxcpm-ready"
 
 
+def qwen_venv_python(repo_root: Path) -> Path:
+    """Path to the ISOLATED Qwen venv's Python interpreter."""
+    venv = repo_root / "backend" / "venv-qwen"
+    if os.name == "nt":
+        return venv / "Scripts" / "python.exe"
+    return venv / "bin" / "python"
+
+
+def qwen_ready_marker(repo_root: Path) -> Path:
+    """Sentinel written only after a FULL successful Qwen install."""
+    return repo_root / "backend" / "venv-qwen" / ".qwen-ready"
+
+
 def _python_supported_for_voxcpm(version_info) -> bool:
     """VoxCPM (torchcodec/funasr) supports Python 3.10–3.12 only."""
     major, minor = version_info[0], version_info[1]
@@ -312,6 +325,56 @@ def _ensure_voxcpm_env() -> bool:
     return True
 
 
+def _ensure_qwen_env() -> bool:
+    """Create backend/venv-qwen and install qwen-tts into it.
+
+    qwen-tts pins transformers==4.57.3 (incompatible with every other engine),
+    so it gets its own environment with a CUDA-matched torch + qwen-tts.
+    Returns True on success, False on any failure.
+    """
+    marker = qwen_ready_marker(REPO_ROOT)
+    try:
+        marker.unlink()
+    except OSError:
+        pass
+    qpy = qwen_venv_python(REPO_ROOT)
+    if not qpy.is_file():
+        print("  Creating isolated Qwen environment (backend/venv-qwen) …")
+        if _run([sys.executable, "-m", "venv", str(BACKEND_DIR / "venv-qwen")]) != 0:
+            print("  ERROR: failed to create venv-qwen.")
+            return False
+    print("  Upgrading pip in the Qwen env …")
+    raw_ok = _run([str(qpy), "-m", "pip", "install", "--upgrade", "pip"]) == 0
+    progress = ["--progress-bar", "raw"] if raw_ok else []
+    net = ["--retries", "10", "--timeout", "120"]
+    # 1. Install qwen-tts FIRST (pulls a torch build to satisfy its deps).
+    print("  Installing qwen-tts into the Qwen env …")
+    if _run([str(qpy), "-m", "pip", "install", *progress, *net, "-r",
+             str(BACKEND_DIR / "requirements-qwen.txt")]) != 0:
+        print("  ERROR: qwen-tts install failed.")
+        return False
+    # 2. Swap in the CUDA build of torch+torchaudio for GPU.
+    qtag = envdetect.detect_qwen_cuda_tag()
+    index = envdetect.torch_index_url(qtag) if qtag else None
+    if index:
+        print(f"  Installing the CUDA build of torch+torchaudio ({qtag}) for GPU …")
+        if _run([str(qpy), "-m", "pip", "install", *progress, *net, "--force-reinstall",
+                 "--no-deps", "--index-url", index, "torch", "torchaudio"]) != 0:
+            print("  ERROR: CUDA torch install failed.")
+            return False
+    else:
+        print("  No matching torch CUDA build for this driver — leaving the "
+              "default (CPU) torch in place. Qwen will run on CPU (slow).")
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text("ok\n", encoding="utf-8")
+    except OSError as exc:
+        print(f"  ERROR: could not write ready marker: {exc}")
+        return False
+    print("  Qwen environment ready.")
+    return True
+
+
 def build_backend_cmd(py: Path, passthrough: list[str]) -> list[str]:
     """Command to launch the backend server via the venv Python."""
     return [py.as_posix(), "-m", "backend.cli", *passthrough]
@@ -493,6 +556,14 @@ def cmd_install_voxcpm(_args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_install_qwen(_args: argparse.Namespace) -> int:
+    """Non-interactive: build/refresh the isolated Qwen env. Used by the
+    backend's in-UI installer. Returns 0 on success, 1 on failure."""
+    print(BANNER)
+    ok = _ensure_qwen_env()
+    return 0 if ok else 1
+
+
 # ---------------------------------------------------------------- start --
 def _backend_port(passthrough: list[str]) -> int:
     """The port the backend will bind: --port from passthrough, else 8880."""
@@ -650,6 +721,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("install-chatterbox", help="build the isolated Chatterbox env (non-interactive)")
     sub.add_parser("install-omnivoice", help="build the isolated OmniVoice env (non-interactive)")
     sub.add_parser("install-voxcpm", help="build the isolated VoxCPM env (non-interactive)")
+    sub.add_parser("install-qwen", help="build the isolated Qwen env (non-interactive)")
 
     args = parser.parse_args(argv)
     if args.command == "setup":
@@ -662,6 +734,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_install_omnivoice(args)
     if args.command == "install-voxcpm":
         return cmd_install_voxcpm(args)
+    if args.command == "install-qwen":
+        return cmd_install_qwen(args)
     if args.command == "start":
         return cmd_start(args)
     parser.print_help()
