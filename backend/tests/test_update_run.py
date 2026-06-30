@@ -48,13 +48,18 @@ def test_runner_nonzero_is_error():
 
 
 def test_runner_coalesces_concurrent_starts():
+    calls = {"n": 0}
+
     def runner_fn(tag):
+        calls["n"] += 1
         time.sleep(0.2)
         yield None, 0
 
-    r = UpdateRunner(runner_factory=lambda tag: runner_fn(tag))
+    r = UpdateRunner(runner_factory=runner_fn)
     first = r.start("v0.3.0")
     second = r.start("v0.3.0")  # should NOT launch a second job
     assert first["state"] == "running"
     assert second["state"] == "running"
     _wait(r, "done", timeout=2.0)
+    # Single-flight: the second start must NOT have launched a second job.
+    assert calls["n"] == 1
