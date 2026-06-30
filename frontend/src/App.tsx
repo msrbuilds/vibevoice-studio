@@ -480,7 +480,7 @@ export default function App() {
         showError("Some segments have no speaker assigned.", "Missing speaker");
         return;
       }
-      const spMode = supportsVoiceModes ? effectiveMode(sp) : "clone";
+      const spMode = supportsVoiceModes ? effectiveMode(sp, activeEngine) : "clone";
       if (spMode === "clone" && !sp.voice) {
         showError(
           "Some segments have no voice. Assign voices in the sidebar first.",
@@ -688,7 +688,7 @@ export default function App() {
         );
         return;
       }
-      const mode = isOmni ? effectiveMode(speaker) : "clone";
+      const mode = isOmni ? effectiveMode(speaker, activeEngine) : "clone";
       if (mode === "clone" && !speaker.voice) {
         showError(
           `Segment has no voice assigned (text: "${seg.text.slice(0, 40)}…").`,
@@ -697,7 +697,7 @@ export default function App() {
         return;
       }
       const instruct =
-        mode === "design" || mode === "clone"
+        mode === "design" || mode === "clone" || mode === "custom"
           ? speaker.voiceDesign?.trim()
             ? speaker.voiceDesign.trim()
             : undefined
