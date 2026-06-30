@@ -235,3 +235,11 @@ def test_cuda_version_to_voxcpm_tag():
 def test_detect_voxcpm_cuda_tag_uses_runner():
     fake = lambda: "NVIDIA-SMI ... CUDA Version: 12.8 ..."
     assert detect_voxcpm_cuda_tag(runner=fake) == "cu128"
+
+
+def test_python_supported_for_voxcpm():
+    import studio
+    assert studio._python_supported_for_voxcpm((3, 11)) is True
+    assert studio._python_supported_for_voxcpm((3, 12)) is True
+    assert studio._python_supported_for_voxcpm((3, 13)) is False
+    assert studio._python_supported_for_voxcpm((3, 9)) is False

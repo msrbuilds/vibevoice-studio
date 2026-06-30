@@ -79,6 +79,25 @@ def omnivoice_ready_marker(repo_root: Path) -> Path:
     return repo_root / "backend" / "venv-omnivoice" / ".omnivoice-ready"
 
 
+def voxcpm_venv_python(repo_root: Path) -> Path:
+    """Path to the ISOLATED VoxCPM venv's Python interpreter."""
+    venv = repo_root / "backend" / "venv-voxcpm"
+    if os.name == "nt":
+        return venv / "Scripts" / "python.exe"
+    return venv / "bin" / "python"
+
+
+def voxcpm_ready_marker(repo_root: Path) -> Path:
+    """Sentinel written only after a FULL successful VoxCPM install."""
+    return repo_root / "backend" / "venv-voxcpm" / ".voxcpm-ready"
+
+
+def _python_supported_for_voxcpm(version_info) -> bool:
+    """VoxCPM (torchcodec/funasr) supports Python 3.10–3.12 only."""
+    major, minor = version_info[0], version_info[1]
+    return major == 3 and 10 <= minor <= 12
+
+
 def _chatterbox_torch_tag(detected_tag: str | None) -> str | None:
     """Pick a CUDA wheel build for Chatterbox's pinned torch.
 
@@ -231,6 +250,65 @@ def _ensure_omnivoice_env() -> bool:
         print(f"  ERROR: could not write ready marker: {exc}")
         return False
     print("  OmniVoice environment ready.")
+    return True
+
+
+def _ensure_voxcpm_env() -> bool:
+    """Create backend/venv-voxcpm and install voxcpm into it.
+
+    VoxCPM needs torch>=2.5 / CUDA>=12 plus a heavy dependency tail, so it gets
+    its own environment with a CUDA-matched torch + voxcpm. Returns True on
+    success, False on any failure.
+    """
+    if not _python_supported_for_voxcpm(sys.version_info):
+        print(
+            "  ERROR: VoxCPM requires Python 3.10–3.12 (you have "
+            f"{sys.version_info.major}.{sys.version_info.minor}). "
+            "Install a supported Python and re-run."
+        )
+        return False
+    marker = voxcpm_ready_marker(REPO_ROOT)
+    try:
+        marker.unlink()
+    except OSError:
+        pass
+    vpy = voxcpm_venv_python(REPO_ROOT)
+    if not vpy.is_file():
+        print("  Creating isolated VoxCPM environment (backend/venv-voxcpm) …")
+        if _run([sys.executable, "-m", "venv", str(BACKEND_DIR / "venv-voxcpm")]) != 0:
+            print("  ERROR: failed to create venv-voxcpm.")
+            return False
+    print("  Upgrading pip in the VoxCPM env …")
+    raw_ok = _run([str(vpy), "-m", "pip", "install", "--upgrade", "pip"]) == 0
+    progress = ["--progress-bar", "raw"] if raw_ok else []
+    net = ["--retries", "10", "--timeout", "120"]
+    # 1. Install voxcpm FIRST (pulls a torch build to satisfy its pin).
+    print("  Installing voxcpm into the VoxCPM env …")
+    if _run([str(vpy), "-m", "pip", "install", *progress, *net, "-r",
+             str(BACKEND_DIR / "requirements-voxcpm.txt")]) != 0:
+        print("  ERROR: voxcpm install failed.")
+        return False
+    # 2. Swap in the CUDA build of torch+torchaudio for GPU. Let pip pick the
+    #    newest matching pair the CUDA index has (VoxCPM only needs torch>=2.5);
+    #    pinning an exact PyPI version 404s on the wheel-only CUDA index.
+    vx_tag = envdetect.detect_voxcpm_cuda_tag()
+    index = envdetect.torch_index_url(vx_tag) if vx_tag else None
+    if index:
+        print(f"  Installing the CUDA build of torch+torchaudio ({vx_tag}) for GPU …")
+        if _run([str(vpy), "-m", "pip", "install", *progress, *net, "--force-reinstall",
+                 "--no-deps", "--index-url", index, "torch", "torchaudio"]) != 0:
+            print("  ERROR: CUDA torch install failed.")
+            return False
+    else:
+        print("  No matching torch CUDA build for this driver — leaving the "
+              "default (CPU) torch in place. VoxCPM will run on CPU (slow).")
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text("ok\n", encoding="utf-8")
+    except OSError as exc:
+        print(f"  ERROR: could not write ready marker: {exc}")
+        return False
+    print("  VoxCPM environment ready.")
     return True
 
 
@@ -407,6 +485,14 @@ def cmd_install_omnivoice(_args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_install_voxcpm(_args: argparse.Namespace) -> int:
+    """Non-interactive: build/refresh the isolated VoxCPM env. Used by the
+    backend's in-UI installer. Returns 0 on success, 1 on failure."""
+    print(BANNER)
+    ok = _ensure_voxcpm_env()
+    return 0 if ok else 1
+
+
 # ---------------------------------------------------------------- start --
 def _backend_port(passthrough: list[str]) -> int:
     """The port the backend will bind: --port from passthrough, else 8880."""
@@ -563,6 +649,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("models", help="re-open the model picker")
     sub.add_parser("install-chatterbox", help="build the isolated Chatterbox env (non-interactive)")
     sub.add_parser("install-omnivoice", help="build the isolated OmniVoice env (non-interactive)")
+    sub.add_parser("install-voxcpm", help="build the isolated VoxCPM env (non-interactive)")
 
     args = parser.parse_args(argv)
     if args.command == "setup":
@@ -573,6 +660,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_install_chatterbox(args)
     if args.command == "install-omnivoice":
         return cmd_install_omnivoice(args)
+    if args.command == "install-voxcpm":
+        return cmd_install_voxcpm(args)
     if args.command == "start":
         return cmd_start(args)
     parser.print_help()
