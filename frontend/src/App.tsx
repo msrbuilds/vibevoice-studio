@@ -115,6 +115,15 @@ export default function App() {
   // Chatterbox Multilingual V3 only — voice expressiveness / dramatization.
   // Ignored by VibeVoice and Kokoro. Range 0.0–1.0+ (clamped to 0–2 server-side).
   const [exaggeration, setExaggeration] = useState<number>(0.5);
+  // VoxCPM only — diffusion quality (inference_timesteps). Ignored by other engines.
+  const [quality, setQuality] = useState<"fast" | "balanced" | "high">(
+    () => (localStorage.getItem("vs.voxcpm.quality") as "fast" | "balanced" | "high") ?? "balanced",
+  );
+  const onQualityChange = (q: "fast" | "balanced" | "high") => {
+    setQuality(q);
+    localStorage.setItem("vs.voxcpm.quality", q);
+  };
+  const QUALITY_TIMESTEPS = { fast: 5, balanced: 10, high: 25 } as const;
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
@@ -256,6 +265,7 @@ export default function App() {
           forceRegenerate: options.forceRegenerate,
           cfgWeight: isChatterbox ? cfgScale : null,
           exaggeration: isChatterbox ? exaggeration : null,
+          ...(activeEngine === "voxcpm" ? { inferenceSteps: QUALITY_TIMESTEPS[quality] } : {}),
         });
         project.cacheAudio(segmentId, {
           audioData,
@@ -271,7 +281,7 @@ export default function App() {
         setGeneratingId(null);
       }
     },
-    [project, showError, cfgScale, exaggeration, activeEngine],
+    [project, showError, cfgScale, exaggeration, activeEngine, quality],
   );
 
   // ---- playback ----
@@ -478,6 +488,7 @@ export default function App() {
         cfgWeight: isChatterbox ? cfgScale : null,
         exaggeration: isChatterbox ? exaggeration : null,
         languageId: isCloningLangEngine ? (pm.tts.language ?? undefined) : undefined,
+        ...(activeEngine === "voxcpm" ? { inferenceSteps: QUALITY_TIMESTEPS[quality] } : {}),
       });
       project.cacheAudio(TTS_SEG_ID, {
         audioData,
@@ -489,7 +500,7 @@ export default function App() {
       });
     } catch (err) { showError(err, "Synthesis failed"); }
     finally { setGeneratingId(null); }
-  }, [pm.tts, displayedVoices, activeEngine, cfgScale, exaggeration, isCloningLangEngine, project, showError]);
+  }, [pm.tts, displayedVoices, activeEngine, cfgScale, exaggeration, isCloningLangEngine, project, showError, quality]);
 
   const playTts = useCallback(async () => {
     // Toggle: if the TTS clip is already playing, this acts as Stop.
@@ -906,6 +917,8 @@ export default function App() {
         onCfgScaleChange={setCfgScale}
         exaggeration={exaggeration}
         onExaggerationChange={setExaggeration}
+        quality={quality}
+        onQualityChange={onQualityChange}
       />
 
       {installEngine && (

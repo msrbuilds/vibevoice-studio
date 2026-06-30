@@ -25,6 +25,8 @@ interface Props {
   onCfgScaleChange: (v: number) => void;
   exaggeration: number;
   onExaggerationChange: (v: number) => void;
+  quality?: "fast" | "balanced" | "high";
+  onQualityChange?: (q: "fast" | "balanced" | "high") => void;
 }
 
 export function ControlPanel({
@@ -41,6 +43,8 @@ export function ControlPanel({
   onCfgScaleChange,
   exaggeration,
   onExaggerationChange,
+  quality,
+  onQualityChange,
 }: Props) {
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     const stored = localStorage.getItem(LS_KEY);
@@ -144,6 +148,35 @@ export function ControlPanel({
                 onChange={onExaggerationChange}
               />
             </>
+          )}
+
+          {activeEngine === "voxcpm" && onQualityChange && (
+            <div className="space-y-1.5 mt-4">
+              <div className={`text-xs font-medium ${isDark ? "text-zinc-300" : "text-gray-700"}`}>
+                Quality
+              </div>
+              <div className="flex gap-1">
+                {(["fast", "balanced", "high"] as const).map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => onQualityChange(q)}
+                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-colors ${
+                      (quality ?? "balanced") === q
+                        ? "bg-orange-600 text-white border-orange-500 hover:bg-orange-500"
+                        : isDark
+                          ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border-zinc-700"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-300"
+                    } ${focusRing}`}
+                  >
+                    {q[0].toUpperCase() + q.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <p className={`text-[11px] ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
+                Diffusion steps: Fast 5 · Balanced 10 · High 25. Higher = better quality, slower.
+              </p>
+            </div>
           )}
         </section>
 

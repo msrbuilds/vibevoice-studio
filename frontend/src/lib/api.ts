@@ -273,6 +273,7 @@ export async function synthesizeWav(
     cfgWeight?: number | null;
     exaggeration?: number | null;
     languageId?: string | null;
+    inferenceSteps?: number | null;
   } = {},
 ): Promise<{ audioData: ArrayBuffer; sampleRate: number; durationSec: number; inferenceMs: number; cacheHit: boolean; cacheHash: string | null }> {
   const res = await fetch(`${API_BASE}/synthesize`, {
@@ -285,6 +286,7 @@ export async function synthesizeWav(
       ...(options.cfgWeight != null ? { cfg_weight: options.cfgWeight } : {}),
       ...(options.exaggeration != null ? { exaggeration: options.exaggeration } : {}),
       ...(options.languageId ? { language_id: options.languageId } : {}),
+      ...(options.inferenceSteps != null ? { inference_steps: options.inferenceSteps } : {}),
       ...(options.forceRegenerate ? { force_regenerate: true } : {}),
     }),
   });
