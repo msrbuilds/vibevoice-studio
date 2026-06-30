@@ -18,10 +18,9 @@ def test_capabilities():
     e = _eng()
     assert e.name == "qwen"
     assert e.sample_rate() == 24000
-    assert e.max_speakers() == 1
-    assert e.supports_voice_cloning() is False
-    assert e.supports_voice_modes() is False
-    assert e.supports_style_prompt() is True
+    assert e.supports_voice_cloning() is True
+    assert e.supports_voice_modes() is True
+    assert e.supports_style_clone() is False
     assert e.supports_streaming() is False
     assert e.default_cfg_scale() is None
 
@@ -48,42 +47,44 @@ def test_languages_include_auto_first():
     assert len(codes) == 11  # Auto + 10
 
 
-def test_build_msg_basic():
+def test_build_msg_custom_mode():
     msg = _eng()._build_synth_msg(
-        EngineSynthRequest(text="hi", voice_id="Vivian", language_id="English"), "/tmp/o.wav"
-    )
+        EngineSynthRequest(text="hi", voice_id="Vivian", voice_mode="custom",
+                           instruct="cheerful", language_id="English"), "/tmp/o.wav")
+    assert msg["mode"] == "custom"
     assert msg["speaker"] == "Vivian"
+    assert msg["instruct"] == "cheerful"
     assert msg["language"] == "English"
-    assert msg["text"] == "hi"
-    assert "instruct" not in msg
+    assert "ref_audio" not in msg
 
 
-def test_build_msg_language_defaults_auto():
+def test_build_msg_custom_defaults_when_mode_absent():
+    msg = _eng()._build_synth_msg(EngineSynthRequest(text="hi", voice_id="Aiden"), "/tmp/o.wav")
+    assert msg["mode"] == "custom"
+    assert msg["speaker"] == "Aiden"
+
+
+def test_build_msg_clone_mode():
     msg = _eng()._build_synth_msg(
-        EngineSynthRequest(text="hi", voice_id="Aiden"), "/tmp/o.wav"
-    )
-    assert msg["language"] == "Auto"
+        EngineSynthRequest(text="hi", voice_id="", voice_mode="clone", reference_audio="/tmp/r.wav",
+                           reference_text="hello"), "/tmp/o.wav")
+    assert msg["mode"] == "clone"
+    assert msg["ref_audio"] == "/tmp/r.wav"
+    assert msg["ref_text"] == "hello"
+    assert "speaker" not in msg
 
 
-def test_build_msg_instruct_and_quality():
+def test_build_msg_design_mode():
     msg = _eng()._build_synth_msg(
-        EngineSynthRequest(
-            text="hi", voice_id="Vivian", instruct="Very happy.",
-            temperature=0.8, top_p=0.9, top_k=40, repetition_penalty=1.1, seed=7,
-        ),
-        "/tmp/o.wav",
-    )
-    assert msg["instruct"] == "Very happy."
-    assert msg["temperature"] == 0.8
-    assert msg["top_p"] == 0.9
-    assert msg["top_k"] == 40
-    assert msg["repetition_penalty"] == 1.1
-    assert msg["seed"] == 7
+        EngineSynthRequest(text="hi", voice_id="", voice_mode="design", instruct="a calm man"), "/tmp/o.wav")
+    assert msg["mode"] == "design"
+    assert msg["instruct"] == "a calm man"
+    assert "speaker" not in msg and "ref_audio" not in msg
 
 
-def test_build_msg_requires_speaker():
+def test_build_msg_custom_requires_speaker():
     try:
-        _eng()._build_synth_msg(EngineSynthRequest(text="hi", voice_id=""), "/tmp/o.wav")
+        _eng()._build_synth_msg(EngineSynthRequest(text="hi", voice_id="", voice_mode="custom"), "/tmp/o.wav")
     except ValueError:
         return
-    raise AssertionError("expected ValueError when no voice/speaker")
+    raise AssertionError("expected ValueError: custom mode needs a speaker")

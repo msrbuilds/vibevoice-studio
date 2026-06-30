@@ -4,9 +4,15 @@ qwen-tts hard-pins transformers==4.57.3, incompatible with every other engine,
 so the model runs in a separate venv (backend/venv-qwen). This class is a thin
 proxy that drives backend/qwen_worker.py, keeping the normal Engine surface.
 
-CustomVoice is a built-in-voice engine (9 premium speakers, like Kokoro) with
-an always-available free-text style prompt and HF sampling quality params. It
-does NOT clone reference audio and has no Clone/Design/Auto modes.
+Qwen3-TTS is a multi-mode engine with three per-speaker voice modes:
+  - Custom: generate_custom_voice with one of the 9 built-in premium speakers
+    plus an optional free-text style prompt.
+  - Clone: generate_voice_clone driven by a reference audio clip (and an
+    optional reference transcript).
+  - Design: generate_voice_design driven by a free-text style description
+    (no built-in speaker, no reference clip).
+HF sampling quality params (temperature/top_p/top_k/repetition_penalty/seed)
+forward in every mode.
 """
 
 from __future__ import annotations
@@ -172,13 +178,16 @@ class QwenEngine(Engine):
         return 1
 
     def supports_voice_cloning(self) -> bool:
-        return False
+        return True
+
+    def supports_voice_modes(self) -> bool:
+        return True
+
+    def supports_style_clone(self) -> bool:
+        return False  # generate_voice_clone takes no instruct/style arg
 
     def supports_streaming(self) -> bool:
         return False
-
-    def supports_style_prompt(self) -> bool:
-        return True
 
     def default_cfg_scale(self) -> float | None:
         return None
@@ -205,19 +214,31 @@ class QwenEngine(Engine):
         text = (req.text or "").strip()
         if not text:
             raise ValueError("text must be non-empty")
-        speaker = req.voice_id
-        if not speaker:
-            raise ValueError("Qwen CustomVoice requires a voice (one of the 9 speakers).")
+        mode = (req.voice_mode or "custom").strip().lower()
         msg: dict[str, Any] = {
             "op": "synth",
+            "mode": mode,
             "text": text,
             "out_wav": out_wav,
-            "speaker": speaker,
             "language": req.language_id or "Auto",
         }
         instruct = (req.instruct or "").strip()
-        if instruct:
+        if mode == "clone":
+            if not req.reference_audio:
+                raise ValueError("Qwen clone mode requires a reference voice clip.")
+            msg["ref_audio"] = req.reference_audio
+            if req.reference_text:
+                msg["ref_text"] = req.reference_text
+        elif mode == "design":
+            if not instruct:
+                raise ValueError("Qwen design mode requires a style description.")
             msg["instruct"] = instruct
+        else:  # custom
+            if not req.voice_id:
+                raise ValueError("Qwen custom mode requires a voice (one of the 9 speakers).")
+            msg["speaker"] = req.voice_id
+            if instruct:
+                msg["instruct"] = instruct
         for attr in ("temperature", "top_p", "top_k", "repetition_penalty", "seed"):
             val = getattr(req, attr, None)
             if val is not None:
