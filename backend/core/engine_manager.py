@@ -20,6 +20,7 @@ from .engines.chatterbox_engine import ChatterboxEngine
 from .engines.kokoro_engine import KokoroEngine
 from .engines.omnivoice_engine import OmniVoiceEngine
 from .engines.vibevoice_engine import VibeVoiceEngine
+from .engines.voxcpm_engine import VoxCPMEngine
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +66,8 @@ class EngineManager:
         chatterbox_watermark: bool = True,
         omnivoice_model_id: str = "k2-fsa/OmniVoice",
         omnivoice_num_step: int = 32,
+        voxcpm_model_id: str = "openbmb/VoxCPM2",
+        voxcpm_inference_timesteps: int = 10,
         state_dir: Path | None = None,
     ) -> None:
         self._voices_dir = Path(voices_dir)
@@ -94,6 +97,11 @@ class EngineManager:
                 model_id=omnivoice_model_id,
                 device_request=device_request,
                 num_step=omnivoice_num_step,
+            ),
+            "voxcpm": VoxCPMEngine(
+                model_id=voxcpm_model_id,
+                device_request=device_request,
+                inference_timesteps=voxcpm_inference_timesteps,
             ),
         }
 
