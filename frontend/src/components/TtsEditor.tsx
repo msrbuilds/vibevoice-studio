@@ -19,6 +19,7 @@ interface Props {
   // drives engine-specific content (OmniVoice chips/tags vs VoxCPM placeholders).
   supportsVoiceModes: boolean;
   supportsStyleClone: boolean;
+  supportsStylePrompt?: boolean;
   activeEngine: string | null;
   omniMode: OmniMode;
   onOmniModeChange: (m: OmniMode) => void;
@@ -34,7 +35,7 @@ interface Props {
 export function TtsEditor(props: Props) {
   const {
     isDark, text, onTextChange, activeVoice, languages, showLanguage,
-    language, onLanguageChange, supportsVoiceModes, supportsStyleClone, activeEngine, omniMode, onOmniModeChange,
+    language, onLanguageChange, supportsVoiceModes, supportsStyleClone, supportsStylePrompt = false, activeEngine, omniMode, onOmniModeChange,
     voiceDesign, onVoiceDesignChange, busy, isGenerating, isPlaying, onGenerate, onPlay,
   } = props;
   const stats = textStats(text);
@@ -123,6 +124,19 @@ export function TtsEditor(props: Props) {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Qwen always-available free-text style prompt (built-in voice + optional style) */}
+      {supportsStylePrompt && (
+        <div className={`rounded-xl border p-3 ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-gray-200 bg-gray-50"}`}>
+          <input
+            type="text"
+            value={voiceDesign}
+            onChange={(e) => onVoiceDesignChange(e.target.value)}
+            placeholder="Style (optional) — e.g. cheerful, slightly faster, whispering"
+            className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-orange-500 ${selectBg}`}
+          />
         </div>
       )}
 

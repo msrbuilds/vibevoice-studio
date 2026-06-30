@@ -10,6 +10,7 @@ interface Props {
   activeEngine: string | null;
   supportsVoiceModes: boolean;
   supportsStyleClone: boolean;
+  supportsStylePrompt?: boolean;
   onAddSpeaker: () => void;
   onUpdateSpeaker: (id: string, patch: Partial<Speaker>) => void;
   onRemoveSpeaker: (id: string) => void;
@@ -23,6 +24,7 @@ export function SpeakerRoster({
   activeEngine,
   supportsVoiceModes,
   supportsStyleClone,
+  supportsStylePrompt = false,
   onAddSpeaker,
   onUpdateSpeaker,
   onRemoveSpeaker,
@@ -66,6 +68,7 @@ export function SpeakerRoster({
             activeEngine={activeEngine}
             supportsVoiceModes={supportsVoiceModes}
             supportsStyleClone={supportsStyleClone}
+            supportsStylePrompt={supportsStylePrompt}
           />
         ))}
       </div>
@@ -84,6 +87,7 @@ function SpeakerRow({
   activeEngine,
   supportsVoiceModes,
   supportsStyleClone,
+  supportsStylePrompt = false,
 }: {
   speaker: Speaker;
   voices: Voice[];
@@ -95,6 +99,7 @@ function SpeakerRow({
   activeEngine: string | null;
   supportsVoiceModes: boolean;
   supportsStyleClone: boolean;
+  supportsStylePrompt?: boolean;
 }) {
   const panelBg = isDark ? "bg-zinc-900/50" : "bg-gray-50";
   const panelBorder = isDark ? "border-zinc-800" : "border-gray-200";
@@ -149,6 +154,24 @@ function SpeakerRow({
   const showModes = supportsVoiceModes;
   const mode: OmniMode = effectiveMode(speaker);
   const setMode = (m: OmniMode) => onUpdate({ omnivoiceMode: m });
+
+  if (supportsStylePrompt) {
+    return (
+      <div className={`p-3 rounded-lg border ${panelBg} ${panelBorder}`}>
+        {nameHeader}
+        <div className="space-y-1.5">
+          {voiceSelect}
+          <input
+            type="text"
+            value={speaker.voiceDesign ?? ""}
+            onChange={(e) => onUpdate({ voiceDesign: e.target.value })}
+            placeholder="Style (optional) — e.g. cheerful, slightly faster, whispering"
+            className={`w-full border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 ${selectBg} ${selectBorder} ${selectText}`}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!showModes) {
     return (
