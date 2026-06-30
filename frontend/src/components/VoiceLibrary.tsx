@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { AudioWaveform, Binary, Cpu, Mic2, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plus, Sun, Trash2, Volume2 } from "lucide-react";
+import { AudioWaveform, Binary, Cpu, Mic2, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plus, RefreshCw, Sun, Trash2, Volume2 } from "lucide-react";
 import type { ConfigResponse, Voice, VoiceMetadata } from "@/types/models";
 import { UploadVoiceDialog } from "./UploadVoiceDialog";
 import { VoiceMetaDialog } from "./VoiceMetaDialog";
+import { useUpdate } from "@/hooks/useUpdate";
+import { UpdateDialog } from "./UpdateDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { focusRing } from "@/lib/theme";
 import { defaultVoiceLibraryOpen } from "@/lib/layout";
@@ -36,6 +38,8 @@ export function VoiceLibrary({
   const confirm = useConfirm();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editingVoice, setEditingVoice] = useState<Voice | null>(null);
+  const { info: updateInfo, checking, check } = useUpdate();
+  const [updateOpen, setUpdateOpen] = useState(false);
 
   const LS_KEY = "vs.voiceLibrary.open";
   const [open, setOpen] = useState<boolean>(() => {
@@ -130,7 +134,23 @@ export function VoiceLibrary({
           <h1 className={`font-semibold text-sm truncate ${isDark ? "text-white" : "text-gray-900"}`}>
             Voice Studio by MSR
           </h1>
-          <p className={`text-xs truncate ${heading}`}>Local · {config?.model_id ?? "—"}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className={`text-xs tabular-nums ${heading}`}>
+              v{config?.version ?? "—"}
+            </span>
+            <button
+              type="button"
+              onClick={() => updateInfo?.update_available ? setUpdateOpen(true) : void check()}
+              disabled={checking}
+              className={`relative p-0.5 rounded transition-colors ${iconBtn} ${focusRing}`}
+              title={updateInfo?.update_available ? `Update to v${updateInfo.latest}` : "Check for updates"}
+            >
+              <RefreshCw className={`w-3 h-3 ${checking ? "animate-spin" : ""}`} />
+              {updateInfo?.update_available && !checking && (
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-orange-500" />
+              )}
+            </button>
+          </div>
         </div>
         <button
           type="button"
@@ -303,6 +323,10 @@ export function VoiceLibrary({
           }
         }}
       />
+
+      {updateOpen && updateInfo && (
+        <UpdateDialog isDark={isDark} info={updateInfo} onClose={() => setUpdateOpen(false)} />
+      )}
     </aside>
   );
 }
