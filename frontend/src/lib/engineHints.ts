@@ -118,12 +118,22 @@ const VOXCPM_HINTS: EngineCfgHints = {
   highlight: "Quality",
 };
 
+// Qwen3-TTS CustomVoice has no CFG knob — the engine ignores the field. Show
+// the familiar slider as a visual cue; tuning happens in the Advanced panel.
+const QWEN_HINTS: EngineCfgHints = {
+  ...VIBEVOICE_HINTS,
+  name: "qwen",
+  hint:
+    "Qwen CustomVoice doesn't use CFG — this slider is a no-op. Tune output via the Advanced generation panel (temperature / top-p / top-k / repetition penalty).",
+};
+
 const HINTS_BY_ENGINE: Record<string, EngineCfgHints> = {
   vibevoice: VIBEVOICE_HINTS,
   kokoro: KOKORO_HINTS,
   chatterbox: CHATTERBOX_HINTS,
   omnivoice: OMNIVOICE_HINTS,
   voxcpm: VOXCPM_HINTS,
+  qwen: QWEN_HINTS,
 };
 
 /** Return the hints for an engine id, falling back to VibeVoice defaults. */
