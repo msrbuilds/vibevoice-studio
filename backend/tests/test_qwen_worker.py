@@ -19,16 +19,38 @@ def test_basic_kwargs():
         {"text": "hi", "speaker": "Vivian", "language": "English"}
     )
     assert k["text"] == "hi"
-    assert k["speaker"] == "Vivian"
-    assert k["language"] == "English"
+    assert k["speaker"] == "vivian"  # lowercased to the package speaker vocabulary
+    assert k["language"] == "english"  # normalized to the package vocabulary
     assert "instruct" not in k
     assert k["max_new_tokens"] > 0  # auto-computed
+
+
+def test_speaker_lowercased():
+    w = _load_worker()
+    for raw in ("Vivian", "VIVIAN", "Uncle_Fu"):
+        k = w._build_generate_kwargs({"text": "hi", "speaker": raw})
+        assert k["speaker"] == raw.lower()
 
 
 def test_language_defaults_to_auto():
     w = _load_worker()
     k = w._build_generate_kwargs({"text": "hi", "speaker": "Aiden"})
-    assert k["language"] == "Auto"
+    assert k["language"] == "auto"
+
+
+def test_language_normalized_to_package_vocabulary():
+    w = _load_worker()
+    # Display names (any case) and the voice's 2-letter codes both map to the
+    # lowercase vocabulary generate_custom_voice accepts.
+    def lang(v):
+        return w._build_generate_kwargs({"text": "hi", "speaker": "Vivian", "language": v})["language"]
+    assert lang("English") == "english"
+    assert lang("en") == "english"      # SynthService voice-language fallback
+    assert lang("zh") == "chinese"
+    assert lang("Japanese") == "japanese"
+    assert lang("Auto") == "auto"
+    assert lang("klingon") == "auto"    # unknown → auto, never raises
+    assert lang(None) == "auto"
 
 
 def test_instruct_passed_when_present():

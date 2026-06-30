@@ -132,10 +132,12 @@ export default function App() {
   const supportsStylePrompt = activeEngineInfo?.supports_style_prompt ?? false;
   const supportsVoiceCloning = activeEngineInfo?.supports_voice_cloning ?? true;
   const engineLanguages = activeEngineInfo?.languages ?? [];
-  // Chatterbox: language is a synth param (cloning engine with languages)
-  const isCloningLangEngine = supportsVoiceCloning && engineLanguages.length > 0;
-  // Kokoro: language filters the voice list (built-in voice engine with languages)
-  const isFilterLangEngine = !supportsVoiceCloning && engineLanguages.length > 0;
+  // Kokoro is the only engine whose built-in voices are grouped by language, so
+  // its language dropdown FILTERS the voice list. Every other engine with
+  // languages (Chatterbox, Qwen) treats language as a synth parameter passed to
+  // the model — its voices are language-agnostic and must not be filtered.
+  const isFilterLangEngine = activeEngine === "kokoro";
+  const isSynthLangEngine = engineLanguages.length > 0 && !isFilterLangEngine;
 
   const pm = useProjectMode();
 
@@ -265,18 +267,23 @@ export default function App() {
   //   those voices (engine="chatterbox") will also appear here.
   const displayedVoices = voices.filter((v) => {
     if (!activeEngine) return true;
-    if (activeEngine === "kokoro") {
-      if (v.engine !== "kokoro") return false;
-      // When Kokoro is active and a TTS language filter is set, filter by voice language
+    // Built-in-voice engines (Kokoro, Qwen) can't clone arbitrary reference
+    // clips — they expose ONLY their own curated catalog (tagged with the
+    // engine name). This is why Qwen shows its 9 designed voices rather than
+    // the filesystem reference clips used by the cloning engines.
+    if (!supportsVoiceCloning) {
+      if (v.engine !== activeEngine) return false;
+      // Kokoro groups its voices by language → filter by the chosen language.
+      // (Qwen's language is a synth param, not a voice group, so it isn't an
+      // isFilterLangEngine and all 9 voices stay visible.)
       if (isFilterLangEngine && pm.tts.language) {
         return v.language === pm.tts.language;
       }
       return true;
     }
-    // Both VibeVoice and Chatterbox support cloning → show any voice
-    // tagged with a voice-cloning engine. Today that's only "vibevoice"
-    // (filesystem voices); if Chatterbox adds built-ins later, those
-    // show up too.
+    // Cloning engines (VibeVoice, Chatterbox, OmniVoice, VoxCPM) clone from
+    // filesystem/uploaded reference clips (tagged engine="vibevoice"; if
+    // Chatterbox ships built-ins later those appear too).
     return v.engine === "vibevoice" || v.engine === "chatterbox";
   });
 
@@ -545,7 +552,7 @@ export default function App() {
       const { audioData, cacheHash } = await synthesizeWav(pm.tts.text, speakers, cfgScale, {
         cfgWeight: isChatterbox ? cfgScale : null,
         exaggeration: isChatterbox ? exaggeration : null,
-        languageId: isCloningLangEngine ? (pm.tts.language ?? undefined) : undefined,
+        languageId: isSynthLangEngine ? (pm.tts.language ?? undefined) : undefined,
         ...(activeEngine === "voxcpm" ? { inferenceSteps: QUALITY_TIMESTEPS[quality] } : {}),
         ...qwenSynthOpts,
       });
@@ -561,7 +568,7 @@ export default function App() {
       });
     } catch (err) { showError(err, "Synthesis failed"); }
     finally { setGeneratingId(null); }
-  }, [pm.tts, displayedVoices, activeEngine, cfgScale, exaggeration, isCloningLangEngine, project, showError, quality, qwenParams]);
+  }, [pm.tts, displayedVoices, activeEngine, cfgScale, exaggeration, isSynthLangEngine, project, showError, quality, qwenParams]);
 
   const playTts = useCallback(async () => {
     // Toggle: if the TTS clip is already playing, this acts as Stop.

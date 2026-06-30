@@ -74,13 +74,39 @@ def _auto_max_new_tokens(text: str) -> int:
     return min(8192, 512 + len(text) * 8)
 
 
+# generate_custom_voice accepts a fixed lowercase vocabulary. Map the UI's
+# display names ("English") and the voice's 2-letter language codes ("en", which
+# SynthService falls back to when no language is explicitly selected) onto it.
+# Anything unrecognized → "auto" (let the model detect).
+_QWEN_LANG_ALIASES = {
+    "auto": "auto",
+    "zh": "chinese", "chinese": "chinese",
+    "en": "english", "english": "english",
+    "ja": "japanese", "japanese": "japanese",
+    "ko": "korean", "korean": "korean",
+    "de": "german", "german": "german",
+    "fr": "french", "french": "french",
+    "ru": "russian", "russian": "russian",
+    "pt": "portuguese", "portuguese": "portuguese",
+    "es": "spanish", "spanish": "spanish",
+    "it": "italian", "italian": "italian",
+}
+
+
+def _normalize_language(language) -> str:
+    """Map a UI language code/name ('English', 'en', 'Auto') to the lowercase
+    vocabulary generate_custom_voice accepts. Unknown / empty → 'auto'."""
+    return _QWEN_LANG_ALIASES.get((language or "auto").strip().lower(), "auto")
+
+
 def _build_generate_kwargs(req: dict) -> dict:
     """Map a synth request to generate_custom_voice(**kwargs).
 
     speaker (one of 9) + language (default Auto) are required structure; an
     optional free-text instruct steers style; quality kwargs are forwarded
     only when present. `seed` is handled in _synth (torch.manual_seed), not
-    here. max_new_tokens is auto-computed.
+    here. max_new_tokens is auto-computed. The language is normalized to the
+    package's lowercase vocabulary (see _normalize_language).
     """
     text = (req.get("text") or "").strip()
     speaker = req.get("speaker")
@@ -88,10 +114,12 @@ def _build_generate_kwargs(req: dict) -> dict:
         raise ValueError("text must be non-empty")
     if not speaker:
         raise ValueError("speaker (voice) is required for Qwen CustomVoice")
-    language = req.get("language") or "Auto"
+    language = _normalize_language(req.get("language"))
     instruct = (req.get("instruct") or "").strip()
 
-    kwargs: dict = {"text": text, "language": language, "speaker": speaker}
+    # generate_custom_voice's speaker vocabulary is lowercased (see
+    # get_supported_speakers()): "Vivian" → "vivian".
+    kwargs: dict = {"text": text, "language": language, "speaker": str(speaker).strip().lower()}
     if instruct:
         kwargs["instruct"] = instruct
     for key in ("temperature", "top_p", "top_k", "repetition_penalty"):
