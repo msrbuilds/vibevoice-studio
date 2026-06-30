@@ -74,7 +74,7 @@ def build_snapshot(
     tag = str(payload.get("tag_name") or "")
     return {
         "current": current,
-        "latest": tag.lstrip("v") or None,
+        "latest": tag.removeprefix("v") or None,
         "update_available": is_newer(tag, current),
         "html_url": payload.get("html_url"),
         "published_at": payload.get("published_at"),
