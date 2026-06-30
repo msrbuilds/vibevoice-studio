@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AudioWaveform, Binary, Cpu, Mic2, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plus, Sun, Trash2, Volume2, Waves } from "lucide-react";
+import { AudioWaveform, Binary, Cpu, Mic2, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plus, Sun, Trash2, Volume2 } from "lucide-react";
 import type { ConfigResponse, Voice, VoiceMetadata } from "@/types/models";
 import { UploadVoiceDialog } from "./UploadVoiceDialog";
 import { VoiceMetaDialog } from "./VoiceMetaDialog";
@@ -87,9 +87,13 @@ export function VoiceLibrary({
       <aside
         className={`w-12 shrink-0 z-10 border-r flex flex-col items-center pt-4 gap-3 transition-colors ${surface} ${border}`}
       >
-        <div className="w-9 h-9 rounded-lg bg-orange-600/20 flex items-center justify-center">
-          <Waves className="w-5 h-5 text-orange-400" />
-        </div>
+        <img
+          src={isDark ? "/logo-dark-sm.png" : "/logo-light-sm.png"}
+          alt="Voice Studio logo"
+          width={36}
+          height={36}
+          className="w-9 h-9 rounded-lg"
+        />
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -115,9 +119,13 @@ export function VoiceLibrary({
       className={`w-64 shrink-0 z-10 border-r flex flex-col transition-colors ${surface} ${border}`}
     >
       <div className={`p-3 xxl:p-4 border-b flex items-center gap-3 ${border}`}>
-        <div className="w-9 h-9 rounded-lg bg-orange-600/20 flex items-center justify-center shrink-0">
-          <Waves className="w-5 h-5 text-orange-400" />
-        </div>
+        <img
+          src={isDark ? "/logo-dark-sm.png" : "/logo-light-sm.png"}
+          alt="Voice Studio logo"
+          width={36}
+          height={36}
+          className="w-9 h-9 rounded-lg shrink-0"
+        />
         <div className="min-w-0 flex-1">
           <h1 className={`font-semibold text-sm truncate ${isDark ? "text-white" : "text-gray-900"}`}>
             Voice Studio by MSR
