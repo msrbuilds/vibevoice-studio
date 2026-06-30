@@ -71,6 +71,12 @@ class SynthRequest:
     # BCP-47-ish short language code. When set, overrides the language
     # derived from the voice's metadata. Used by the multilingual engine.
     language_id: str | None = None
+    # --- Qwen3-TTS CustomVoice only (other engines ignore) ---
+    temperature: float | None = None
+    top_p: float | None = None
+    top_k: int | None = None
+    repetition_penalty: float | None = None
+    seed: int | None = None
 
 
 @dataclass
@@ -244,6 +250,15 @@ class SynthService:
         effective_cfg_weight = req.cfg_weight
         effective_exaggeration = req.exaggeration
 
+        qwen_gen = None
+        if target_name == "qwen":
+            qwen_gen = "|".join(
+                f"{k}={v}" for k, v in (
+                    ("t", req.temperature), ("p", req.top_p), ("k", req.top_k),
+                    ("r", req.repetition_penalty), ("s", req.seed),
+                ) if v is not None
+            ) or None
+
         # Cache key includes the engine name + extra knobs so VibeVoice-
         # cached audio never gets returned for a Kokoro request (or vice
         # versa), and so changing cfg_weight/exaggeration/language
@@ -253,7 +268,7 @@ class SynthService:
             sp0 = req.speakers[0]
             cache_voice_key = _voice_cache_key(
                 sp0.voice_id, sp0.voice_mode, sp0.instruct, reference_audio,
-                reference_transcript, steps_override,
+                reference_transcript, steps_override, qwen_gen=qwen_gen,
             )
             # Fold the optional knobs into the voice field with a stable
             # delimiter so different knob combos don't share a cache slot.
@@ -307,6 +322,12 @@ class SynthService:
                 voice_mode=sp0.voice_mode,
                 instruct=sp0.instruct,
                 reference_text=reference_transcript,
+                language_id=effective_language_id,
+                temperature=req.temperature,
+                top_p=req.top_p,
+                top_k=req.top_k,
+                repetition_penalty=req.repetition_penalty,
+                seed=req.seed,
             )
             return self._synth_one(
                 engine=target_engine,
@@ -349,6 +370,11 @@ class SynthService:
                 voice_mode=req.speakers[0].voice_mode,
                 instruct=req.speakers[0].instruct,
                 reference_text=reference_transcript,
+                temperature=req.temperature,
+                top_p=req.top_p,
+                top_k=req.top_k,
+                repetition_penalty=req.repetition_penalty,
+                seed=req.seed,
             )
             sub = self._synth_one(
                 engine=target_engine,
@@ -484,6 +510,7 @@ def _voice_cache_key(
     reference_audio: str | None,
     reference_text: str | None = None,
     timesteps: int | None = None,
+    qwen_gen: str | None = None,
 ) -> str:
     """Cache-key 'voice' component, folding voice-mode/instruct/transcript/quality.
 
@@ -508,6 +535,8 @@ def _voice_cache_key(
         base += f"|rt={digest}"
     if timesteps is not None:
         base += f"|ts={timesteps}"
+    if qwen_gen:
+        base += f"|qg={qwen_gen}"
     return base
 
 

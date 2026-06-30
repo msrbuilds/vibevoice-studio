@@ -71,6 +71,11 @@ def synthesize(
                 cfg_weight=body.cfg_weight,
                 exaggeration=body.exaggeration,
                 language_id=body.language_id,
+                temperature=body.temperature,
+                top_p=body.top_p,
+                top_k=body.top_k,
+                repetition_penalty=body.repetition_penalty,
+                seed=body.seed,
             )
         )
     except BackendError:

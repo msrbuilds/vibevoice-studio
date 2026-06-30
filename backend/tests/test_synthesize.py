@@ -24,3 +24,19 @@ def test_cache_key_identical_inputs_collide():
 def test_cache_key_backwards_compatible_without_new_args():
     # Existing callers passing only the original 4 args still work via defaults.
     assert _voice_cache_key("v", None, None, None) == "v"
+
+
+from backend.services.synthesize import _voice_cache_key as _vck_qwen  # noqa: E402
+
+
+def test_cache_key_folds_qwen_quality():
+    base = dict(voice_id="Vivian", voice_mode=None, instruct=None, reference_audio=None)
+    a = _vck_qwen(**base)
+    b = _vck_qwen(**base, qwen_gen="t0.8|p0.9|k40|r1.1|s7")
+    c = _vck_qwen(**base, qwen_gen="t0.5|p0.9|k40|r1.1|s7")
+    assert a != b and b != c  # quality signature changes the slot
+
+
+def test_cache_key_qwen_omitted_when_absent():
+    # No qwen_gen → unchanged key (no churn for other engines)
+    assert _vck_qwen("Vivian", None, None, None) == "Vivian"
