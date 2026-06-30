@@ -259,3 +259,19 @@ def test_cuda_version_to_qwen_tag():
 
 def test_detect_qwen_cuda_tag_uses_runner():
     assert detect_qwen_cuda_tag(runner=lambda: "CUDA Version: 12.8") == "cu128"
+
+
+def test_remote_is_voice_studio():
+    import studio
+    assert studio.remote_is_voice_studio("https://github.com/msrbuilds/voice-studio.git")
+    assert studio.remote_is_voice_studio("git@github.com:msrbuilds/voice-studio.git")
+    assert not studio.remote_is_voice_studio("https://github.com/someoneelse/other.git")
+    assert not studio.remote_is_voice_studio("")
+
+
+def test_worktree_is_clean():
+    import studio
+    assert studio.worktree_is_clean("") is True
+    assert studio.worktree_is_clean("   \n  ") is True
+    assert studio.worktree_is_clean(" M backend/app.py\n") is False
+    assert studio.worktree_is_clean("?? newfile\n") is False

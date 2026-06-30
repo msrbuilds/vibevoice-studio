@@ -394,6 +394,16 @@ def _run(cmd: list[str], cwd: Path | None = None) -> int:
     return subprocess.run(cmd, cwd=str(cwd) if cwd else None).returncode
 
 
+def remote_is_voice_studio(url: str) -> bool:
+    """True if a git remote URL points at the Voice Studio repo (any form)."""
+    return "msrbuilds/voice-studio" in (url or "").lower()
+
+
+def worktree_is_clean(porcelain: str) -> bool:
+    """True if `git status --porcelain` output indicates no local changes."""
+    return not (porcelain or "").strip()
+
+
 def _confirm(prompt: str, default: bool = True) -> bool:
     suffix = " [Y/n] " if default else " [y/N] "
     ans = input(prompt + suffix).strip().lower()
@@ -564,6 +574,89 @@ def cmd_install_qwen(_args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+# --------------------------------------------------------------- update --
+def _git_out(args: list[str]) -> tuple[int, str]:
+    """Run a git command in REPO_ROOT, returning (returncode, stdout)."""
+    try:
+        p = subprocess.run(
+            ["git", *args],
+            cwd=str(REPO_ROOT),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        return p.returncode, p.stdout
+    except FileNotFoundError:
+        return 127, "git not found on PATH"
+
+
+def cmd_update(args: argparse.Namespace) -> int:
+    """Apply an update by checking out a release tag, then re-syncing deps and
+    rebuilding the frontend. Guards refuse to touch a non-git / dirty checkout.
+    Used by the in-app updater; --tag is the release tag to check out.
+    """
+    print(BANNER)
+    tag = args.tag
+
+    # --- Guards (the notify-only fallback path lives here) ---
+    if not (REPO_ROOT / ".git").exists():
+        print("ERROR: not a git checkout — auto-update is unavailable. "
+              "Download the latest release from GitHub instead.")
+        return 1
+    rc, _ = _git_out(["rev-parse", "--is-inside-work-tree"])
+    if rc != 0:
+        print("ERROR: git is unavailable or this is not a git repo. "
+              "Install git or update manually.")
+        return 1
+    rc, remote = _git_out(["remote", "get-url", "origin"])
+    if rc != 0 or not remote_is_voice_studio(remote):
+        print("ERROR: the 'origin' remote is not the Voice Studio repo. "
+              "Refusing to auto-update.")
+        return 1
+    rc, porcelain = _git_out(["status", "--porcelain"])
+    if rc != 0 or not worktree_is_clean(porcelain):
+        print("ERROR: you have uncommitted local changes. Commit or discard "
+              "them before updating, or update manually.")
+        return 1
+
+    # --- Apply ---
+    print("\n[1/4] Fetching tags …")
+    if _run(["git", "fetch", "origin", "--tags"], cwd=REPO_ROOT) != 0:
+        print("ERROR: git fetch failed.")
+        return 1
+    print(f"[2/4] Checking out {tag} …")
+    if _run(["git", "checkout", tag], cwd=REPO_ROOT) != 0:
+        print(f"ERROR: could not check out {tag}.")
+        return 1
+
+    py = venv_python(REPO_ROOT)
+    if py.is_file():
+        print("[3/4] Syncing backend dependencies …")
+        if _run([str(py), "-m", "pip", "install", "-r",
+                 str(BACKEND_DIR / "requirements.txt")]) != 0:
+            print("ERROR: dependency sync failed.")
+            return 1
+    else:
+        print("[3/4] No backend venv found — skipping dependency sync. "
+              "Run `python studio.py setup`.")
+
+    npm = _npm()
+    if npm:
+        print("[4/4] Rebuilding frontend …")
+        if _run([npm, "install"], cwd=FRONTEND_DIR) != 0:
+            print("ERROR: npm install failed.")
+            return 1
+        if _run([npm, "run", "build"], cwd=FRONTEND_DIR) != 0:
+            print("ERROR: frontend build failed.")
+            return 1
+    else:
+        print("[4/4] npm not found — skipping frontend rebuild. "
+              "Install Node.js 18+ and run `cd frontend && npm run build`.")
+
+    print(f"\nUPDATE OK — now on {tag}. Restart Voice Studio to apply.")
+    return 0
+
+
 # ---------------------------------------------------------------- start --
 def _backend_port(passthrough: list[str]) -> int:
     """The port the backend will bind: --port from passthrough, else 8880."""
@@ -723,6 +816,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("install-voxcpm", help="build the isolated VoxCPM env (non-interactive)")
     sub.add_parser("install-qwen", help="build the isolated Qwen env (non-interactive)")
 
+    p_update = sub.add_parser("update", help="check out a release tag, sync deps, rebuild frontend")
+    p_update.add_argument("--tag", required=True, help="release tag to check out (e.g. v0.3.0)")
+
     args = parser.parse_args(argv)
     if args.command == "setup":
         return cmd_setup(args)
@@ -736,6 +832,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_install_voxcpm(args)
     if args.command == "install-qwen":
         return cmd_install_qwen(args)
+    if args.command == "update":
+        return cmd_update(args)
     if args.command == "start":
         return cmd_start(args)
     parser.print_help()
