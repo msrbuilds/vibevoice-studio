@@ -63,8 +63,24 @@ export function VoiceLibrary({
   const iconBtn = isDark
     ? "text-zinc-400 hover:text-orange-400"
     : "text-gray-600 hover:text-orange-600";
-  const hover = isDark ? "hover:bg-zinc-900" : "hover:bg-gray-100";
   const empty = isDark ? "text-zinc-600" : "text-gray-600";
+
+  // Voice-row background states — shared by both lists so built-in and uploaded
+  // voices look identical. One coherent scale (rest → hover → selected), all
+  // orange-accented and consistent across light/dark. Selected adds a ring so it
+  // reads clearly even where the hover tint is close. (Avoids the old tangle of
+  // an inline `hover:bg-orange-*` fighting the `${hover}` token, and the loud
+  // solid-orange dark fill vs. subtle light tint mismatch.)
+  const rowState = (selected: boolean) =>
+    selected
+      ? "bg-orange-100 text-orange-900 ring-1 ring-orange-300 dark:bg-orange-500/15 dark:text-orange-50 dark:ring-orange-500/50"
+      : "bg-white text-gray-700 hover:bg-orange-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-orange-500/10";
+  // Leading mic/speaker icon: orange in dark, neutral-until-selected in light.
+  const rowIcon = (selected: boolean) =>
+    selected ? "text-orange-600 dark:text-orange-300" : "text-gray-400 dark:text-orange-400/80";
+  // Secondary gender label: subtle at rest, tinted to match when selected.
+  const rowMeta = (selected: boolean) =>
+    selected ? "text-orange-700/90 dark:text-orange-200/80" : subtle;
 
   if (!open) {
     return (
@@ -131,17 +147,17 @@ export function VoiceLibrary({
               <li
                 key={v.id}
                 onClick={onSelectVoice ? () => onSelectVoice(v.id) : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 hover:bg-orange-200/30 dark:hover:bg-zinc-600 ${bodyText} ${hover} ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${rowState(isSelected)} ${
                   onSelectVoice ? "cursor-pointer" : ""
-                } ${isSelected ? "ring-1 ring-orange-300 bg-orange-200/30 text-black dark:bg-orange-900 dark:ring-orange-800 dark:text-white" : ""}`}
+                }`}
               >
-                <Volume2 className={`w-4 h-4 dark:text-orange-400 ${subtle}`} />
+                <Volume2 className={`w-4 h-4 shrink-0 ${rowIcon(isSelected)}`} />
                 <span className="flex-1 truncate">{v.name}</span>
-                {v.gender && <span className={`text-xs ${subtle}`}>{v.gender}</span>}
+                {v.gender && <span className={`text-xs ${rowMeta(isSelected)}`}>{v.gender}</span>}
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingVoice(v); }}
-                  className={`p-1 dark:text-orange-400 ${iconBtn} ${focusRing}`}
+                  className={`p-1 ${iconBtn} ${focusRing}`}
                   title="Edit name / gender / language"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -181,17 +197,17 @@ export function VoiceLibrary({
               <li
                 key={v.id}
                 onClick={onSelectVoice ? () => onSelectVoice(v.id) : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm bg-white dark:bg-zinc-800 hover:bg-orange-200/30 dark:hover:bg-zinc-600 ${bodyText} ${hover} ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${rowState(isSelected)} ${
                   onSelectVoice ? "cursor-pointer" : ""
-                } ${isSelected ? "ring-1 ring-orange-500 bg-orange-300/10 dark:bg-orange-900 dark:ring-orange-800" : ""}`}
+                }`}
               >
-                <Mic2 className="w-4 h-4 text-orange-500" />
+                <Mic2 className={`w-4 h-4 shrink-0 ${isSelected ? "text-orange-600 dark:text-orange-300" : "text-orange-500 dark:text-orange-400"}`} />
                 <span className="flex-1 truncate">{v.name}</span>
-                {v.gender && <span className={`text-xs ${subtle}`}>{v.gender}</span>}
+                {v.gender && <span className={`text-xs ${rowMeta(isSelected)}`}>{v.gender}</span>}
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingVoice(v); }}
-                  className={`p-1 dark:text-orange-400 ${iconBtn} ${focusRing}`}
+                  className={`p-1 ${iconBtn} ${focusRing}`}
                   title="Edit name / gender / language"
                 >
                   <Pencil className="w-3.5 h-3.5" />
