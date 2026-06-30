@@ -17,6 +17,7 @@ class HealthResponse(BaseModel):
 
 
 class ConfigResponse(BaseModel):
+    version: str = "0.0.0"
     model_id: str
     device: str
     dtype: str

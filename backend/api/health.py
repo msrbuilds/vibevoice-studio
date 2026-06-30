@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from ..config import Settings, get_settings
 from ..core.engine_manager import EngineManager
 from ..core.model import ModelManager
+from ..core.version import get_version
 from .deps import get_engine_manager, get_model_manager
 from .schemas import ConfigResponse, EngineInfoModel, HealthResponse
 
@@ -24,7 +25,7 @@ def health(
         status="ok" if engine.is_loaded() else "loading",
         model_loaded=engine.is_loaded(),
         device=info.get("device", "unknown"),
-        version="0.2.0",
+        version=get_version(),
     )
 
 
@@ -59,6 +60,7 @@ def config(
         model_id = info["model_id"]
 
     return ConfigResponse(
+        version=get_version(),
         model_id=model_id,
         device=device_name,
         dtype=dtype_name,

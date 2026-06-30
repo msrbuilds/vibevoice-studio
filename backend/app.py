@@ -38,6 +38,7 @@ from .api.voices import router as voices_router
 from .config import Settings, get_settings
 from .core.engine_manager import EngineManager
 from .core.exceptions import BackendError
+from .core.version import get_version
 from .services.chatterbox_install import ChatterboxInstaller, EngineEnvInstaller
 from .services.model_download import ModelDownloader
 from .services.model_delete import ModelDeleter
@@ -129,7 +130,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title="Multi-engine TTS API",
-        version="0.2.0",
+        version=get_version(),
         lifespan=lifespan,
     )
 
