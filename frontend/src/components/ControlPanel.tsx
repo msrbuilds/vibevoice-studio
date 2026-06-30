@@ -27,6 +27,9 @@ interface Props {
   onExaggerationChange: (v: number) => void;
   quality?: "fast" | "balanced" | "high";
   onQualityChange?: (q: "fast" | "balanced" | "high") => void;
+  qwenParams?: { temperature: number; topP: number; topK: number; repetitionPenalty: number; seed: number | null };
+  onQwenParamsChange?: (p: { temperature: number; topP: number; topK: number; repetitionPenalty: number; seed: number | null }) => void;
+  qwenDefaults?: { temperature: number; topP: number; topK: number; repetitionPenalty: number; seed: number | null };
 }
 
 export function ControlPanel({
@@ -45,6 +48,9 @@ export function ControlPanel({
   onExaggerationChange,
   quality,
   onQualityChange,
+  qwenParams,
+  onQwenParamsChange,
+  qwenDefaults,
 }: Props) {
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     const stored = localStorage.getItem(LS_KEY);
@@ -176,6 +182,51 @@ export function ControlPanel({
               <p className={`text-[11px] ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
                 Diffusion steps: Fast 5 · Balanced 10 · High 25. Higher = better quality, slower.
               </p>
+            </div>
+          )}
+
+          {activeEngine === "qwen" && qwenParams && onQwenParamsChange && (
+            <div className="space-y-2 mt-4">
+              <div className={`text-xs font-medium ${isDark ? "text-zinc-300" : "text-gray-700"}`}>
+                Advanced generation
+              </div>
+              {([
+                { key: "temperature", label: "Temperature", min: 0.1, max: 2.0, step: 0.05 },
+                { key: "topP", label: "Top-p", min: 0.0, max: 1.0, step: 0.05 },
+                { key: "topK", label: "Top-k", min: 0, max: 200, step: 1 },
+                { key: "repetitionPenalty", label: "Repetition penalty", min: 1.0, max: 2.0, step: 0.05 },
+              ] as const).map((f) => (
+                <label key={f.key} className={`block text-[11px] ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
+                  <span className="flex justify-between"><span>{f.label}</span><span>{qwenParams[f.key]}</span></span>
+                  <input
+                    type="range" min={f.min} max={f.max} step={f.step}
+                    value={qwenParams[f.key]}
+                    onChange={(e) => onQwenParamsChange({ ...qwenParams, [f.key]: Number(e.target.value) })}
+                    className="w-full accent-orange-600"
+                  />
+                </label>
+              ))}
+              <label className={`block text-[11px] ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
+                Seed (optional)
+                <input
+                  type="number"
+                  value={qwenParams.seed ?? ""}
+                  onChange={(e) => onQwenParamsChange({ ...qwenParams, seed: e.target.value === "" ? null : Number(e.target.value) })}
+                  placeholder="random"
+                  className={`mt-1 w-full border rounded-md px-2 py-1 text-xs focus:outline-none focus:border-orange-500 ${
+                    isDark ? "bg-zinc-800 border-zinc-700 text-white" : "bg-white border-gray-300 text-gray-900"
+                  }`}
+                />
+              </label>
+              {qwenDefaults && (
+                <button
+                  type="button"
+                  onClick={() => onQwenParamsChange(qwenDefaults)}
+                  className={`text-[11px] underline ${isDark ? "text-zinc-400 hover:text-orange-400" : "text-gray-600 hover:text-orange-600"} ${focusRing}`}
+                >
+                  Reset to defaults
+                </button>
+              )}
             </div>
           )}
         </section>

@@ -148,10 +148,10 @@ export default function App() {
     } catch { /* ignore */ }
     return QWEN_DEFAULTS;
   });
-  // Note: onQwenParamsChange (localStorage save) lands with the ControlPanel
-  // advanced panel in Task 14, which is its only consumer. setQwenParams is the
-  // state setter; qwenSynthOpts (below) is the only current reader of qwenParams.
-  void setQwenParams;
+  const onQwenParamsChange = (p: QwenParams) => {
+    setQwenParams(p);
+    localStorage.setItem("vs.qwen.params", JSON.stringify(p));
+  };
   const qwenSynthOpts =
     activeEngine === "qwen"
       ? {
@@ -965,6 +965,9 @@ export default function App() {
         onExaggerationChange={setExaggeration}
         quality={quality}
         onQualityChange={onQualityChange}
+        qwenParams={qwenParams}
+        onQwenParamsChange={onQwenParamsChange}
+        qwenDefaults={QWEN_DEFAULTS}
       />
 
       {installEngine && (
