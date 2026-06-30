@@ -26,6 +26,7 @@ def list_voices(reg: VoiceRegistry = Depends(get_voice_registry)) -> VoiceListRe
             duration_sec=v.duration_sec,
             sample_rate=v.sample_rate,
             engine=v.engine,
+            reference_transcript=v.reference_transcript,
         )
         for v in reg.list()
     ]
@@ -81,6 +82,7 @@ def update_voice_meta(
             name=body.name,
             gender=body.gender,
             language=body.language,
+            reference_transcript=body.reference_transcript,
         )
     except BuiltInVoiceProtected as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
@@ -96,6 +98,7 @@ def update_voice_meta(
         duration_sec=info.duration_sec,
         sample_rate=info.sample_rate,
         engine=info.engine,
+        reference_transcript=info.reference_transcript,
     )
 
 

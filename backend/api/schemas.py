@@ -46,6 +46,7 @@ class VoiceInfoModel(BaseModel):
     # Which TTS engine owns this voice. Optional for backward compat with
     # older clients that don't know about engines.
     engine: str | None = None
+    reference_transcript: str | None = None
 
 
 class VoiceMetaUpdate(BaseModel):
@@ -53,6 +54,7 @@ class VoiceMetaUpdate(BaseModel):
     name: str | None = None
     gender: str | None = None
     language: str | None = None
+    reference_transcript: str | None = None
 
 
 class VoiceListResponse(BaseModel):
