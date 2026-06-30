@@ -120,6 +120,7 @@ export interface VoiceMetadata {
   name?: string;
   gender?: string;
   language?: string;
+  reference_transcript?: string;
 }
 
 export interface EngineListResponse {

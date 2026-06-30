@@ -14,6 +14,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
   const [name, setName] = useState("");
   const [gender, setGender] = useState<"man" | "woman" | "nonbinary" | "">("");
   const [language, setLanguage] = useState("en");
+  const [transcript, setTranscript] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +25,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
       setName(voice.name);
       setGender((voice.gender as "man" | "woman" | "nonbinary" | null) ?? "");
       setLanguage(voice.language ?? "en");
+      setTranscript(voice.reference_transcript ?? "");
       setError(null);
     }
   }, [voice]);
@@ -38,6 +40,7 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
         name: name.trim() || undefined,
         gender: gender || undefined,
         language: language.trim() || undefined,
+        reference_transcript: transcript.trim(),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -125,6 +128,19 @@ export function VoiceMetaDialog({ voice, theme, onClose, onSave }: Props) {
               />
             </label>
           </div>
+
+          <label className="block">
+            <span className={`text-xs font-medium mb-1 block ${labelText}`}>
+              Reference transcript <span className="opacity-60">(optional, for VoxCPM)</span>
+            </span>
+            <textarea
+              value={transcript}
+              onChange={(e) => setTranscript(e.target.value)}
+              rows={2}
+              placeholder="Exact words spoken in this voice's reference clip"
+              className={`w-full px-3 py-2 ${inputBg} ${inputBorder} border rounded-md text-sm ${inputText} ${placeholder} focus:outline-none focus:border-orange-500`}
+            />
+          </label>
         </div>
 
         {error && (
