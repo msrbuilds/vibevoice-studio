@@ -51,6 +51,13 @@ class DownloadSegment(BaseModel):
     # VoxCPM diffusion quality (inference timesteps). voxcpm-only; other engines
     # ignore it. Threaded through so an exported segment matches its preview slot.
     inference_steps: int | None = None
+    # Qwen3-TTS CustomVoice sampling params. qwen-only; other engines ignore them.
+    # Threaded through so an exported segment matches its preview slot.
+    temperature: float | None = None
+    top_p: float | None = None
+    top_k: int | None = None
+    repetition_penalty: float | None = None
+    seed: int | None = None
     cfg_scale: float | None = None
     # Per-segment cache hash. If provided, the join hash includes this so that
     # regenerating a segment invalidates the join cache. Optional for backward
@@ -80,6 +87,7 @@ def _join_canonical(segments: list["DownloadSegment"], silence_gap_ms: int, defa
                 "vm": s.voice_mode,
                 "in": s.instruct,
                 "steps": s.inference_steps,
+                "q": [s.temperature, s.top_p, s.top_k, s.repetition_penalty, s.seed],
             }
             for s in segments
         ]
@@ -213,6 +221,11 @@ def download(
                         instruct=seg.instruct,
                     )],
                     inference_steps=seg.inference_steps,
+                    temperature=seg.temperature,
+                    top_p=seg.top_p,
+                    top_k=seg.top_k,
+                    repetition_penalty=seg.repetition_penalty,
+                    seed=seg.seed,
                     cfg_scale=seg.cfg_scale,
                     cfg_weight=seg.cfg_weight,
                     exaggeration=seg.exaggeration,

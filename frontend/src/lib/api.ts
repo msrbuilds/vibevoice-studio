@@ -353,6 +353,11 @@ export interface DownloadSegmentPayload {
   voice_mode?: "clone" | "design" | "auto";
   instruct?: string;
   inference_steps?: number;
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+  repetition_penalty?: number;
+  seed?: number;
 }
 
 export async function downloadPodcast(

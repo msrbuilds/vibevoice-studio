@@ -651,6 +651,11 @@ export default function App() {
       voice_mode?: "clone" | "design" | "auto";
       instruct?: string;
       inference_steps?: number;
+      temperature?: number;
+      top_p?: number;
+      top_k?: number;
+      repetition_penalty?: number;
+      seed?: number;
     }[] = [];
     const isChatterbox = activeEngine === "chatterbox";
     const isOmni = supportsVoiceModes;
@@ -691,6 +696,13 @@ export default function App() {
         ...(isOmni ? { voice_mode: mode } : {}),
         ...(instruct ? { instruct } : {}),
         ...(activeEngine === "voxcpm" ? { inference_steps: QUALITY_TIMESTEPS[quality] } : {}),
+        ...(activeEngine === "qwen" ? {
+          temperature: qwenParams.temperature,
+          top_p: qwenParams.topP,
+          top_k: qwenParams.topK,
+          repetition_penalty: qwenParams.repetitionPenalty,
+          ...(qwenParams.seed != null ? { seed: qwenParams.seed } : {}),
+        } : {}),
       });
     }
 
@@ -719,7 +731,7 @@ export default function App() {
       setIsExporting(false);
       setExportProgress("");
     }
-  }, [project, showError, cfgScale, exaggeration, activeEngine, supportsVoiceModes, quality]);
+  }, [project, showError, cfgScale, exaggeration, activeEngine, supportsVoiceModes, quality, qwenParams]);
 
   const viewportWidth = useViewportWidth();
 
