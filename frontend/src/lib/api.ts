@@ -350,7 +350,7 @@ export interface DownloadSegmentPayload {
   cfg_weight?: number;
   exaggeration?: number;
   language_id?: string;
-  voice_mode?: "clone" | "design" | "auto" | "custom";
+  voice_mode?: "clone" | "design" | "auto";
   instruct?: string;
   inference_steps?: number;
   temperature?: number;

@@ -15,7 +15,7 @@ export interface TtsBuffer {
   language: string | null;
   // OmniVoice only: per-buffer voice mode + design prompt. Other engines
   // ignore these. Mode is derived when unset (see lib/voiceModes.ts).
-  omnivoiceMode?: "clone" | "design" | "auto" | "custom";
+  omnivoiceMode?: "clone" | "design" | "auto";
   voiceDesign?: string;
 }
 
@@ -69,6 +69,7 @@ export interface EngineInfo {
   languages: EngineLanguage[];
   supports_voice_modes: boolean;
   supports_style_clone: boolean;
+  supports_style_prompt: boolean;
 }
 
 export interface InstallStatus {
@@ -129,7 +130,7 @@ export interface SynthBase64Response {
 export interface SynthSpeaker {
   name: string;
   voice: string; // Voice.id (may be empty for OmniVoice design/auto)
-  voice_mode?: "clone" | "design" | "auto" | "custom";
+  voice_mode?: "clone" | "design" | "auto";
   instruct?: string;
 }
 
@@ -142,7 +143,7 @@ export interface Speaker {
   color: string;
   // OmniVoice only: per-speaker voice mode + design prompt (optional; other
   // engines ignore). Mode is derived when unset — see lib/voiceModes.ts.
-  omnivoiceMode?: "clone" | "design" | "auto" | "custom";
+  omnivoiceMode?: "clone" | "design" | "auto";
   voiceDesign?: string;
 }
 
@@ -158,7 +159,7 @@ export interface CachedAudio {
   voice: string;
   cacheHash?: string;
   // OmniVoice: what mode/prompt produced this, so the cached badge stays honest.
-  mode?: "clone" | "design" | "auto" | "custom";
+  mode?: "clone" | "design" | "auto";
   instruct?: string;
   // VoxCPM Quality (inference timesteps preset) that produced this clip, so the
   // cache badge re-synths when the user changes Quality. Undefined for engines

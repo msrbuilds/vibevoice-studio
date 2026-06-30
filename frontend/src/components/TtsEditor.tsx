@@ -3,7 +3,7 @@ import { Loader2, Play, RefreshCw, Square } from "lucide-react";
 import { focusRing } from "@/lib/theme";
 import type { EngineLanguage, Voice } from "@/types/models";
 import { textStats, fmtDuration } from "@/lib/textStats";
-import { DESIGN_CHIPS, NONVERBAL_TAGS, appendDesignChip, availableModes, modeLabel, type OmniMode } from "@/lib/voiceModes";
+import { DESIGN_CHIPS, NONVERBAL_TAGS, appendDesignChip, type OmniMode } from "@/lib/voiceModes";
 import { LanguageSelect } from "./LanguageSelect";
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
   // drives engine-specific content (OmniVoice chips/tags vs VoxCPM placeholders).
   supportsVoiceModes: boolean;
   supportsStyleClone: boolean;
+  supportsStylePrompt?: boolean;
   activeEngine: string | null;
   omniMode: OmniMode;
   onOmniModeChange: (m: OmniMode) => void;
@@ -34,7 +35,7 @@ interface Props {
 export function TtsEditor(props: Props) {
   const {
     isDark, text, onTextChange, activeVoice, languages, showLanguage,
-    language, onLanguageChange, supportsVoiceModes, supportsStyleClone, activeEngine, omniMode, onOmniModeChange,
+    language, onLanguageChange, supportsVoiceModes, supportsStyleClone, supportsStylePrompt = false, activeEngine, omniMode, onOmniModeChange,
     voiceDesign, onVoiceDesignChange, busy, isGenerating, isPlaying, onGenerate, onPlay,
   } = props;
   const stats = textStats(text);
@@ -71,10 +72,9 @@ export function TtsEditor(props: Props) {
     onTextChange(before + chunk + after);
   };
 
-  // Show the "Voice: X" note whenever a built-in/reference voice applies: for
-  // any non-voice-modes engine, and for clone + custom modes (design/auto carry
-  // no reference voice).
-  const showVoiceNote = !supportsVoiceModes || omniMode === "clone" || omniMode === "custom";
+  // Show the "Voice: X" note for any non-OmniVoice engine, and for OmniVoice
+  // only in clone mode (design/auto carry no reference voice).
+  const showVoiceNote = !supportsVoiceModes || omniMode === "clone";
 
   const segBtn = (m: OmniMode, label: string) => (
     <button
@@ -127,27 +127,27 @@ export function TtsEditor(props: Props) {
         </div>
       )}
 
-      {/* Per-engine voice modes (OmniVoice/VoxCPM: Clone/Design/Auto · Qwen: Custom/Clone/Design) */}
+      {/* Qwen always-available free-text style prompt (built-in voice + optional style) */}
+      {supportsStylePrompt && (
+        <div className={`rounded-xl border p-3 ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-gray-200 bg-gray-50"}`}>
+          <input
+            type="text"
+            value={voiceDesign}
+            onChange={(e) => onVoiceDesignChange(e.target.value)}
+            placeholder="Style (optional) — e.g. cheerful, slightly faster, whispering"
+            className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-orange-500 ${selectBg}`}
+          />
+        </div>
+      )}
+
+      {/* OmniVoice voice mode: Clone / Design / Auto */}
       {supportsVoiceModes && (
         <div className={`rounded-xl border p-3 space-y-2 ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-gray-200 bg-gray-50"}`}>
           <div className="flex gap-1.5">
-            {availableModes(activeEngine).map((m) => segBtn(m, modeLabel(m)))}
+            {segBtn("clone", "Clone")}
+            {segBtn("design", "Design")}
+            {segBtn("auto", "Auto")}
           </div>
-          {omniMode === "custom" && (
-            <div className="space-y-1.5">
-              <p className={`text-xs ${sub}`}>
-                Built-in voice:{" "}
-                <span className="text-orange-400">{activeVoice ? activeVoice.name : "none selected"}</span>
-              </p>
-              <input
-                type="text"
-                value={voiceDesign}
-                onChange={(e) => onVoiceDesignChange(e.target.value)}
-                placeholder="Style (optional) — e.g. cheerful, slightly faster"
-                className={`w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-orange-500 ${selectBg}`}
-              />
-            </div>
-          )}
           {omniMode === "clone" && (
             <div className="space-y-1.5">
               <p className={`text-xs ${sub}`}>

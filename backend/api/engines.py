@@ -44,6 +44,7 @@ class EngineInfoModel(BaseModel):
     languages: list[EngineLanguageModel] = []
     supports_voice_modes: bool = False
     supports_style_clone: bool = False
+    supports_style_prompt: bool = False
 
 
 class EnginesListResponse(BaseModel):
@@ -104,6 +105,7 @@ def _to_model(info: dict) -> EngineInfoModel:
         languages=[EngineLanguageModel(**lang) for lang in info.get("languages", [])],
         supports_voice_modes=info.get("supports_voice_modes", False),
         supports_style_clone=info.get("supports_style_clone", False),
+        supports_style_prompt=info.get("supports_style_prompt", False),
     )
 
 

@@ -204,8 +204,7 @@ class SynthService:
         supports_modes = target_engine.supports_voice_modes()
         for sp in req.speakers:
             if supports_modes:
-                default_mode = "custom" if target_name == "qwen" else ("clone" if sp.voice_id else "auto")
-                sp_mode = sp.voice_mode or default_mode
+                sp_mode = sp.voice_mode or ("clone" if sp.voice_id else "auto")
             else:
                 sp_mode = "clone"
             if sp_mode != "clone":
@@ -529,9 +528,9 @@ def _voice_cache_key(
         base = voice_id
     if voice_mode:
         base += f"|vm={voice_mode}"
-    # Fold the style/instruct prompt independent of voice_mode so different
-    # styles never share a cache slot (kept independent for robustness even
-    # though every style-carrying mode currently also sets a voice_mode).
+    # Fold the style/instruct prompt independent of voice_mode: Qwen
+    # (supports_style_prompt) sends an always-available style with voice_mode
+    # None, so gating this on voice_mode would let different styles collide.
     if instruct:
         base += f"|in={instruct}"
     if reference_text:

@@ -50,7 +50,7 @@ function isSegmentCached(
   cache: Record<string, CachedAudio>,
   speakers: Speaker[],
   supportsVoiceModes: boolean,
-  activeEngine: string | null,
+  supportsStylePrompt: boolean,
   effectiveQuality: "fast" | "balanced" | "high" | undefined,
   effectiveGenSig: string | undefined,
 ): { cached: boolean; voice: string | null; signature: string } {
@@ -60,7 +60,7 @@ function isSegmentCached(
   if (!speaker) return { cached: false, voice: null, signature: "" };
 
   if (supportsVoiceModes) {
-    const mode = effectiveMode(speaker, activeEngine);
+    const mode = effectiveMode(speaker);
     if (mode === "clone") {
       const voice = speaker.voice;
       if (!voice) return { cached: false, voice: null, signature: "" };
@@ -71,22 +71,6 @@ function isSegmentCached(
           entry.text === segment.text &&
           entry.voice === voice &&
           entry.mode === "clone" &&
-          (entry.instruct ?? "") === style &&
-          entry.quality === effectiveQuality &&
-          entry.genSig === effectiveGenSig,
-        voice,
-        signature,
-      };
-    }
-    if (mode === "custom") {
-      const voice = speaker.voice;
-      const style = (speaker.voiceDesign ?? "").trim();
-      const signature = `${segment.text}::${voice}::custom::${style}::${effectiveQuality ?? ""}::${effectiveGenSig ?? ""}`;
-      return {
-        cached:
-          entry.text === segment.text &&
-          entry.voice === voice &&
-          entry.mode === "custom" &&
           (entry.instruct ?? "") === style &&
           entry.quality === effectiveQuality &&
           entry.genSig === effectiveGenSig,
@@ -110,13 +94,18 @@ function isSegmentCached(
 
   const voice = speaker.voice;
   if (!voice) return { cached: false, voice: null, signature: "" };
-  const signature = `${segment.text}::${voice}::${segment.speakerId ?? ""}::${effectiveQuality ?? ""}::${effectiveGenSig ?? ""}`;
+  // Qwen (supports_style_prompt) carries an always-available style with no
+  // voice mode; fold it so changing the style re-synthesizes. Empty for
+  // engines without it → identical to prior behavior.
+  const style = supportsStylePrompt ? (speaker.voiceDesign ?? "").trim() : "";
+  const signature = `${segment.text}::${voice}::${segment.speakerId ?? ""}::${effectiveQuality ?? ""}::${effectiveGenSig ?? ""}::${style}`;
   return {
     cached:
       entry.text === segment.text &&
       entry.voice === voice &&
       entry.quality === effectiveQuality &&
-      entry.genSig === effectiveGenSig,
+      entry.genSig === effectiveGenSig &&
+      (entry.instruct ?? "") === style,
     voice,
     signature,
   };
@@ -140,6 +129,7 @@ export default function App() {
   } = useEngine();
   const activeEngineInfo = engines.find((e) => e.name === activeEngine) ?? null;
   const supportsVoiceModes = activeEngineInfo?.supports_voice_modes ?? false;
+  const supportsStylePrompt = activeEngineInfo?.supports_style_prompt ?? false;
   const supportsVoiceCloning = activeEngineInfo?.supports_voice_cloning ?? true;
   const engineLanguages = activeEngineInfo?.languages ?? [];
   // Chatterbox: language is a synth param (cloning engine with languages)
@@ -302,14 +292,14 @@ export default function App() {
         return;
       }
       const isOmni = supportsVoiceModes;
-      const mode = supportsVoiceModes ? effectiveMode(speaker, activeEngine) : "clone";
-      // A reference voice is required except for design/auto/custom modes.
+      const mode = isOmni ? effectiveMode(speaker) : "clone";
+      // A reference voice is required except for design/auto modes.
       if (mode === "clone" && !speaker.voice) {
         showError("No voice assigned to the speaker. Pick one in the sidebar.", "No voice");
         return;
       }
       const instruct =
-        mode === "design" || mode === "clone" || mode === "custom"
+        mode === "design" || mode === "clone"
           ? speaker.voiceDesign?.trim()
             ? speaker.voiceDesign.trim()
             : undefined
@@ -372,7 +362,7 @@ export default function App() {
       try {
         const seg = project.segments.find((s) => s.id === segmentId);
         if (!seg) return;
-        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
+        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, supportsStylePrompt, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
         if (!cached) {
           await generateFor(segmentId);
         }
@@ -383,7 +373,7 @@ export default function App() {
         setPlayingId((id) => (id === segmentId ? null : id));
       }
     },
-    [project, generateFor, playCached, showError, activeEngine, supportsVoiceModes, quality, qwenGenSig],
+    [project, generateFor, playCached, showError, activeEngine, supportsVoiceModes, supportsStylePrompt, quality, qwenGenSig],
   );
 
   const handleStop = useCallback(() => {
@@ -429,7 +419,7 @@ export default function App() {
         setCurrentIndex(i);
         setPlayingId(seg.id);
         try {
-          const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
+          const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, supportsStylePrompt, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
           if (!cached) {
             setGeneratingId(seg.id);
             try {
@@ -448,7 +438,7 @@ export default function App() {
       setCurrentIndex(-1);
       setPlayingId(null);
     }
-  }, [project, generateFor, playCached, showError, activeEngine, supportsVoiceModes, quality, qwenGenSig]);
+  }, [project, generateFor, playCached, showError, activeEngine, supportsVoiceModes, supportsStylePrompt, quality, qwenGenSig]);
 
   const handleStopAll = useCallback(() => {
     stopAllRef.current = true;
@@ -480,7 +470,7 @@ export default function App() {
         showError("Some segments have no speaker assigned.", "Missing speaker");
         return;
       }
-      const spMode = supportsVoiceModes ? effectiveMode(sp, activeEngine) : "clone";
+      const spMode = supportsVoiceModes ? effectiveMode(sp) : "clone";
       if (spMode === "clone" && !sp.voice) {
         showError(
           "Some segments have no voice. Assign voices in the sidebar first.",
@@ -504,7 +494,7 @@ export default function App() {
       for (let i = 0; i < valid.length; i++) {
         const seg = valid[i]!;
         // Skip already-cached segments
-        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
+        const { cached } = isSegmentCached(seg, project.audioCache, project.speakers, supportsVoiceModes, supportsStylePrompt, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
         if (cached) continue;
 
         setExportProgress(`Segment ${i + 1}/${valid.length}`);
@@ -521,7 +511,7 @@ export default function App() {
       setIsExporting(false);
       setExportProgress("");
     }
-  }, [project, generateFor, showError, activeEngine, supportsVoiceModes, quality, qwenGenSig]);
+  }, [project, generateFor, showError, activeEngine, supportsVoiceModes, supportsStylePrompt, quality, qwenGenSig]);
 
   // ---- TTS mode generation ----
 
@@ -529,16 +519,16 @@ export default function App() {
     if (!pm.tts.text.trim()) return;
     const isOmni = supportsVoiceModes;
     const voice = displayedVoices.find((v) => v.id === pm.tts.voiceId) ?? null;
-    const mode: OmniMode = supportsVoiceModes
-      ? effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode }, activeEngine)
+    const mode: OmniMode = isOmni
+      ? effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode })
       : "clone";
-    // A reference voice is required except for design/auto/custom modes.
+    // A reference voice is required except for design/auto modes.
     if (mode === "clone" && !voice) {
       showError("Select a voice in the library first.", "No voice");
       return;
     }
     const instruct =
-      mode === "design" || mode === "clone" || mode === "custom"
+      mode === "design" || mode === "clone"
         ? pm.tts.voiceDesign?.trim()
           ? pm.tts.voiceDesign.trim()
           : undefined
@@ -668,7 +658,7 @@ export default function App() {
       cfg_weight?: number;
       exaggeration?: number;
       language_id?: string;
-      voice_mode?: "clone" | "design" | "auto" | "custom";
+      voice_mode?: "clone" | "design" | "auto";
       instruct?: string;
       inference_steps?: number;
       temperature?: number;
@@ -688,7 +678,7 @@ export default function App() {
         );
         return;
       }
-      const mode = isOmni ? effectiveMode(speaker, activeEngine) : "clone";
+      const mode = isOmni ? effectiveMode(speaker) : "clone";
       if (mode === "clone" && !speaker.voice) {
         showError(
           `Segment has no voice assigned (text: "${seg.text.slice(0, 40)}…").`,
@@ -697,7 +687,7 @@ export default function App() {
         return;
       }
       const instruct =
-        mode === "design" || mode === "clone" || mode === "custom"
+        mode === "design" || mode === "clone"
           ? speaker.voiceDesign?.trim()
             ? speaker.voiceDesign.trim()
             : undefined
@@ -762,10 +752,10 @@ export default function App() {
   const cachedCount = useMemo(
     () =>
       project.segments.filter((s) => {
-        const { cached } = isSegmentCached(s, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
+        const { cached } = isSegmentCached(s, project.audioCache, project.speakers, supportsVoiceModes, supportsStylePrompt, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
         return cached;
       }).length,
-    [project.segments, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, quality, qwenGenSig],
+    [project.segments, project.audioCache, project.speakers, supportsVoiceModes, supportsStylePrompt, activeEngine, quality, qwenGenSig],
   );
   const busy = isPlayingAll || isExporting || generatingId !== null;
 
@@ -864,8 +854,9 @@ export default function App() {
               onLanguageChange={pm.setTtsLanguage}
               supportsVoiceModes={supportsVoiceModes}
               supportsStyleClone={activeEngineInfo?.supports_style_clone ?? false}
+              supportsStylePrompt={supportsStylePrompt}
               activeEngine={activeEngine}
-              omniMode={effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode }, activeEngine)}
+              omniMode={effectiveMode({ voice: pm.tts.voiceId ?? "", omnivoiceMode: pm.tts.omnivoiceMode })}
               onOmniModeChange={pm.setTtsOmniMode}
               voiceDesign={pm.tts.voiceDesign ?? ""}
               onVoiceDesignChange={pm.setTtsVoiceDesign}
@@ -922,6 +913,7 @@ export default function App() {
                   activeEngine={activeEngine}
                   supportsVoiceModes={activeEngineInfo?.supports_voice_modes ?? false}
                   supportsStyleClone={activeEngineInfo?.supports_style_clone ?? false}
+                  supportsStylePrompt={supportsStylePrompt}
                   onAddSpeaker={project.addSpeaker}
                   onUpdateSpeaker={project.updateSpeaker}
                   onRemoveSpeaker={project.removeSpeaker}
@@ -931,7 +923,7 @@ export default function App() {
 
               <div className="space-y-4">
                 {project.segments.map((segment, index) => {
-                  const { cached } = isSegmentCached(segment, project.audioCache, project.speakers, supportsVoiceModes, activeEngine, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
+                  const { cached } = isSegmentCached(segment, project.audioCache, project.speakers, supportsVoiceModes, supportsStylePrompt, activeEngine === "voxcpm" ? quality : undefined, qwenGenSig);
                   return (
                     <SegmentCard
                       key={segment.id}
