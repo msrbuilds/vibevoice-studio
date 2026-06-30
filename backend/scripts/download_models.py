@@ -40,6 +40,11 @@ MODEL_CATALOG: dict[str, dict[str, str]] = {
         "size": "~5 GB",
         "label": "VoxCPM2",
     },
+    "qwen": {
+        "repo_id": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+        "size": "~3.5 GB",
+        "label": "Qwen3-TTS CustomVoice",
+    },
 }
 
 

@@ -19,7 +19,7 @@ from backend.scripts.download_models import MODEL_CATALOG
 #: Every engine has weights in the shared HF cache and can have them deleted.
 #: (Superset of model_download.DOWNLOADABLE — chatterbox's weights arrive via
 #: its worker's install but still land in the shared cache.)
-DELETABLE: frozenset[str] = frozenset({"vibevoice", "kokoro", "omnivoice", "chatterbox", "voxcpm"})
+DELETABLE: frozenset[str] = frozenset({"vibevoice", "kokoro", "omnivoice", "chatterbox", "voxcpm", "qwen"})
 
 _MAX_LOG_LINES = 500
 

@@ -212,6 +212,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         "chatterbox": ChatterboxInstaller(),
         "omnivoice": EngineEnvInstaller("install-omnivoice"),
         "voxcpm": EngineEnvInstaller("install-voxcpm"),
+        "qwen": EngineEnvInstaller("install-qwen"),
     }
     app.state.model_downloader = ModelDownloader()
     app.state.model_deleter = ModelDeleter(em=engine_manager)
@@ -219,6 +220,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         "chatterbox": EngineEnvUninstaller("chatterbox", em=engine_manager),
         "omnivoice": EngineEnvUninstaller("omnivoice", em=engine_manager),
         "voxcpm": EngineEnvUninstaller("voxcpm", em=engine_manager),
+        "qwen": EngineEnvUninstaller("qwen", em=engine_manager),
     }
 
     # ---- routers

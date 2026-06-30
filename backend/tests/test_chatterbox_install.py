@@ -167,3 +167,18 @@ def test_install_endpoint_supports_voxcpm():
     assert client.post("/api/engines/voxcpm/install").status_code == 200
     _wait(vx)
     assert "hi" in client.get("/api/engines/voxcpm/install").json()["log"]
+
+
+def test_install_endpoint_supports_qwen():
+    q = EngineEnvInstaller("install-qwen", runner=_fake_runner(["hi"], 0))
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from backend.api.engines import router
+    app = FastAPI()
+    app.include_router(router)
+    app.state.engine_installers = {"qwen": q}
+    client = TestClient(app)
+    assert client.get("/api/engines/qwen/install").json()["state"] == "not_installed"
+    assert client.post("/api/engines/qwen/install").status_code == 200
+    _wait(q)
+    assert "hi" in client.get("/api/engines/qwen/install").json()["log"]
