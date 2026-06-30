@@ -162,12 +162,6 @@ class Engine(abc.ABC):
         prompt only applies without a reference, so it leaves this False."""
         return False
 
-    def supports_style_prompt(self) -> bool:
-        """True if the engine accepts an always-available free-text style
-        prompt alongside a built-in voice (Qwen CustomVoice), independent of
-        any Clone/Design/Auto toggle. The value rides the `instruct` field."""
-        return False
-
     def languages(self) -> list[dict[str, str]]:
         """UI language options as [{"code","label"}].
 
@@ -238,7 +232,6 @@ class Engine(abc.ABC):
             "languages": self.languages(),
             "supports_voice_modes": self.supports_voice_modes(),
             "supports_style_clone": self.supports_style_clone(),
-            "supports_style_prompt": self.supports_style_prompt(),
         }
 
     def engine_info(self) -> dict[str, Any]:

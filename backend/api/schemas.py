@@ -95,7 +95,6 @@ class EngineInfoModel(BaseModel):
     active: bool = False
     supports_voice_modes: bool = False
     supports_style_clone: bool = False
-    supports_style_prompt: bool = False
 
 
 # Forward-ref: ConfigResponse references EngineInfoModel.
