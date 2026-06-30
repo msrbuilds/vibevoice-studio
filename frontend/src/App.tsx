@@ -35,6 +35,9 @@ import { showNarrowBanner } from "@/lib/layout";
 
 const TTS_SEG_ID = "__tts__";
 
+// VoxCPM diffusion quality → inference_timesteps. Higher = better quality, slower.
+const QUALITY_TIMESTEPS = { fast: 5, balanced: 10, high: 25 } as const;
+
 type Theme = "light" | "dark";
 
 function isSegmentCached(
@@ -116,14 +119,14 @@ export default function App() {
   // Ignored by VibeVoice and Kokoro. Range 0.0–1.0+ (clamped to 0–2 server-side).
   const [exaggeration, setExaggeration] = useState<number>(0.5);
   // VoxCPM only — diffusion quality (inference_timesteps). Ignored by other engines.
-  const [quality, setQuality] = useState<"fast" | "balanced" | "high">(
-    () => (localStorage.getItem("vs.voxcpm.quality") as "fast" | "balanced" | "high") ?? "balanced",
-  );
+  const [quality, setQuality] = useState<"fast" | "balanced" | "high">(() => {
+    const v = localStorage.getItem("vs.voxcpm.quality");
+    return v === "fast" || v === "balanced" || v === "high" ? v : "balanced";
+  });
   const onQualityChange = (q: "fast" | "balanced" | "high") => {
     setQuality(q);
     localStorage.setItem("vs.voxcpm.quality", q);
   };
-  const QUALITY_TIMESTEPS = { fast: 5, balanced: 10, high: 25 } as const;
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
