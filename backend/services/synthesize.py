@@ -204,7 +204,8 @@ class SynthService:
         supports_modes = target_engine.supports_voice_modes()
         for sp in req.speakers:
             if supports_modes:
-                sp_mode = sp.voice_mode or ("clone" if sp.voice_id else "auto")
+                default_mode = "custom" if target_name == "qwen" else ("clone" if sp.voice_id else "auto")
+                sp_mode = sp.voice_mode or default_mode
             else:
                 sp_mode = "clone"
             if sp_mode != "clone":
