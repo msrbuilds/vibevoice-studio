@@ -26,7 +26,7 @@ import {
 } from "@/lib/audio";
 import { loadSample, loadTtsSample, type Sample, type TtsSample } from "@/lib/samples";
 import { useProject } from "@/lib/store";
-import type { CachedAudio, Project, Speaker, SynthSpeaker } from "@/types/models";
+import type { CachedAudio, Project, Speaker, SynthSpeaker, VoiceMetadata } from "@/types/models";
 import { getDefaultCfgForEngine } from "@/lib/engineHints";
 import { effectiveMode, type OmniMode } from "@/lib/voiceModes";
 import { TooNarrowBanner } from "@/components/TooNarrowBanner";
@@ -342,7 +342,7 @@ export default function App() {
   );
 
   const handleUpdateVoiceMeta = useCallback(
-    async (voiceId: string, meta: { name?: string; gender?: string; language?: string }) => {
+    async (voiceId: string, meta: VoiceMetadata) => {
       try {
         await updateVoiceMeta(voiceId, meta);
         window.location.reload();
