@@ -40,6 +40,7 @@ export interface VoiceMetadata {
 }
 
 export interface ConfigResponse {
+  version: string;
   model_id: string;
   device: string;
   dtype: string;
@@ -176,4 +177,22 @@ export interface Project {
   segments: Segment[];
   createdAt: string;
   version: string;
+}
+
+export interface UpdateInfo {
+  current: string;
+  latest: string | null;
+  update_available: boolean;
+  html_url: string | null;
+  published_at: string | null;
+  body: string | null;
+  checked_at: number;
+  error: string | null;
+}
+
+export interface UpdateRunStatus {
+  state: "idle" | "running" | "done" | "error";
+  log: string[];
+  returncode: number | null;
+  error: string | null;
 }

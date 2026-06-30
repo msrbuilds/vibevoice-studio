@@ -10,6 +10,8 @@ import type {
   SynthBase64Response,
   SynthSpeaker,
   UninstallStatus,
+  UpdateInfo,
+  UpdateRunStatus,
   UploadVoiceResponse,
   Voice,
 } from "@/types/models";
@@ -204,6 +206,24 @@ export async function getUninstallStatus(name: string): Promise<UninstallStatus>
   return jsonOrThrow<UninstallStatus>(
     await fetch(`${API_BASE}/engines/${encodeURIComponent(name)}/uninstall`),
   );
+}
+
+export async function getUpdateInfo(): Promise<UpdateInfo> {
+  return jsonOrThrow<UpdateInfo>(await fetch(`${API_BASE}/update`));
+}
+
+export async function checkUpdate(): Promise<UpdateInfo> {
+  return jsonOrThrow<UpdateInfo>(await fetch(`${API_BASE}/update?force=1`));
+}
+
+export async function startUpdate(): Promise<UpdateRunStatus> {
+  return jsonOrThrow<UpdateRunStatus>(
+    await fetch(`${API_BASE}/update`, { method: "POST" }),
+  );
+}
+
+export async function getUpdateRunStatus(): Promise<UpdateRunStatus> {
+  return jsonOrThrow<UpdateRunStatus>(await fetch(`${API_BASE}/update/run`));
 }
 
 export async function uploadVoice(
