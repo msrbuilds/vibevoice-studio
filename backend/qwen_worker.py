@@ -7,8 +7,10 @@ goes to STDERR so it never corrupts the stdout protocol.
 
 Protocol (one JSON object per line):
   stdin  {"op":"load","device":"cuda","model_id":"Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"}
-         {"op":"synth","text":..,"out_wav":<path>,"speaker":<str>,"language":<str>,
-          "instruct":<str?>,"temperature":<float?>,"top_p":<float?>,"top_k":<int?>,
+         {"op":"synth","mode":"custom|clone|design","text":..,"out_wav":<path>,
+          "speaker":<str?>,"language":<str>,"instruct":<str?>,
+          "ref_audio":<path?>,"ref_text":<str?>,
+          "temperature":<float?>,"top_p":<float?>,"top_k":<int?>,
           "repetition_penalty":<float?>,"seed":<int?>}
          {"op":"shutdown"}
   stdout {"ok":true}                                            (load)
@@ -99,32 +101,51 @@ def _normalize_language(language) -> str:
     return _QWEN_LANG_ALIASES.get((language or "auto").strip().lower(), "auto")
 
 
-def _build_generate_kwargs(req: dict) -> dict:
-    """Map a synth request to generate_custom_voice(**kwargs).
-
-    speaker (one of 9) + language (default Auto) are required structure; an
-    optional free-text instruct steers style; quality kwargs are forwarded
-    only when present. `seed` is handled in _synth (torch.manual_seed), not
-    here. max_new_tokens is auto-computed. The language is normalized to the
-    package's lowercase vocabulary (see _normalize_language).
-    """
+def _common_kwargs(req: dict) -> dict:
+    """Quality kwargs + max_new_tokens shared by every mode."""
     text = (req.get("text") or "").strip()
-    speaker = req.get("speaker")
     if not text:
         raise ValueError("text must be non-empty")
-    if not speaker:
-        raise ValueError("speaker (voice) is required for Qwen CustomVoice")
-    language = _normalize_language(req.get("language"))
-    instruct = (req.get("instruct") or "").strip()
-
-    kwargs: dict = {"text": text, "language": language, "speaker": speaker}
-    if instruct:
-        kwargs["instruct"] = instruct
+    kw: dict = {"text": text, "language": _normalize_language(req.get("language"))}
     for key in ("temperature", "top_p", "top_k", "repetition_penalty"):
         if req.get(key) is not None:
-            kwargs[key] = req[key]
-    kwargs["max_new_tokens"] = _auto_max_new_tokens(text)
-    return kwargs
+            kw[key] = req[key]
+    kw["max_new_tokens"] = _auto_max_new_tokens(text)
+    return kw
+
+
+def _build_call(req: dict) -> tuple[str, dict]:
+    """Return (op, kwargs) for the requested mode. op is the method suffix:
+    'custom' -> generate_custom_voice, 'clone' -> generate_voice_clone,
+    'design' -> generate_voice_design. Defaults to custom (built-in voice)."""
+    mode = (req.get("mode") or "custom").strip().lower()
+    kw = _common_kwargs(req)
+    if mode == "clone":
+        ref_audio = req.get("ref_audio")
+        if not ref_audio:
+            raise ValueError("clone mode requires ref_audio")
+        kw["ref_audio"] = ref_audio
+        ref_text = (req.get("ref_text") or "").strip()
+        if ref_text:
+            kw["ref_text"] = ref_text
+            kw["x_vector_only_mode"] = False
+        else:
+            kw["x_vector_only_mode"] = True
+        return "clone", kw
+    if mode == "design":
+        instruct = (req.get("instruct") or "").strip()
+        if not instruct:
+            raise ValueError("design mode requires a non-empty instruct/style")
+        kw["instruct"] = instruct
+        return "design", kw
+    speaker = req.get("speaker")
+    if not speaker:
+        raise ValueError("custom mode requires a speaker (one of the 9 Qwen voices)")
+    kw["speaker"] = str(speaker).strip().lower()
+    instruct = (req.get("instruct") or "").strip()
+    if instruct:
+        kw["instruct"] = instruct
+    return "custom", kw
 
 
 class _Worker:
@@ -169,7 +190,7 @@ class _Worker:
         if not out_wav:
             return {"ok": False, "error": "out_wav required"}
         try:
-            kwargs = _build_generate_kwargs(req)
+            op, kwargs = _build_call(req)
         except ValueError as exc:
             return {"ok": False, "error": str(exc)}
         if req.get("seed") is not None:
@@ -178,9 +199,14 @@ class _Worker:
                 torch.manual_seed(int(req["seed"]))
             except Exception:  # noqa: BLE001
                 pass
+        method = {
+            "custom": "generate_custom_voice",
+            "clone": "generate_voice_clone",
+            "design": "generate_voice_design",
+        }[op]
         t0 = time.perf_counter()
         try:
-            wavs, sr = self._model.generate_custom_voice(**kwargs)
+            wavs, sr = getattr(self._model, method)(**kwargs)
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": f"generate failed: {exc}"}
         inference_ms = int((time.perf_counter() - t0) * 1000)

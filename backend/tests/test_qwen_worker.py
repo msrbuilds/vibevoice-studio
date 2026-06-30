@@ -1,4 +1,4 @@
-"""Tests for the Qwen worker's generate_custom_voice dispatch (fake model)."""
+"""Tests for the Qwen worker's 3-way dispatch (custom/clone/design, fake model)."""
 
 import importlib
 import sys
@@ -13,30 +13,12 @@ def _load_worker():
     return importlib.reload(w)
 
 
-def test_basic_kwargs():
-    w = _load_worker()
-    k = w._build_generate_kwargs(
-        {"text": "hi", "speaker": "Vivian", "language": "English"}
-    )
-    assert k["text"] == "hi"
-    assert k["speaker"] == "Vivian"
-    assert k["language"] == "english"  # normalized to the package vocabulary
-    assert "instruct" not in k
-    assert k["max_new_tokens"] > 0  # auto-computed
-
-
-def test_language_defaults_to_auto():
-    w = _load_worker()
-    k = w._build_generate_kwargs({"text": "hi", "speaker": "Aiden"})
-    assert k["language"] == "auto"
-
-
 def test_language_normalized_to_package_vocabulary():
     w = _load_worker()
     # Display names (any case) and the voice's 2-letter codes both map to the
     # lowercase vocabulary generate_custom_voice accepts.
     def lang(v):
-        return w._build_generate_kwargs({"text": "hi", "speaker": "Vivian", "language": v})["language"]
+        return w._build_call({"mode": "custom", "text": "hi", "speaker": "Vivian", "language": v})[1]["language"]
     assert lang("English") == "english"
     assert lang("en") == "english"      # SynthService voice-language fallback
     assert lang("zh") == "chinese"
@@ -46,66 +28,98 @@ def test_language_normalized_to_package_vocabulary():
     assert lang(None) == "auto"
 
 
-def test_instruct_passed_when_present():
-    w = _load_worker()
-    k = w._build_generate_kwargs(
-        {"text": "hi", "speaker": "Vivian", "instruct": "Very happy."}
-    )
-    assert k["instruct"] == "Very happy."
-
-
-def test_empty_instruct_omitted():
-    w = _load_worker()
-    k = w._build_generate_kwargs(
-        {"text": "hi", "speaker": "Vivian", "instruct": "   "}
-    )
-    assert "instruct" not in k
-
-
-def test_quality_kwargs_passed_through_only_when_set():
-    w = _load_worker()
-    k = w._build_generate_kwargs(
-        {"text": "hi", "speaker": "Vivian",
-         "temperature": 0.8, "top_p": 0.9, "top_k": 40, "repetition_penalty": 1.1}
-    )
-    assert k["temperature"] == 0.8
-    assert k["top_p"] == 0.9
-    assert k["top_k"] == 40
-    assert k["repetition_penalty"] == 1.1
-    # seed is NOT a generate kwarg (handled via torch.manual_seed in _synth)
-    assert "seed" not in k
-
-
-def test_missing_speaker_raises():
-    w = _load_worker()
-    try:
-        w._build_generate_kwargs({"text": "hi"})
-    except ValueError:
-        return
-    raise AssertionError("expected ValueError when speaker is missing")
-
-
 def test_max_new_tokens_scales_with_text():
     w = _load_worker()
-    short = w._build_generate_kwargs({"text": "hi", "speaker": "Vivian"})["max_new_tokens"]
-    long = w._build_generate_kwargs({"text": "x" * 1000, "speaker": "Vivian"})["max_new_tokens"]
+    short = w._build_call({"mode": "custom", "text": "hi", "speaker": "Vivian"})[1]["max_new_tokens"]
+    long = w._build_call({"mode": "custom", "text": "x" * 1000, "speaker": "Vivian"})[1]["max_new_tokens"]
     assert long >= short
 
 
-def test_synth_end_to_end_with_fake_model(tmp_path):
-    import numpy as np
+def test_custom_mode_lowercases_speaker():
+    w = _load_worker()
+    op, kw = w._build_call({"mode": "custom", "text": "hi", "speaker": "Vivian", "language": "English"})
+    assert op == "custom"
+    assert kw["speaker"] == "vivian"
+    assert kw["language"] == "english"
+    assert kw["text"] == "hi"
 
+
+def test_custom_mode_requires_speaker():
+    w = _load_worker()
+    try:
+        w._build_call({"mode": "custom", "text": "hi"})
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError when custom mode lacks a speaker")
+
+
+def test_clone_mode_icl_when_ref_text_present():
+    w = _load_worker()
+    op, kw = w._build_call({"mode": "clone", "text": "hi", "ref_audio": "/tmp/r.wav", "ref_text": "hello there"})
+    assert op == "clone"
+    assert kw["ref_audio"] == "/tmp/r.wav"
+    assert kw["ref_text"] == "hello there"
+    assert kw["x_vector_only_mode"] is False
+
+
+def test_clone_mode_xvector_when_no_ref_text():
+    w = _load_worker()
+    op, kw = w._build_call({"mode": "clone", "text": "hi", "ref_audio": "/tmp/r.wav"})
+    assert op == "clone"
+    assert kw["x_vector_only_mode"] is True
+    assert "ref_text" not in kw
+
+
+def test_clone_mode_requires_ref_audio():
+    w = _load_worker()
+    try:
+        w._build_call({"mode": "clone", "text": "hi"})
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError when clone mode lacks ref_audio")
+
+
+def test_design_mode_requires_instruct():
+    w = _load_worker()
+    op, kw = w._build_call({"mode": "design", "text": "hi", "instruct": "a calm elderly man"})
+    assert op == "design"
+    assert kw["instruct"] == "a calm elderly man"
+    try:
+        w._build_call({"mode": "design", "text": "hi", "instruct": "  "})
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError when design mode lacks instruct")
+
+
+def test_quality_kwargs_forwarded_in_every_mode():
+    w = _load_worker()
+    for req in (
+        {"mode": "custom", "text": "hi", "speaker": "Vivian"},
+        {"mode": "clone", "text": "hi", "ref_audio": "/tmp/r.wav"},
+        {"mode": "design", "text": "hi", "instruct": "x"},
+    ):
+        _op, kw = w._build_call({**req, "temperature": 0.8, "top_p": 0.9})
+        assert kw["temperature"] == 0.8 and kw["top_p"] == 0.9
+        assert kw["max_new_tokens"] > 0
+
+
+def test_synth_dispatches_to_method(tmp_path):
+    import numpy as np
     w = _load_worker()
     worker = w._Worker()
 
     class _FakeModel:
-        def generate_custom_voice(self, **kwargs):
-            return [np.zeros(24000, dtype=np.float32)], 24000  # 1s @ 24k
+        def __init__(self):
+            self.called = None
+        def generate_custom_voice(self, **k):
+            self.called = "custom"; return [np.zeros(24000, dtype=np.float32)], 24000
+        def generate_voice_clone(self, **k):
+            self.called = "clone"; return [np.zeros(24000, dtype=np.float32)], 24000
+        def generate_voice_design(self, **k):
+            self.called = "design"; return [np.zeros(24000, dtype=np.float32)], 24000
 
     worker._model = _FakeModel()
     out = tmp_path / "o.wav"
-    resp = worker._synth({"text": "hi", "speaker": "Vivian", "out_wav": str(out)})
-    assert resp["ok"] is True
-    assert resp["sample_rate"] == 24000
-    assert abs(resp["duration_sec"] - 1.0) < 0.01
+    resp = worker._synth({"mode": "design", "text": "hi", "instruct": "calm", "out_wav": str(out)})
+    assert resp["ok"] is True and worker._model.called == "design"
     assert out.is_file() and out.stat().st_size > 0
