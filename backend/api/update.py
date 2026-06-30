@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -22,7 +24,7 @@ class UpdateInfoModel(BaseModel):
 
 
 class UpdateRunStatusModel(BaseModel):
-    state: str  # idle | running | done | error
+    state: Literal["idle", "running", "done", "error"]
     log: list[str]
     returncode: int | None = None
     error: str | None = None
