@@ -262,7 +262,7 @@ export function EngineSelector({
                       )}
                       {/* Secondary destructive actions — hidden for the active
                           engine (switching away first is required). */}
-                      {!isActive && (e.downloaded || (e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm"))) && (
+                      {!isActive && (e.downloaded || (e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm" || e.name === "qwen"))) && (
                         <div className="mt-1.5 flex items-center gap-3">
                           {e.downloaded && (
                             <button
@@ -280,7 +280,7 @@ export function EngineSelector({
                               Delete weights
                             </button>
                           )}
-                          {e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm") && (
+                          {e.installed && (e.name === "chatterbox" || e.name === "omnivoice" || e.name === "voxcpm" || e.name === "qwen") && (
                             <button
                               type="button"
                               onClick={() => {

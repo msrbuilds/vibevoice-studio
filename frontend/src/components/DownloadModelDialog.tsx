@@ -18,6 +18,7 @@ const MODEL_SIZES: Record<string, string> = {
   kokoro: "~350 MB",
   omnivoice: "~3.3 GB",
   voxcpm: "~5 GB",
+  qwen: "~3.5 GB",
 };
 
 const fmtBytes = (b: number): string =>

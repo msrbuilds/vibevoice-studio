@@ -19,6 +19,7 @@ const MODEL_SIZES: Record<string, string> = {
   chatterbox: "~500 MB",
   omnivoice: "~3.3 GB",
   voxcpm: "~5 GB",
+  qwen: "~3.5 GB",
 };
 
 export function DeleteWeightsDialog({
