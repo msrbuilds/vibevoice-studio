@@ -134,6 +134,9 @@ class _Worker:
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": f"import voxcpm failed: {exc}"}
         try:
+            # NOTE: VoxCPM.from_pretrained auto-selects the device; `device` here is
+            # advisory only. If a future voxcpm version accepts an explicit device arg,
+            # pass it here (confirmed when the isolated venv is built).
             self._model = VoxCPM.from_pretrained(model_id, load_denoiser=False)
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": f"load failed: {exc}"}
@@ -144,7 +147,7 @@ class _Worker:
                 self._sample_rate = sr
         except Exception:  # noqa: BLE001
             pass
-        _log(f"[voxcpm-worker] model loaded on {device}, sr={self._sample_rate}")
+        _log(f"[voxcpm-worker] model loaded (requested device={device!r}; VoxCPM selects its own device), sr={self._sample_rate}")
         return {"ok": True}
 
     def _synth(self, req: dict) -> dict:
