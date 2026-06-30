@@ -21,6 +21,7 @@ from .engines.kokoro_engine import KokoroEngine
 from .engines.omnivoice_engine import OmniVoiceEngine
 from .engines.vibevoice_engine import VibeVoiceEngine
 from .engines.voxcpm_engine import VoxCPMEngine
+from .engines.qwen_engine import QwenEngine
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ class EngineManager:
         omnivoice_num_step: int = 32,
         voxcpm_model_id: str = "openbmb/VoxCPM2",
         voxcpm_inference_timesteps: int = 10,
+        qwen_model_id: str = "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
         state_dir: Path | None = None,
     ) -> None:
         self._voices_dir = Path(voices_dir)
@@ -102,6 +104,10 @@ class EngineManager:
                 model_id=voxcpm_model_id,
                 device_request=device_request,
                 inference_timesteps=voxcpm_inference_timesteps,
+            ),
+            "qwen": QwenEngine(
+                model_id=qwen_model_id,
+                device_request=device_request,
             ),
         }
 

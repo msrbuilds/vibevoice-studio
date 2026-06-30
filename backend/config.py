@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Active TTS engine. "vibevoice" (default), "kokoro", "chatterbox",
     # "omnivoice", or "voxcpm". The user's last choice is persisted in
     # backend/.last_engine and overrides this on next start.
-    default_engine: Literal["vibevoice", "kokoro", "chatterbox", "omnivoice", "voxcpm"] = "vibevoice"
+    default_engine: Literal["vibevoice", "kokoro", "chatterbox", "omnivoice", "voxcpm", "qwen"] = "vibevoice"
 
     # Model
     # Default: the community-maintained mirror at vibevoice/VibeVoice-1.5B
@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     voxcpm_model_id: str = "openbmb/VoxCPM2"
     # Diffusion inference timesteps (5 fast … 25 high quality). Default 10.
     voxcpm_inference_timesteps: int = 10
+
+    qwen_model_id: str = "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
 
     # Server
     host: str = "0.0.0.0"

@@ -172,6 +172,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         omnivoice_num_step=settings.omnivoice_num_step,
         voxcpm_model_id=settings.voxcpm_model_id,
         voxcpm_inference_timesteps=settings.voxcpm_inference_timesteps,
+        qwen_model_id=settings.qwen_model_id,
     )
 
     # Wire each engine's built-in voice catalog into the registry so
