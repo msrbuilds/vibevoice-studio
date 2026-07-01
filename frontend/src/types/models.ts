@@ -196,3 +196,17 @@ export interface UpdateRunStatus {
   returncode: number | null;
   error: string | null;
 }
+
+export interface MemStat {
+  used_bytes: number;
+  total_bytes: number;
+  percent: number;
+}
+
+export interface SystemStats {
+  cpu_percent: number;
+  ram: MemStat;
+  vram: MemStat | null;
+  disk: MemStat;
+  cache_bytes: number;
+}

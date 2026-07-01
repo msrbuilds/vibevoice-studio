@@ -9,6 +9,7 @@ import type {
   InstallStatus,
   SynthBase64Response,
   SynthSpeaker,
+  SystemStats,
   UninstallStatus,
   UpdateInfo,
   UpdateRunStatus,
@@ -57,6 +58,10 @@ export class ApiError extends Error {
 
 export async function getConfig(): Promise<ConfigResponse> {
   return jsonOrThrow<ConfigResponse>(await fetch(`${API_BASE}/config`));
+}
+
+export async function getSystemStats(): Promise<SystemStats> {
+  return jsonOrThrow<SystemStats>(await fetch(`${API_BASE}/system/stats`));
 }
 
 export interface CacheEntryInfo {
