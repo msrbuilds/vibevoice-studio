@@ -33,6 +33,22 @@ class ConfigResponse(BaseModel):
     engines: list["EngineInfoModel"] = []
 
 
+# ---- system stats (hardware status bar) ----
+
+class MemStat(BaseModel):
+    used_bytes: int
+    total_bytes: int
+    percent: float
+
+
+class SystemStatsResponse(BaseModel):
+    cpu_percent: float
+    ram: MemStat
+    vram: MemStat | None = None  # null when no CUDA device
+    disk: MemStat
+    cache_bytes: int
+
+
 # ---- voices ----
 
 class VoiceInfoModel(BaseModel):
