@@ -10,6 +10,7 @@ import { UninstallEngineDialog } from "@/components/UninstallEngineDialog";
 import { SegmentCard } from "@/components/SegmentCard";
 import { VoiceLibrary } from "@/components/VoiceLibrary";
 import { SpeakerRoster } from "@/components/SpeakerRoster";
+import { HardwareStatusBar } from "@/components/HardwareStatusBar";
 import { MiddleToolbar } from "@/components/MiddleToolbar";
 import { ModeChooser } from "@/components/ModeChooser";
 import { TtsEditor } from "@/components/TtsEditor";
@@ -825,6 +826,7 @@ export default function App() {
       {/* MIDDLE column: sticky toolbar, scroll body, sticky player */}
       <main className="flex-1 flex flex-col min-w-0 @container">
         {showNarrowBanner(viewportWidth) && <TooNarrowBanner isDark={isDark} />}
+        <HardwareStatusBar isDark={isDark} />
         <MiddleToolbar
           validCount={validCount}
           cachedCount={cachedCount}
