@@ -36,6 +36,9 @@ pydantic>=2.7.0
 pydantic-settings>=2.4.0
 python-dotenv>=1.0.1
 
+# System metrics for the hardware status bar (CPU/RAM/disk).
+psutil>=5.9
+
 # Kokoro TTS engine (optional but recommended). Requires `espeak-ng`
 # installed on the system PATH — see README for the platform install
 # command. Models: https://huggingface.co/hexgrad/Kokoro-82M
