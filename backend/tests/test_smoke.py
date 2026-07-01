@@ -321,6 +321,19 @@ def test_cache_total_size(tmp_path):
     assert cache.total_size() >= 2048
 
 
+def test_system_stats(tmp_path):
+    client = _make_client(tmp_path / "v", tmp_path / "u")
+    r = client.get("/api/system/stats")
+    assert r.status_code == 200
+    body = r.json()
+    assert isinstance(body["cpu_percent"], (int, float))
+    assert body["ram"]["total_bytes"] > 0
+    assert body["disk"]["total_bytes"] > 0
+    assert body["cache_bytes"] >= 0
+    # vram is either null (CPU-only test env) or a valid MemStat
+    assert body["vram"] is None or body["vram"]["total_bytes"] > 0
+
+
 if __name__ == "__main__":
     import tempfile
 
