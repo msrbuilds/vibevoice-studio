@@ -40,11 +40,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${GITHUB_REF_NAME}"
-          notes_file="docs/releases/${tag}.md"
-          if [ -f "$notes_file" ]; then
-            echo "Using curated notes: ${notes_file}"
-            gh release create "$tag" --title "Voice Studio ${tag}" --notes-file "$notes_file"
-          else
-            echo "No curated notes; auto-generating from commit history."
-            gh release create "$tag" --title "Voice Studio ${tag}" --generate-notes
-          fi
+          gh release create "$tag" --title "Voice Studio ${tag}" --generate-notes

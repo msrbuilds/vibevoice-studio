@@ -181,6 +181,12 @@ datasets/
 *.rar
 *.gz
 
+# --- Project docs (internal working notes) ---
+# Brainstorming specs/plans and release notes are kept local-only; nothing under
+# docs/ is tracked. The release workflow uses auto-generated notes, so it does
+# not depend on any committed file here.
+docs/
+
 # --- Playwright UI-verification artifacts ---
 # Ad-hoc screenshots captured during manual UI checks live at the repo root
 # (banner-*.png, clean-*.png, step*-*.png, …) plus the Playwright MCP output
