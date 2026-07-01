@@ -336,6 +336,18 @@ class SynthCache:
         with self._lock:
             return sorted(self._index.values(), key=lambda e: e.created_at, reverse=True)
 
+    def total_size(self) -> int:
+        """Total bytes on disk for all cached WAVs + their JSON metas."""
+        total = 0
+        with self._lock:
+            for entry in self._index.values():
+                for p in (entry.wav_path, entry.wav_path.with_suffix(".json")):
+                    try:
+                        total += p.stat().st_size
+                    except OSError:
+                        pass
+        return total
+
     # ---- maintenance ----
 
     def _maybe_evict(self) -> None:
